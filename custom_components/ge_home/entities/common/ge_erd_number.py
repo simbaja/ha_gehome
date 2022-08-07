@@ -1,12 +1,11 @@
 import logging
 from typing import Optional
 from gehomesdk.erd.erd_data_type import ErdDataType
-from homeassistant.components.number import NumberEntity
-
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberDeviceClass,
 )
+from homeassistant.const import TEMP_FAHRENHEIT
 from gehomesdk import ErdCodeType, ErdCodeClass
 from .ge_erd_entity import GeErdEntity
 from ...devices import ApplianceApi
@@ -88,7 +87,7 @@ class GeErdNumber(GeErdEntity, NumberEntity):
         if self._uom_override:
             return self._uom_override
 
-        if self.device_class == DEVICE_CLASS_TEMPERATURE:
+        if self.device_class == NumberDeviceClass.TEMPERATURE:
             #NOTE: it appears that the API only sets temperature in Fahrenheit,
             #so we'll hard code this UOM instead of using the device configured
             #settings
@@ -104,7 +103,7 @@ class GeErdNumber(GeErdEntity, NumberEntity):
             ErdCodeClass.RAW_TEMPERATURE,
             ErdCodeClass.NON_ZERO_TEMPERATURE,
         ]:
-            return DEVICE_CLASS_TEMPERATURE
+            return NumberDeviceClass.TEMPERATURE
 
         return None
 

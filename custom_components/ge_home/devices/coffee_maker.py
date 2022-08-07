@@ -60,7 +60,7 @@ class CcmApi(ApplianceApi):
     async def start_brewing(self) -> None:
         """Aggregate brew settings and start brewing."""
 
-        new_mode = ErdCcmBrewSettings(self._brew_cups_entity.value,
+        new_mode = ErdCcmBrewSettings(self._brew_cups_entity.native_value,
                                       self._brew_strengh_entity.brew_strength,
-                                      self._brew_temperature_entity.brew_temperature)
+                                      self._brew_temperature_entity.native_value)
         await self.appliance.async_set_erd_value(ErdCode.CCM_BREW_SETTINGS, new_mode)

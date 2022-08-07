@@ -16,4 +16,4 @@ class GeCcmBrewCupsNumber(GeErdNumber, GeCcmCachedValue):
 
     @property
     def native_value(self):
-        return self.get_value(device_value = super().value)
+        return self.get_value(device_value = super().native_value)
