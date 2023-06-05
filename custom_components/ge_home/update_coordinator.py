@@ -252,7 +252,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.info("ge_home shutting down")
         if self.client:
             self.client.clear_event_handlers()
-            self.client.disconnect()
+            self._hass.loop.create_task(self.client.disconnect())
 
     async def on_device_update(self, data: Tuple[GeAppliance, Dict[ErdCodeType, Any]]):
         """Let HA know there's new state."""
