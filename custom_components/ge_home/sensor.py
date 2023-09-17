@@ -42,6 +42,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             for api in apis
             for entity in api.entities
             if isinstance(entity, GeErdSensor) and entity.erd_code in api.appliance._property_cache
+        ]
+        for entity in entities:
+            if isinstance(entity, GeErdSensor) and entity.entity_id is None:
+                entity.entity_id = registry.async_generate_entity_id(DOMAIN, entity.unique_id)
+        entities = [
+            entity for entity in entities            
             if not registry.async_is_registered(entity.entity_id)
         ]
         _LOGGER.debug(f'Found {len(entities):d} unregistered sensors')
