@@ -55,7 +55,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Set up the GeHomeUpdateCoordinator class."""
-        self._hass = hass
+        self.hass = hass
         self._config_entry = config_entry
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
@@ -161,7 +161,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             finally:
                 self._reset_initialization()
 
-        loop = self._hass.loop
+        loop = self.hass.loop
         self.client = self.create_ge_client(event_loop=loop)
         return self.client
 
@@ -201,9 +201,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_begin_session(self):
         """Begins the ge_home session."""
         _LOGGER.debug("Beginning session")
-        session = self._hass.helpers.aiohttp_client.async_get_clientsession()
+        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         await self.client.async_get_credentials(session)
-        fut = asyncio.ensure_future(self.client.async_run_client(), loop=self._hass.loop)
+        fut = asyncio.ensure_future(self.client.async_run_client(), loop=self.hass.loop)
         _LOGGER.debug("Client running")
         return fut
 
@@ -263,7 +263,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.info("ge_home shutting down")
         if self.client:
             self.client.clear_event_handlers()
-            self._hass.loop.create_task(self.client.disconnect())
+            self.hass.loop.create_task(self.client.disconnect())
 
     async def on_device_update(self, data: Tuple[GeAppliance, Dict[ErdCodeType, Any]]):
         """Let HA know there's new state."""
