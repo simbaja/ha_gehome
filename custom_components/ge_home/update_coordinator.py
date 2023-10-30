@@ -64,8 +64,6 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         self._reset_initialization()
 
-        super().__init__(hass, _LOGGER, name=DOMAIN)
-
     def _reset_initialization(self):
         self.client = None  # type: Optional[GeWebsocketClient]
 
