@@ -6,7 +6,7 @@ import abc
 import logging
 from typing import Any, Dict, List, Optional
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util.unit_conversion import TemperatureConverter
 from gehomesdk import (
     ErdCode,
@@ -117,7 +117,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             return getattr(self.setpoint_limits, f"{self.heater_type}_min")
         except:
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
-            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_min"], TEMP_FAHRENHEIT, self.temperature_unit)
+            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_min"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
     @property
     def max_temp(self):
@@ -126,7 +126,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             return getattr(self.setpoint_limits, f"{self.heater_type}_max")
         except:
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
-            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], TEMP_FAHRENHEIT, self.temperature_unit)
+            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
     @property
     def current_operation(self) -> str:

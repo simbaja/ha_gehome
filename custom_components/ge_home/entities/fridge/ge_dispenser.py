@@ -3,7 +3,7 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from gehomesdk import (
@@ -102,12 +102,12 @@ class GeDispenser(GeAbstractWaterHeater):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return TemperatureConverter.convert(self._min_temp, TEMP_FAHRENHEIT, self.temperature_unit)
+        return TemperatureConverter.convert(self._min_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return TemperatureConverter.convert(self._max_temp, TEMP_FAHRENHEIT, self.temperature_unit)
+        return TemperatureConverter.convert(self._max_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:

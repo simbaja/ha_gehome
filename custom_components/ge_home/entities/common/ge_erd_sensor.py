@@ -1,17 +1,9 @@
 import logging
 from typing import Optional
 from gehomesdk.erd.erd_data_type import ErdDataType
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_HUMIDITY,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import UnitOfTemperature
 from gehomesdk import ErdCodeType, ErdCodeClass
 from .ge_erd_entity import GeErdEntity
 from ...devices import ApplianceApi
@@ -76,8 +68,8 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         return self.api.hass.config.units.temperature_unit
 
         #if self._measurement_system == ErdMeasurementUnits.METRIC:
-        #    return TEMP_CELSIUS
-        #return TEMP_FAHRENHEIT
+        #    return UnitOfTemperature.CELSIUS
+        #return UnitOfTemperature.FAHRENHEIT
 
     def _convert_numeric_value_from_device(self, value):
         """Convert to expected data type"""
@@ -97,20 +89,20 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         if (
             self.erd_code_class
             in [ErdCodeClass.RAW_TEMPERATURE, ErdCodeClass.NON_ZERO_TEMPERATURE]
-            or self.device_class == DEVICE_CLASS_TEMPERATURE
+            or self.device_class == SensorDeviceClass.TEMPERATURE
         ):
             #NOTE: it appears that the API only sets temperature in Fahrenheit,
             #so we'll hard code this UOM instead of using the device configured
             #settings
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
         if (
             self.erd_code_class == ErdCodeClass.BATTERY
-            or self.device_class == DEVICE_CLASS_BATTERY
+            or self.device_class == SensorDeviceClass.BATTERY
         ):
             return "%"
         if self.erd_code_class == ErdCodeClass.PERCENTAGE:
             return "%"
-        if self.device_class == DEVICE_CLASS_POWER_FACTOR:
+        if self.device_class == SensorDeviceClass.POWER_FACTOR:
             return "%"
         if self.erd_code_class == ErdCodeClass.HUMIDITY:
             return "%"
@@ -131,15 +123,15 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             ErdCodeClass.RAW_TEMPERATURE,
             ErdCodeClass.NON_ZERO_TEMPERATURE,
         ]:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         if self.erd_code_class == ErdCodeClass.BATTERY:
-            return DEVICE_CLASS_BATTERY
+            return SensorDeviceClass.BATTERY
         if self.erd_code_class == ErdCodeClass.POWER:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if self.erd_code_class == ErdCodeClass.ENERGY:
-            return DEVICE_CLASS_ENERGY
+            return SensorDeviceClass.ENERGY
         if self.erd_code_class == ErdCodeClass.HUMIDITY:
-            return DEVICE_CLASS_HUMIDITY
+            return SensorDeviceClass.HUMIDITY
 
         return None
 
@@ -147,7 +139,7 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         if self._state_class_override:
             return self._state_class_override
 
-        if self.device_class in [DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_ENERGY]:
+        if self.device_class in [SensorDeviceClass.TEMPERATURE, SensorDeviceClass.ENERGY]:
             return SensorStateClass.MEASUREMENT
         if self.erd_code_class in [ErdCodeClass.FLOW_RATE, ErdCodeClass.PERCENTAGE, ErdCodeClass.HUMIDITY]:
             return SensorStateClass.MEASUREMENT

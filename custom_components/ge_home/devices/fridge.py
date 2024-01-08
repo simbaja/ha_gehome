@@ -1,5 +1,5 @@
 from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import SensorDeviceClass
 import logging
 from typing import List
 
@@ -117,7 +117,7 @@ class FridgeApi(ApplianceApi):
                 GeErdSensor(self, ErdCode.HOT_WATER_SET_TEMP),
                 GeErdPropertySensor(self, ErdCode.HOT_WATER_STATUS, "status", icon_override="mdi:information-outline"),
                 GeErdPropertySensor(self, ErdCode.HOT_WATER_STATUS, "time_until_ready", icon_override="mdi:timer-outline"),
-                GeErdPropertySensor(self, ErdCode.HOT_WATER_STATUS, "current_temp", device_class_override=DEVICE_CLASS_TEMPERATURE, data_type_override=ErdDataType.INT),
+                GeErdPropertySensor(self, ErdCode.HOT_WATER_STATUS, "current_temp", device_class_override=SensorDeviceClass.TEMPERATURE, data_type_override=ErdDataType.INT),
                 GeErdPropertyBinarySensor(self, ErdCode.HOT_WATER_STATUS, "faulted", device_class_override=DEVICE_CLASS_PROBLEM),
                 GeDispenser(self)
             ])

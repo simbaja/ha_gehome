@@ -10,7 +10,7 @@ from gehomesdk import (
     OvenCookSetting
 )
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
@@ -56,8 +56,8 @@ class GeOven(GeAbstractWaterHeater):
     def temperature_unit(self):
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         if measurement_system == ErdMeasurementUnits.METRIC:
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def oven_select(self) -> str:
@@ -155,7 +155,7 @@ class GeOven(GeAbstractWaterHeater):
             target_temp = 0
         elif self.target_temperature:
             target_temp = self.target_temperature
-        elif self.temperature_unit == TEMP_FAHRENHEIT:
+        elif self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
             target_temp = 350
         else:
             target_temp = 177

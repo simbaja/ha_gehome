@@ -1,11 +1,6 @@
 import logging
 from typing import Any, List, Optional
 
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-)
 from gehomesdk import ErdAcFanSetting
 from ..common import OptionsConverter
 

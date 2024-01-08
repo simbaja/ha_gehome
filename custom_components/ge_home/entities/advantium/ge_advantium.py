@@ -15,7 +15,8 @@ from gehomesdk import (
 )
 from gehomesdk.erd.values.advantium.advantium_enums import CookAction, CookMode
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import ATTR_TEMPERATURE
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
@@ -272,7 +273,7 @@ class GeAdvantium(GeAbstractWaterHeater):
     async def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
         unit_type = self.unit_type
         target_temp_f = temp_240v if unit_type in [ErdUnitType.TYPE_240V_MONOGRAM, ErdUnitType.TYPE_240V_CAFE] else temp_120v
-        if self.temperature_unit == TEMP_FAHRENHEIT:
+        if self.temperature_unit == SensorDeviceClass.FAHRENHEIT:
             return float(target_temp_f)
         else:
             return (target_temp_f - 32.0) * (5/9)

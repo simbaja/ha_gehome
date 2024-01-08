@@ -1,16 +1,7 @@
 import logging
 from typing import Any, List, Optional
 
-from homeassistant.const import (
-    TEMP_FAHRENHEIT
-)
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-)
+from homeassistant.components.climate import HVACMode
 from gehomesdk import ErdCode, ErdAcOperationMode, ErdSacAvailableModes, ErdSacTargetTemperatureRange
 from ...devices import ApplianceApi
 from ..common import GeClimate, OptionsConverter
@@ -24,21 +15,21 @@ class SacHvacModeOptionsConverter(OptionsConverter):
 
     @property
     def options(self) -> List[str]:
-        modes = [HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY]
+        modes = [HVACMode.COOL, HVACMode.FAN_ONLY]
         if self._available_modes and self._available_modes.has_heat:
-            modes.append(HVAC_MODE_HEAT)
-            modes.append(HVAC_MODE_AUTO)
+            modes.append(HVACMode.HEAT)
+            modes.append(HVACMode.AUTO)
         if self._available_modes and self._available_modes.has_dry:
-            modes.append(HVAC_MODE_DRY)
+            modes.append(HVACMode.DRY)
         return modes
     def from_option_string(self, value: str) -> Any:
         try:
             return {
-                HVAC_MODE_AUTO: ErdAcOperationMode.AUTO,
-                HVAC_MODE_COOL: ErdAcOperationMode.COOL,
-                HVAC_MODE_HEAT: ErdAcOperationMode.HEAT,
-                HVAC_MODE_FAN_ONLY: ErdAcOperationMode.FAN_ONLY,
-                HVAC_MODE_DRY: ErdAcOperationMode.DRY
+                HVACMode.AUTO: ErdAcOperationMode.AUTO,
+                HVACMode.COOL: ErdAcOperationMode.COOL,
+                HVACMode.HEAT: ErdAcOperationMode.HEAT,
+                HVACMode.FAN_ONLY: ErdAcOperationMode.FAN_ONLY,
+                HVACMode.DRY: ErdAcOperationMode.DRY
             }.get(value)
         except:
             _LOGGER.warn(f"Could not set HVAC mode to {value.upper()}")
@@ -46,16 +37,16 @@ class SacHvacModeOptionsConverter(OptionsConverter):
     def to_option_string(self, value: Any) -> Optional[str]:
         try:
             return {
-                ErdAcOperationMode.ENERGY_SAVER: HVAC_MODE_AUTO,
-                ErdAcOperationMode.AUTO: HVAC_MODE_AUTO,
-                ErdAcOperationMode.COOL: HVAC_MODE_COOL,
-                ErdAcOperationMode.HEAT: HVAC_MODE_HEAT,
-                ErdAcOperationMode.DRY: HVAC_MODE_DRY,
-                ErdAcOperationMode.FAN_ONLY: HVAC_MODE_FAN_ONLY
+                ErdAcOperationMode.ENERGY_SAVER: HVACMode.AUTO,
+                ErdAcOperationMode.AUTO: HVACMode.AUTO,
+                ErdAcOperationMode.COOL: HVACMode.COOL,
+                ErdAcOperationMode.HEAT: HVACMode.HEAT,
+                ErdAcOperationMode.DRY: HVACMode.DRY,
+                ErdAcOperationMode.FAN_ONLY: HVACMode.FAN_ONLY
             }.get(value)
         except:
             _LOGGER.warn(f"Could not determine operation mode mapping for {value}")
-            return HVAC_MODE_COOL
+            return HVACMode.COOL
       
 class GeSacClimate(GeClimate):
     """Class for Split AC units"""

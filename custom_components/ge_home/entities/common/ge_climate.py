@@ -4,15 +4,10 @@ from typing import List, Optional
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    TEMP_FAHRENHEIT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-from homeassistant.components.climate.const import (
-    HVAC_MODE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE,
-    HVAC_MODE_OFF
-)
+from homeassistant.components.climate import ClimateEntityFeature, HVACMode
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from gehomesdk import ErdCode, ErdCodeType, ErdMeasurementUnits, ErdOnOff
 from ...const import DOMAIN
 from ...devices import ApplianceApi
@@ -22,7 +17,7 @@ from .options_converter import OptionsConverter
 _LOGGER = logging.getLogger(__name__)
 
 #by default, we'll support target temp and fan mode (derived classes can override)
-GE_CLIMATE_SUPPORT = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+GE_CLIMATE_SUPPORT = WaterHeaterEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
 
 class GeClimate(GeEntity, ClimateEntity):
     """GE Climate Base Entity (Window AC, Portable AC, etc)"""
@@ -83,11 +78,11 @@ class GeClimate(GeEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         #appears to always be Fahrenheit internally, hardcode this
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
         #measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         #if measurement_system == ErdMeasurementUnits.METRIC:
-        #    return TEMP_CELSIUS
-        #return TEMP_FAHRENHEIT
+        #    return UnitOfTemperature.CELSIUS
+        #return UnitOfTempterature.FAHRENHEIT
 
     @property
     def supported_features(self):
@@ -116,30 +111,30 @@ class GeClimate(GeEntity, ClimateEntity):
     @property
     def hvac_mode(self):
         if not self.is_on:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         return self._hvac_mode_converter.to_option_string(self.appliance.get_erd_value(self.hvac_mode_erd_code))
 
     @property
     def hvac_modes(self) -> List[str]:
-        return [HVAC_MODE_OFF] + self._hvac_mode_converter.options
+        return [HVACMode.OFF] + self._hvac_mode_converter.options
 
     @property
     def fan_mode(self):
-        if self.hvac_mode == HVAC_MODE_FAN_ONLY:
+        if self.hvac_mode == HVACMode.FAN_ONLY:
             return self._fan_only_fan_mode_converter.to_option_string(self.appliance.get_erd_value(self.fan_mode_erd_code))
         return self._fan_mode_converter.to_option_string(self.appliance.get_erd_value(self.fan_mode_erd_code))
 
     @property
     def fan_modes(self) -> List[str]:
-        if self.hvac_mode == HVAC_MODE_FAN_ONLY:
+        if self.hvac_mode == HVACMode.FAN_ONLY:
             return self._fan_only_fan_mode_converter.options
         return self._fan_mode_converter.options
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         _LOGGER.debug(f"Setting HVAC mode from {self.hvac_mode} to {hvac_mode}")
         if hvac_mode != self.hvac_mode:
-            if hvac_mode == HVAC_MODE_OFF:
+            if hvac_mode == HVACMode.OFF:
                 await self.appliance.async_set_erd_value(self.power_status_erd_code, ErdOnOff.OFF)
             else:
                 #if it's not on, turn it on
@@ -156,7 +151,7 @@ class GeClimate(GeEntity, ClimateEntity):
         _LOGGER.debug(f"Setting Fan mode from {self.fan_mode} to {fan_mode}")
         if fan_mode != self.fan_mode:
             converter = (self._fan_only_fan_mode_converter 
-                if self.hvac_mode == HVAC_MODE_FAN_ONLY
+                if self.hvac_mode == HVACMode.FAN_ONLY
                 else self._fan_mode_converter
             )
 
@@ -185,7 +180,7 @@ class GeClimate(GeEntity, ClimateEntity):
         await self.appliance.async_set_erd_value(self.power_status_erd_code, ErdOnOff.OFF)
 
     def _convert_temp(self, temperature_f: int):
-        if self.temperature_unit == TEMP_FAHRENHEIT:
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return float(temperature_f)
         else:
             return (temperature_f - 32.0) * (5/9)

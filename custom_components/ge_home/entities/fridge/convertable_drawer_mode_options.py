@@ -2,7 +2,7 @@ import logging
 from typing import List, Any, Optional
 
 from gehomesdk import ErdConvertableDrawerMode
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.util.unit_system import UnitSystem
 from ..common import OptionsConverter
 
@@ -43,7 +43,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
                 t = _TEMP_MAP.get(value, None)
 
                 if t and self._units.is_metric:
-                    t = self._units.temperature(float(t), TEMP_FAHRENHEIT)
+                    t = self._units.temperature(float(t), UnitOfTemperature.FAHRENHEIT)
                     t = round(t,1)
                 
                 if t:

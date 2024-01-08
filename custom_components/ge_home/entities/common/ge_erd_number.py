@@ -5,7 +5,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberDeviceClass,
 )
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from gehomesdk import ErdCodeType, ErdCodeClass
 from .ge_erd_entity import GeErdEntity
 from ...devices import ApplianceApi
@@ -91,7 +91,7 @@ class GeErdNumber(GeErdEntity, NumberEntity):
             #NOTE: it appears that the API only sets temperature in Fahrenheit,
             #so we'll hard code this UOM instead of using the device configured
             #settings
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
         
         return None
 

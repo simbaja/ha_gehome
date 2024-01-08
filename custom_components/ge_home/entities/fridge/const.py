@@ -1,10 +1,7 @@
-from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE
-)
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 
 ATTR_DOOR_STATUS = "door_status"
-GE_FRIDGE_SUPPORT = (SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE)
+GE_FRIDGE_SUPPORT = (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
 HEATER_TYPE_FRIDGE = "fridge"
 HEATER_TYPE_FREEZER = "freezer"

@@ -3,10 +3,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from homeassistant.components.water_heater import WaterHeaterEntity
-from homeassistant.const import (
-    TEMP_FAHRENHEIT,
-    TEMP_CELSIUS
-)
+from homeassistant.const import UnitOfTemperature
 from gehomesdk import ErdCode, ErdMeasurementUnits
 from ...const import DOMAIN
 from .ge_erd_entity import GeEntity
@@ -37,8 +34,8 @@ class GeAbstractWaterHeater(GeEntity, WaterHeaterEntity, metaclass=abc.ABCMeta):
         #It appears that the GE API is alwasy Fehrenheit
         #measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         #if measurement_system == ErdMeasurementUnits.METRIC:
-        #    return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+        #    return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def supported_features(self):

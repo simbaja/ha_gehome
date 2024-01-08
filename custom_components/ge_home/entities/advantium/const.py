@@ -1,8 +1,5 @@
-from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE
-)
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 
 SUPPORT_NONE = 0
-GE_ADVANTIUM_WITH_TEMPERATURE = (SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE)
-GE_ADVANTIUM = SUPPORT_OPERATION_MODE
+GE_ADVANTIUM_WITH_TEMPERATURE = (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
+GE_ADVANTIUM = WaterHeaterEntityFeature.OPERATION_MODE

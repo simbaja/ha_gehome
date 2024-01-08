@@ -1,13 +1,10 @@
 import bidict
 
-from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE
-)
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from gehomesdk import ErdOvenCookMode
 
 SUPPORT_NONE = 0
-GE_OVEN_SUPPORT = (SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE)
+GE_OVEN_SUPPORT = (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
 OP_MODE_OFF = "Off"
 OP_MODE_BAKE = "Bake"

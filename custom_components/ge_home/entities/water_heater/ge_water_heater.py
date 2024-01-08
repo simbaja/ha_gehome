@@ -7,12 +7,9 @@ from gehomesdk import (
     ErdWaterHeaterMode
 )
 
-from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE
-)
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .heater_modes import WhHeaterModeConverter
@@ -34,11 +31,11 @@ class GeWaterHeater(GeAbstractWaterHeater):
 
     @property
     def supported_features(self):
-        return (SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE)
+        return (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
     @property
     def temperature_unit(self):
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self) -> Optional[int]:
