@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.9
+
+- Added additional fridge controls [#200]
+
 ## 0.6.8
 
 - Added Dehumidifier [#114]

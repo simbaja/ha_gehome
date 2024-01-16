@@ -34,4 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         _LOGGER.debug(f'Found {len(entities):d} unregisterd numbers')
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, coordinator.signal_ready, async_devices_discovered)
+    #if we're already initialized at this point, call device
+    #discovery directly, otherwise add a callback based on the
+    #ready signal
+    if coordinator.initialized:
+        async_devices_discovered(coordinator.appliance_apis.values())
+    else:    
+        # add the ready signal and register the remove callback
+        coordinator.add_signal_remove_callback(
+            async_dispatcher_connect(hass, coordinator.signal_ready, async_devices_discovered))

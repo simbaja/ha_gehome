@@ -27,7 +27,7 @@ class WaterSoftenerApi(ApplianceApi):
             GeErdBinarySensor(self, ErdCode.WH_FILTER_MANUAL_MODE, icon_on_override="mdi:human", icon_off_override="mdi:robot"),
             GeErdPropertySensor(self, ErdCode.WH_FILTER_FLOW_RATE, "flow_rate"),
             GeErdBinarySensor(self, ErdCode.WH_FILTER_FLOW_ALERT, device_class_override="moisture"),
-            GeErdSensor(self, ErdCode.WH_FILTER_DAY_USAGE),
+            GeErdSensor(self, ErdCode.WH_FILTER_DAY_USAGE, device_class_override="water"),
             GeErdSensor(self, ErdCode.WH_SOFTENER_ERROR_CODE, icon_override="mdi:alert-circle"),
             GeErdBinarySensor(self, ErdCode.WH_SOFTENER_LOW_SALT, icon_on_override="mdi:alert", icon_off_override="mdi:grain"),
             GeErdSensor(self, ErdCode.WH_SOFTENER_SHUTOFF_VALVE_STATE, icon_override="mdi:state-machine"),

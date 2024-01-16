@@ -69,6 +69,10 @@ A/C Controls:
 
 #### Features
 
+{% if version_installed.split('.') | map('int') < '0.6.9'.split('.') | map('int') %}
+- Added additional fridge controls (#200)
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '0.6.8'.split('.') | map('int') %}
 - Added Dehumidifier (#114)
 - Added oven drawer sensors

@@ -3,7 +3,7 @@
 import asyncio
 import async_timeout
 import logging
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, List
 
 from gehomesdk import (
     EVENT_APPLIANCE_INITIAL_UPDATE,
@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -55,16 +56,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Set up the GeHomeUpdateCoordinator class."""
-        self._hass = hass
+        super().__init__(hass, _LOGGER, name=DOMAIN)
+
         self._config_entry = config_entry
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._region = config_entry.data[CONF_REGION]
         self._appliance_apis = {}  # type: Dict[str, ApplianceApi]
+        self._signal_remove_callbacks = [] # type: List[Callable]
 
         self._reset_initialization()
-
-        super().__init__(hass, _LOGGER, name=DOMAIN)
 
     def _reset_initialization(self):
         self.client = None  # type: Optional[GeWebsocketClient]
@@ -111,7 +112,11 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     @property
     def signal_ready(self) -> str:
         """Event specific per entry to signal readiness"""
-        return f"{DOMAIN}-ready-{self._config_entry.entry_id}"        
+        return f"{DOMAIN}-ready-{self._config_entry.entry_id}"
+
+    @property
+    def initialized(self) -> bool:
+        return self._init_done 
 
     @property
     def online(self) -> bool:
@@ -150,6 +155,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
 
+    def add_signal_remove_callback(self, cb: Callable):
+        self._signal_remove_callbacks.append(cb)
+
     async def get_client(self) -> GeWebsocketClient:
         """Get a new GE Websocket client."""
         if self.client:
@@ -161,8 +169,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             finally:
                 self._reset_initialization()
 
-        loop = self._hass.loop
-        self.client = self.create_ge_client(event_loop=loop)
+        self.client = self.create_ge_client(event_loop=self.hass.loop)
         return self.client
 
     async def async_setup(self):
@@ -201,9 +208,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_begin_session(self):
         """Begins the ge_home session."""
         _LOGGER.debug("Beginning session")
-        session = self._hass.helpers.aiohttp_client.async_get_clientsession()
+        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         await self.client.async_get_credentials(session)
-        fut = asyncio.ensure_future(self.client.async_run_client(), loop=self._hass.loop)
+        fut = asyncio.ensure_future(self.client.async_run_client(), loop=self.hass.loop)
         _LOGGER.debug("Client running")
         return fut
 
@@ -211,6 +218,12 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Resets the coordinator."""
         _LOGGER.debug("resetting the coordinator")
         entry = self._config_entry
+        
+        # remove all the callbacks for this coordinator
+        for c in self._signal_remove_callbacks:
+            c()
+        self._signal_remove_callbacks.clear()
+
         unload_ok = all(
             await asyncio.gather(
                 *[
@@ -263,7 +276,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.info("ge_home shutting down")
         if self.client:
             self.client.clear_event_handlers()
-            self._hass.loop.create_task(self.client.disconnect())
+            self.hass.loop.create_task(self.client.disconnect())
 
     async def on_device_update(self, data: Tuple[GeAppliance, Dict[ErdCodeType, Any]]):
         """Let HA know there's new state."""
@@ -272,24 +285,34 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
+            _LOGGER.warn(f"Could not find appliance {appliance.mac_addr} in known device list.")
             return
-
-        for entity in api.entities:
-            if entity.enabled:
-                _LOGGER.debug(f"Updating {entity} ({entity.unique_id}, {entity.entity_id})")
-                entity.async_write_ha_state()
+        
+        self._update_entity_state(api.entities)
 
     async def _refresh_ha_state(self):
         entities = [
             entity for api in self.appliance_apis.values() for entity in api.entities
         ]
+
+        self._update_entity_state(entities)
+
+    def _update_entity_state(self, entities: List[Entity]):
+        from .entities import GeEntity
         for entity in entities:
+            # if this is a GeEntity, check if it's been added
+            #if not, don't try to refresh this entity
+            if isinstance(entity, GeEntity):
+                gee: GeEntity = entity
+                if not gee.added:
+                    _LOGGER.debug(f"Entity {entity} ({entity.unique_id}, {entity.entity_id}) not yet added, skipping update...")
+                    continue
             if entity.enabled:
                 try:
                     _LOGGER.debug(f"Refreshing state for {entity} ({entity.unique_id}, {entity.entity_id}")
                     entity.async_write_ha_state()
                 except:
-                    _LOGGER.debug(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}")
+                    _LOGGER.warn(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=1)
 
     @property
     def all_appliances_updated(self) -> bool:

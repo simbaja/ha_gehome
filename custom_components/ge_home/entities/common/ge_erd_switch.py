@@ -29,5 +29,5 @@ class GeErdSwitch(GeErdBinarySensor, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        _LOGGER.debug(f"Turning on {self.unique_id}")
+        _LOGGER.debug(f"Turning off {self.unique_id}")
         await self.appliance.async_set_erd_value(self.erd_code, self._converter.false_value())
