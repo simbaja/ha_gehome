@@ -94,7 +94,12 @@ class GeClimate(GeEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> Optional[float]:
-        return float(self.appliance.get_erd_value(self.target_temperature_erd_code))
+        measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
+        if measurement_system == ErdMeasurementUnits.METRIC:
+            targ = float(self.appliance.get_erd_value(self.target_temperature_erd_code))
+            targ = round( ((targ - 32.0) * (5/9)) / 2 ) * 2 
+            return (9 * targ) / 5 + 32
+        return float(self.appliance.get_erd_value(self.target_temperature_erd_code)
 
     @property
     def current_temperature(self) -> Optional[float]:
