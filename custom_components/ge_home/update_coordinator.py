@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     DOMAIN,
     EVENT_ALL_APPLIANCES_READY,
@@ -208,7 +208,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_begin_session(self):
         """Begins the ge_home session."""
         _LOGGER.debug("Beginning session")
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        session = async_get_clientsession(self.hass)
         await self.client.async_get_credentials(session)
         fut = asyncio.ensure_future(self.client.async_run_client(), loop=self.hass.loop)
         _LOGGER.debug("Client running")
