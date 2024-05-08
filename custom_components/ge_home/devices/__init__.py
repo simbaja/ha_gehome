@@ -37,6 +37,8 @@ def get_appliance_api_type(appliance_type: ErdApplianceType) -> Type:
         return OvenApi
     if appliance_type == ErdApplianceType.COOKTOP:
         return CooktopApi
+    if appliance_type == ErdApplianceType.ELECTRIC_COOKTOP:
+        return CooktopApi
     if appliance_type == ErdApplianceType.FRIDGE:
         return FridgeApi
     if appliance_type == ErdApplianceType.BEVERAGE_CENTER:
