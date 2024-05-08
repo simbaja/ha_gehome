@@ -3,7 +3,7 @@ from typing import List, Any, Optional
 
 from gehomesdk import ErdConvertableDrawerMode
 from homeassistant.const import UnitOfTemperature
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_system import UnitSystem, UnitOfTemperature
 from ..common import OptionsConverter
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
             v = value.split(" ")[0]
             return ErdConvertableDrawerMode[v.upper()]
         except:
-            _LOGGER.warn(f"Could not set hood light level to {value.upper()}")
+            _LOGGER.warn(f"Could not set drawer mode to {value.upper()}")
             return ErdConvertableDrawerMode.NA
     def to_option_string(self, value: ErdConvertableDrawerMode) -> Optional[str]:
         try:
@@ -42,7 +42,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
                 v = value.stringify()
                 t = _TEMP_MAP.get(value, None)
 
-                if t and self._units.is_metric:
+                if t and self._units.temperature_unit == UnitOfTemperature.CELSIUS:
                     t = self._units.temperature(float(t), UnitOfTemperature.FAHRENHEIT)
                     t = round(t,1)
                 
