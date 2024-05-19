@@ -21,6 +21,7 @@ from .exceptions import HaAuthError, HaCannotConnect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,14 +38,14 @@ from .const import (
 from .devices import ApplianceApi, get_appliance_api_type
 
 PLATFORMS = [
-    "binary_sensor", 
-    "sensor", 
-    "switch", 
-    "water_heater", 
-    "select", 
-    "climate", 
-    "light", 
-    "button", 
+    "binary_sensor",
+    "sensor",
+    "switch",
+    "water_heater",
+    "select",
+    "climate",
+    "light",
+    "button",
     "number",
     "humidifier"
 ]
@@ -63,7 +64,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self._password = config_entry.data[CONF_PASSWORD]
         self._region = config_entry.data[CONF_REGION]
         self._appliance_apis = {}  # type: Dict[str, ApplianceApi]
-        self._signal_remove_callbacks = [] # type: List[Callable]
+        self._signal_remove_callbacks = []  # type: List[Callable]
 
         self._reset_initialization()
 
@@ -116,7 +117,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     @property
     def initialized(self) -> bool:
-        return self._init_done 
+        return self._init_done
 
     @property
     def online(self) -> bool:
@@ -208,7 +209,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_begin_session(self):
         """Begins the ge_home session."""
         _LOGGER.debug("Beginning session")
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        session = async_get_clientsession(self.hass)
         await self.client.async_get_credentials(session)
         fut = asyncio.ensure_future(self.client.async_run_client(), loop=self.hass.loop)
         _LOGGER.debug("Client running")
@@ -218,7 +219,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Resets the coordinator."""
         _LOGGER.debug("resetting the coordinator")
         entry = self._config_entry
-        
+
         # remove all the callbacks for this coordinator
         for c in self._signal_remove_callbacks:
             c()
@@ -287,7 +288,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         except KeyError:
             _LOGGER.warn(f"Could not find appliance {appliance.mac_addr} in known device list.")
             return
-        
+
         self._update_entity_state(api.entities)
 
     async def _refresh_ha_state(self):
@@ -326,7 +327,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         if not self._got_roster:
             self._got_roster = True
             # TODO: Probably should have a better way of confirming we're good to go...
-            await asyncio.sleep(5)  
+            await asyncio.sleep(5)
             # After the initial roster update, wait a bit and hit go
             await self.async_maybe_trigger_all_ready()
 
@@ -365,9 +366,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._init_done = True
             await self.client.async_event(EVENT_ALL_APPLIANCES_READY, None)
             async_dispatcher_send(
-                self.hass, 
-                self.signal_ready, 
-                list(self.appliance_apis.values()))            
+                self.hass,
+                self.signal_ready,
+                list(self.appliance_apis.values()))
 
     def _get_retry_delay(self) -> int:
         delay = MIN_RETRY_DELAY * 2 ** (self._retry_count - 1)
