@@ -1,6 +1,14 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.11
+
+- Bugfix: Fixed convertable drawer issue [#243]
+- Bugfix: Updated app types to include electric cooktops [#252]
+- Bugfix: Updated clientsession to remove deprecation [#253]
+- Bugfix: Fixed error strings
+- Bugfix: Updated climate support for new flags introduced in 2024.2.0
+
 ## 0.6.10
 
 - Bugfix: Removed additional deprecated constants [#229]
