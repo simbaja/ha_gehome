@@ -127,6 +127,16 @@ A/C Controls:
 
 #### Bugfixes
 
+
+{% if version_installed.split('.') | map('int') < '0.6.11'.split('.') | map('int') %}
+- Bugfix: Fixed convertable drawer issue (#243)
+- Bugfix: Updated app types to include electric cooktops (#252)
+- Bugfix: Updated clientsession to remove deprecation (#253)
+- Bugfix: Fixed error strings
+- Bugfix: Updated climate support for new flags introduced in 2024.2.0
+{% endif %}
+
+
 {% if version_installed.split('.') | map('int') < '0.6.10'.split('.') | map('int') %}
 - Bugfix: Removed additional deprecated constants (#229)
 - Bugfix: Fixed issue with climate entities (#228)
