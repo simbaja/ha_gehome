@@ -175,14 +175,12 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_setup(self):
         """Setup a new coordinator"""
         _LOGGER.debug("Setting up coordinator")
-
+    
         for component in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, component
-                )
+            await self.hass.config_entries.async_forward_entry_setup(
+                self._config_entry, component
             )
-
+    
         try:
             await self.async_start_client()
         except (GeNotAuthenticatedError, GeAuthFailedError):
@@ -191,7 +189,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             raise HaCannotConnect("Cannot connect (server error)")
         except Exception:
             raise HaCannotConnect("Unknown connection failure")
-
+    
         return True
 
     async def async_start_client(self):
