@@ -285,7 +285,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
-            _LOGGER.warn(f"Could not find appliance {appliance.mac_addr} in known device list.")
+            _LOGGER.info(f"Could not find appliance {appliance.mac_addr} in known device list.")
             return
         
         self._update_entity_state(api.entities)
