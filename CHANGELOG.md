@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.12
+
+- Bugfix: Deprecations [#271]
+
 ## 0.6.11
 
 - Bugfix: Fixed convertable drawer issue [#243]
