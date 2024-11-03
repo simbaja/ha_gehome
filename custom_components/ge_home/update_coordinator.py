@@ -178,10 +178,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Setup a new coordinator"""
         _LOGGER.debug("Setting up coordinator")
 
-        for component in PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self._config_entry, component
-            )
+        await self.hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         try:
             await self.async_start_client()
@@ -224,15 +223,8 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             c()
         self._signal_remove_callbacks.clear()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        entry, component
-                    )
-                    for component in PLATFORMS
-                ]
-            )
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self._config_entry, PLATFORMS
         )
         return unload_ok
 
