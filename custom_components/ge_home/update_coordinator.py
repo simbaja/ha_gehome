@@ -25,6 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import get_default_context 
 from .const import (
     DOMAIN,
     EVENT_ALL_APPLIANCES_READY,
@@ -93,6 +94,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._password,
             self._region,
             event_loop=event_loop,
+            ssl_context=get_default_context()
         )
         client.add_event_handler(EVENT_APPLIANCE_INITIAL_UPDATE, self.on_device_initial_update)
         client.add_event_handler(EVENT_APPLIANCE_UPDATE_RECEIVED, self.on_device_update)
@@ -176,10 +178,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Setup a new coordinator"""
         _LOGGER.debug("Setting up coordinator")
 
-        for component in PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self._config_entry, component
-            )
+        await self.hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         try:
             await self.async_start_client()
@@ -222,15 +223,8 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             c()
         self._signal_remove_callbacks.clear()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        entry, component
-                    )
-                    for component in PLATFORMS
-                ]
-            )
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self._config_entry, PLATFORMS
         )
         return unload_ok
 
@@ -283,7 +277,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
-            _LOGGER.warn(f"Could not find appliance {appliance.mac_addr} in known device list.")
+            _LOGGER.info(f"Could not find appliance {appliance.mac_addr} in known device list.")
             return
         
         self._update_entity_state(api.entities)
