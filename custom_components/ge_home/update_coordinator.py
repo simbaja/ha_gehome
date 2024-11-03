@@ -25,6 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import get_default_context 
 from .const import (
     DOMAIN,
     EVENT_ALL_APPLIANCES_READY,
@@ -93,6 +94,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._password,
             self._region,
             event_loop=event_loop,
+            ssl_context=get_default_context()
         )
         client.add_event_handler(EVENT_APPLIANCE_INITIAL_UPDATE, self.on_device_initial_update)
         client.add_event_handler(EVENT_APPLIANCE_UPDATE_RECEIVED, self.on_device_update)
