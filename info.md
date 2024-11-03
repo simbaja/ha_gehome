@@ -128,6 +128,16 @@ A/C Controls:
 #### Bugfixes
 
 
+{% if version_installed.split('.') | map('int') < '0.6.13'.split('.') | map('int') %}
+- Bugfix: Deprecations [#290] [#297] 
+{% endif %}
+
+
+{% if version_installed.split('.') | map('int') < '0.6.12'.split('.') | map('int') %}
+- Bugfix: Deprecations [#271] 
+{% endif %}
+
+
 {% if version_installed.split('.') | map('int') < '0.6.11'.split('.') | map('int') %}
 - Bugfix: Fixed convertable drawer issue (#243)
 - Bugfix: Updated app types to include electric cooktops (#252)

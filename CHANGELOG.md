@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.13
+
+- Bugfix: Deprecations [#290] [#297] 
+
 ## 0.6.12
 
 - Bugfix: Deprecations [#271]
