@@ -46,6 +46,9 @@ class OvenApi(ApplianceApi):
         has_upper_raw_temperature = self.has_erd_code(ErdCode.UPPER_OVEN_RAW_TEMPERATURE)
         has_lower_raw_temperature = self.has_erd_code(ErdCode.LOWER_OVEN_RAW_TEMPERATURE)
 
+        has_upper_probe_temperature = self.has_erd_code(ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP)
+        has_lower_probe_temperature = self.has_erd_code(ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP)
+
         upper_light : ErdOvenLightLevel = self.try_get_erd_value(ErdCode.UPPER_OVEN_LIGHT)
         upper_light_availability: ErdOvenLightLevelAvailability = self.try_get_erd_value(ErdCode.UPPER_OVEN_LIGHT_AVAILABILITY)
         lower_light : ErdOvenLightLevel = self.try_get_erd_value(ErdCode.LOWER_OVEN_LIGHT)
@@ -78,6 +81,8 @@ class OvenApi(ApplianceApi):
                 oven_entities.append(GeOvenLightLevelSelect(self, ErdCode.LOWER_OVEN_LIGHT))
             if lower_warm_drawer is not None:
                 oven_entities.append(GeOvenWarmingStateSelect(self, ErdCode.LOWER_OVEN_WARMING_DRAWER_STATE))
+            if has_lower_probe_temperature:
+                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP))
 
         oven_entities.extend([
             GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_MODE, self._single_name(ErdCode.UPPER_OVEN_COOK_MODE, ~oven_config.has_lower_oven)),
@@ -96,6 +101,8 @@ class OvenApi(ApplianceApi):
             oven_entities.append(GeOvenLightLevelSelect(self, ErdCode.UPPER_OVEN_LIGHT, self._single_name(ErdCode.UPPER_OVEN_LIGHT, ~oven_config.has_lower_oven)))
         if upper_warm_drawer is not None:
             oven_entities.append(GeOvenWarmingStateSelect(self, ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE, self._single_name(ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE, ~oven_config.has_lower_oven)))
+        if has_upper_probe_temperature:
+            oven_entities.append(GeErdSensor(self, ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, self._single_name(ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, ~oven_config.has_lower_oven)))
 
         if oven_config.has_warming_drawer and warm_drawer is not None:
             oven_entities.append(GeErdSensor(self, ErdCode.WARMING_DRAWER_STATE))
