@@ -18,7 +18,7 @@ class DehumidifierFanSettingOptionsConverter(OptionsConverter):
                 return ErdAcFanSetting.DEFAULT
             return ErdAcFanSetting[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set fan setting to {value.upper()}")
+            _LOGGER.warning(f"Could not set fan setting to {value.upper()}")
             return ErdAcFanSetting.DEFAULT
     def to_option_string(self, value: ErdAcFanSetting) -> Optional[str]:
         try:

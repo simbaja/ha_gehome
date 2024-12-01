@@ -30,7 +30,7 @@ class PacHvacModeOptionsConverter(OptionsConverter):
                 HVACMode.DRY: ErdAcOperationMode.DRY
             }.get(value)
         except:
-            _LOGGER.warn(f"Could not set HVAC mode to {value.upper()}")
+            _LOGGER.warning(f"Could not set HVAC mode to {value.upper()}")
             return ErdAcOperationMode.COOL
     def to_option_string(self, value: Any) -> Optional[str]:
         try:
@@ -41,7 +41,7 @@ class PacHvacModeOptionsConverter(OptionsConverter):
                 ErdAcOperationMode.FAN_ONLY: HVACMode.FAN_ONLY
             }.get(value)
         except:
-            _LOGGER.warn(f"Could not determine operation mode mapping for {value}")
+            _LOGGER.warning(f"Could not determine operation mode mapping for {value}")
             return HVACMode.COOL
      
 class GePacClimate(GeClimate):

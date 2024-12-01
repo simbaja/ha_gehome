@@ -15,7 +15,7 @@ class OimLightLevelOptionsConverter(OptionsConverter):
         try:
             return ErdOimLightLevel[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set hood light level to {value.upper()}")
+            _LOGGER.warning(f"Could not set hood light level to {value.upper()}")
             return ErdOimLightLevel.OFF
     def to_option_string(self, value: ErdOimLightLevel) -> Optional[str]:
         try:

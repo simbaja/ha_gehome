@@ -23,7 +23,7 @@ class OvenLightLevelOptionsConverter(OptionsConverter):
         try:
             return ErdOvenLightLevel[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set Oven light level to {value.upper()}")
+            _LOGGER.warning(f"Could not set Oven light level to {value.upper()}")
             return ErdOvenLightLevel.OFF
     def to_option_string(self, value: ErdOvenLightLevel) -> Optional[str]:
         try:

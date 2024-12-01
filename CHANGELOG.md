@@ -1,6 +1,12 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.14
+
+- Bugfix: Error checking socket status [#304]
+- Bugfix: Error with setup [#301]
+- Bugfix: Logger deprecations
+
 ## 0.6.13
 
 - Bugfix: Deprecations [#290] [#297] 

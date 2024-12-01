@@ -30,7 +30,7 @@ class HoodFanSpeedOptionsConverter(OptionsConverter):
         try:
             return ErdHoodFanSpeed[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set hood fan speed to {value.upper()}")
+            _LOGGER.warning(f"Could not set hood fan speed to {value.upper()}")
             return ErdHoodFanSpeed.OFF
     def to_option_string(self, value: ErdHoodFanSpeed) -> Optional[str]:
         try:

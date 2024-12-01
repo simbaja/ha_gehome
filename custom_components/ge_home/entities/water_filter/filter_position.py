@@ -15,7 +15,7 @@ class FilterPositionOptionsConverter(OptionsConverter):
         try:
             return ErdWaterFilterPosition[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set filter position to {value.upper()}")
+            _LOGGER.warning(f"Could not set filter position to {value.upper()}")
             return ErdWaterFilterPosition.UNKNOWN
     def to_option_string(self, value: Any) -> Optional[str]:
         try:

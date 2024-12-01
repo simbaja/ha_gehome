@@ -37,13 +37,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up the ge_home component."""
+    """Set up ge_home from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    """Set up ge_home from a config entry."""
+    #try to get existing coordinator
+    existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN],entry.entry_id)
+
     coordinator = GeHomeUpdateCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # try to unload the existing coordinator
+    try:
+        if existing:
+            await coordinator.async_reset()
+    except:
+        _LOGGER.warning("Could not reset existing coordinator.")
+    
     try:
         if not await coordinator.async_setup():
             return False
