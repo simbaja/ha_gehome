@@ -18,7 +18,7 @@ class AcFanModeOptionsConverter(OptionsConverter):
         try:
             return ErdAcFanSetting[value.upper().replace(" ","_")]
         except:
-            _LOGGER.warn(f"Could not set fan mode to {value}")
+            _LOGGER.warning(f"Could not set fan mode to {value}")
             return self._default
 
     def to_option_string(self, value: Any) -> Optional[str]:

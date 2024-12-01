@@ -167,7 +167,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                 self.client.clear_event_handlers()
                 await self.client.disconnect()
             except Exception as err:
-                _LOGGER.warn(f"exception while disconnecting client {err}")
+                _LOGGER.warning(f"exception while disconnecting client {err}")
             finally:
                 self._reset_initialization()
 
@@ -252,7 +252,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             with async_timeout.timeout(ASYNC_TIMEOUT):
                 await self.async_start_client()
         except Exception as err:
-            _LOGGER.warn(f"could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
+            _LOGGER.warning(f"could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
             self.hass.loop.call_later(self._get_retry_delay(), self.reconnect)
             _LOGGER.debug("forcing a state refresh while disconnected")
             try:
@@ -304,7 +304,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.debug(f"Refreshing state for {entity} ({entity.unique_id}, {entity.entity_id}")
                     entity.async_write_ha_state()
                 except:
-                    _LOGGER.warn(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=1)
+                    _LOGGER.warning(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=1)
 
     @property
     def all_appliances_updated(self) -> bool:

@@ -34,7 +34,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
             v = value.split(" ")[0]
             return ErdConvertableDrawerMode[v.upper()]
         except:
-            _LOGGER.warn(f"Could not set drawer mode to {value.upper()}")
+            _LOGGER.warning(f"Could not set drawer mode to {value.upper()}")
             return ErdConvertableDrawerMode.NA
     def to_option_string(self, value: ErdConvertableDrawerMode) -> Optional[str]:
         try:

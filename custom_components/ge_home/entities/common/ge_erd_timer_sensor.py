@@ -19,7 +19,7 @@ class GeErdTimerSensor(GeErdSensor):
         try:
             await self.appliance.async_set_erd_value(self.erd_code, duration)
         except:
-            _LOGGER.warn("Could not set timer value", exc_info=1)
+            _LOGGER.warning("Could not set timer value", exc_info=1)
 
     async def clear_timer(self):
         try:
@@ -27,4 +27,4 @@ class GeErdTimerSensor(GeErdSensor):
             #won't turn off... I don't see any way around it though.
             await self.appliance.async_set_erd_value(self.erd_code, timedelta(seconds=0))
         except:
-            _LOGGER.warn("Could not clear timer value", exc_info=1)
+            _LOGGER.warning("Could not clear timer value", exc_info=1)

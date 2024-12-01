@@ -20,7 +20,7 @@ class GeCcmBrewStrengthOptionsConverter(OptionsConverter):
         try:
             return ErdCcmBrewStrength[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set brew strength to {value.upper()}")
+            _LOGGER.warning(f"Could not set brew strength to {value.upper()}")
             return self._default
 
     def to_option_string(self, value: ErdCcmBrewStrength) -> Optional[str]:

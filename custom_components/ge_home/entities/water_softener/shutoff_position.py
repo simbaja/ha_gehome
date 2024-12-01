@@ -17,7 +17,7 @@ class FilterPositionOptionsConverter(OptionsConverter):
         try:
             return ErdWaterSoftenerShutoffValveState[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set filter position to {value.upper()}")
+            _LOGGER.warning(f"Could not set filter position to {value.upper()}")
             return ErdWaterSoftenerShutoffValveState.UNKNOWN
     def to_option_string(self, value: Any) -> Optional[str]:
         try:

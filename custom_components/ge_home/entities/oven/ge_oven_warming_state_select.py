@@ -15,7 +15,7 @@ class OvenWarmingStateOptionsConverter(OptionsConverter):
         try:
             return ErdOvenWarmingState[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set Oven warming state to {value.upper()}")
+            _LOGGER.warning(f"Could not set Oven warming state to {value.upper()}")
             return ErdOvenWarmingState.OFF
     def to_option_string(self, value: ErdOvenWarmingState) -> Optional[str]:
         try:

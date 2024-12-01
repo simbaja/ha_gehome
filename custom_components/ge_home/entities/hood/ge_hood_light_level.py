@@ -26,7 +26,7 @@ class HoodLightLevelOptionsConverter(OptionsConverter):
         try:
             return ErdHoodLightLevel[value.upper()]
         except:
-            _LOGGER.warn(f"Could not set hood light level to {value.upper()}")
+            _LOGGER.warning(f"Could not set hood light level to {value.upper()}")
             return ErdHoodLightLevel.OFF
     def to_option_string(self, value: ErdHoodLightLevel) -> Optional[str]:
         try:
