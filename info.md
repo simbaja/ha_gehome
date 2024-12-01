@@ -127,6 +127,13 @@ A/C Controls:
 
 #### Bugfixes
 
+{% if version_installed.split('.') | map('int') < '0.6.14'.split('.') | map('int') %}
+
+- Bugfix: Error checking socket status [#304]
+- Bugfix: Error with setup [#301]
+- Bugfix: Logger deprecations
+{% endif %}
+
 
 {% if version_installed.split('.') | map('int') < '0.6.13'.split('.') | map('int') %}
 - Bugfix: Deprecations [#290] [#297] 
