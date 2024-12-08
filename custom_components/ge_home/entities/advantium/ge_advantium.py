@@ -5,7 +5,7 @@ from random import randrange
 
 from gehomesdk import (
     ErdCode,
-    ErdUnitType,
+    ErdPersonality,
     ErdAdvantiumCookStatus, 
     ErdAdvantiumCookSetting, 
     AdvantiumOperationMode, 
@@ -48,9 +48,9 @@ class GeAdvantium(GeAbstractWaterHeater):
         return f"{self.serial_number} Advantium"
 
     @property
-    def unit_type(self) -> Optional[ErdUnitType]:
+    def personality(self) -> Optional[ErdPersonality]:
         try:
-            return self.appliance.get_erd_value(ErdCode.UNIT_TYPE)
+            return self.appliance.get_erd_value(ErdCode.PERSONALITY)
         except:
             return None
 
@@ -272,7 +272,7 @@ class GeAdvantium(GeAbstractWaterHeater):
 
     async def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
         unit_type = self.unit_type
-        target_temp_f = temp_240v if unit_type in [ErdUnitType.TYPE_240V_MONOGRAM, ErdUnitType.TYPE_240V_CAFE] else temp_120v
+        target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE] else temp_120v
         if self.temperature_unit == SensorDeviceClass.FAHRENHEIT:
             return float(target_temp_f)
         else:

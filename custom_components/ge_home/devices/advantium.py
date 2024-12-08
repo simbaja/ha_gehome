@@ -17,7 +17,7 @@ class AdvantiumApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         advantium_entities = [
-            GeErdSensor(self, ErdCode.UNIT_TYPE),
+            GeErdSensor(self, ErdCode.PERSONALITY),
             GeErdBinarySensor(self, ErdCode.UPPER_OVEN_REMOTE_ENABLED, self._single_name(ErdCode.UPPER_OVEN_REMOTE_ENABLED)),
             GeErdBinarySensor(self, ErdCode.MICROWAVE_REMOTE_ENABLE),
             GeErdSensor(self, ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)),
