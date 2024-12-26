@@ -46,6 +46,10 @@ A/C Controls:
 
 #### Breaking Changes
 
+{% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
+- Some enums changed names/values and may need updates to client code
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '0.6.6'.split('.') | map('int') %}
 - Requires HA version 2022.12.0 or later
 {% endif %}
@@ -68,6 +72,10 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
+- Improved Support for Laundry
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.9'.split('.') | map('int') %}
 - Added additional fridge controls (#200)
@@ -127,8 +135,12 @@ A/C Controls:
 
 #### Bugfixes
 
-{% if version_installed.split('.') | map('int') < '0.6.14'.split('.') | map('int') %}
+{% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
+- Bugfix: More deprecation fixes
+{% endif %}
 
+
+{% if version_installed.split('.') | map('int') < '0.6.14'.split('.') | map('int') %}
 - Bugfix: Error checking socket status [#304]
 - Bugfix: Error with setup [#301]
 - Bugfix: Logger deprecations

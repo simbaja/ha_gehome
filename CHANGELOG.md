@@ -1,6 +1,12 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 0.6.15
+
+- Feature: Improved Support for Laundry
+- Breaking: Some enums changed names/values and may need updates to client code
+- Bugfix: More deprecation fixes
+
 ## 0.6.14
 
 - Bugfix: Error checking socket status [#304]
