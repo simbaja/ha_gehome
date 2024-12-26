@@ -25,7 +25,7 @@ class DryerApi(ApplianceApi):
             GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, icon_on_override="mdi:tumble-dryer", icon_off_override="mdi:tumble-dryer"),
-            GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_BLOCKED_VENT_FAULT, icon_on_override="mid:alert-circle", icon_off_override "mdi:alert-circle"),
+            GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_BLOCKED_VENT_FAULT, icon_on_override="mid:alert-circle", icon_off_override="mdi:alert-circle"),
         ]
 
         dryer_entities = self.get_dryer_entities()
