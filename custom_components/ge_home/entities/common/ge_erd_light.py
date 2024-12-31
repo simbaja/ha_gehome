@@ -2,9 +2,8 @@ import logging
 
 from gehomesdk import ErdCodeType
 from homeassistant.components.light import (
+    ColorMode,
     ATTR_BRIGHTNESS, 
-    COLOR_MODE_BRIGHTNESS, 
-    SUPPORT_BRIGHTNESS, 
     LightEntity
 )
 
@@ -25,19 +24,14 @@ def to_hass_level(level):
 class GeErdLight(GeErdEntity, LightEntity):
     """Lights for ERD codes."""
 
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: str = None, color_mode = COLOR_MODE_BRIGHTNESS):
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: str = None, color_mode = ColorMode.BRIGHTNESS):
         super().__init__(api, erd_code, erd_override)
         self._color_mode = color_mode
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS    
-
-    @property
     def supported_color_modes(self):
         """Flag supported color modes."""
-        return {COLOR_MODE_BRIGHTNESS}
+        return ColorMode.BRIGHTNESS
     
     @property
     def color_mode(self):
