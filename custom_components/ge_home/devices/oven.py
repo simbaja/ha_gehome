@@ -82,7 +82,7 @@ class OvenApi(ApplianceApi):
             if lower_warm_drawer is not None:
                 oven_entities.append(GeOvenWarmingStateSelect(self, ErdCode.LOWER_OVEN_WARMING_DRAWER_STATE))
             if has_lower_probe_temperature:
-                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP))
+                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP))
 
         oven_entities.extend([
             GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_MODE, self._single_name(ErdCode.UPPER_OVEN_COOK_MODE, ~oven_config.has_lower_oven)),

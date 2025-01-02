@@ -25,6 +25,7 @@ class DryerApi(ApplianceApi):
             GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, icon_on_override="mdi:tumble-dryer", icon_off_override="mdi:tumble-dryer"),
+            GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_BLOCKED_VENT_FAULT, icon_on_override="mid:alert-circle", icon_off_override="mdi:alert-circle"),
         ]
 
         dryer_entities = self.get_dryer_entities()
@@ -48,8 +49,8 @@ class DryerApi(ApplianceApi):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_TEMPERATURENEW_OPTION)])
         if self.has_erd_code(ErdCode.LAUNDRY_DRYER_TUMBLE_STATUS):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_TUMBLE_STATUS)])
-        if self.has_erd_code(ErdCode.LAUNDRY_DRYER_TUMBLENEW_STATUS):
-            dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_TUMBLENEW_STATUS)])
+        if self.has_erd_code(ErdCode.LAUNDRY_DRYER_EXTENDED_TUMBLE_OPTION_SELECTION):
+            dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_EXTENDED_TUMBLE_OPTION_SELECTION)])
         if self.has_erd_code(ErdCode.LAUNDRY_DRYER_WASHERLINK_STATUS):
             dryer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_WASHERLINK_STATUS)])
         if self.has_erd_code(ErdCode.LAUNDRY_DRYER_LEVEL_SENSOR_DISABLED):
@@ -58,8 +59,8 @@ class DryerApi(ApplianceApi):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_SHEET_USAGE_CONFIGURATION)])
         if self.has_erd_code(ErdCode.LAUNDRY_DRYER_SHEET_INVENTORY):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_SHEET_INVENTORY, icon_override="mdi:tray-full", uom_override="sheets")])
-        if self.has_erd_code(ErdCode.LAUNDRY_DRYER_ECODRY_STATUS):
-            dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_ECODRY_STATUS)])
+        if self.has_erd_code(ErdCode.LAUNDRY_DRYER_ECODRY_OPTION_SELECTION):
+            dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_ECODRY_OPTION_SELECTION)])
 
         return dryer_entities
         
