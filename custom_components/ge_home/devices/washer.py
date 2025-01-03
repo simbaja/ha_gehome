@@ -28,13 +28,13 @@ class WasherApi(ApplianceApi):
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS),
         ]
 
-        washer_entities = self.get_washer_entities()      
+        washer_entities = self.get_washer_entities()
 
         entities = base_entities + common_entities + washer_entities
         return entities
-        
+
     def get_washer_entities(self) -> List[Entity]:
-        washer_entities = [         
+        washer_entities = [
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SOIL_LEVEL, icon_override="mdi:emoticon-poop"),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_WASHTEMP_LEVEL),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SPINTIME_LEVEL, icon_override="mdi:speedometer"),
@@ -44,7 +44,7 @@ class WasherApi(ApplianceApi):
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_DOOR_LOCK):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_DOOR_LOCK)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_STATUS):
-            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])           
+            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_SELECTED):
             washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_SELECTED)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TIMESAVER):

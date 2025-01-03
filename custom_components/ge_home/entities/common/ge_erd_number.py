@@ -16,11 +16,11 @@ class GeErdNumber(GeErdEntity, NumberEntity):
     """GE Entity for numbers"""
 
     def __init__(
-        self, 
-        api: ApplianceApi, 
-        erd_code: ErdCodeType, 
-        erd_override: str = None, 
-        icon_override: str = None, 
+        self,
+        api: ApplianceApi,
+        erd_code: ErdCodeType,
+        erd_override: str = None,
+        icon_override: str = None,
         device_class_override: str = None,
         uom_override: str = None,
         data_type_override: ErdDataType = None,

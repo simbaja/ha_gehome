@@ -5,22 +5,22 @@ from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType, ErdAcFanSetting
 
 class GeDehumidifierFanSpeedSensor(GeErdSensor):
     def __init__(
-        self, 
-        api: ApplianceApi, 
-        erd_code: ErdCodeType, 
-        erd_override: str = None, 
-        icon_override: str = None, 
+        self,
+        api: ApplianceApi,
+        erd_code: ErdCodeType,
+        erd_override: str = None,
+        icon_override: str = None,
         device_class_override: str = None,
         state_class_override: str = None,
         uom_override: str = None,
         data_type_override: ErdDataType = None
     ):
-    
+
         super().__init__(
-            api, 
-            erd_code, 
-            erd_override, 
-            icon_override, 
+            api,
+            erd_code,
+            erd_override,
+            icon_override,
             device_class_override,
             state_class_override,
             uom_override,
@@ -36,5 +36,3 @@ class GeDehumidifierFanSpeedSensor(GeErdSensor):
             return self._converter.to_option_string(value)
         except KeyError:
             return None
-
-    
