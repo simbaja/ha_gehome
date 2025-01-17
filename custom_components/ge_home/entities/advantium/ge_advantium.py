@@ -272,7 +272,7 @@ class GeAdvantium(GeAbstractWaterHeater):
 
     async def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
         unit_type = self.personality
-        target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE] else temp_120v
+        target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE, ErdPersonality.PERSONALITY_240V_STANDALONE_CAFE] else temp_120v
         if self.temperature_unit == SensorDeviceClass.FAHRENHEIT:
             return float(target_temp_f)
         else:
