@@ -150,7 +150,7 @@ class GeAdvantium(GeAbstractWaterHeater):
 
         cook_time_remaining = self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_TIME_REMAINING)
         kitchen_timer = self.appliance.get_erd_value(ErdCode.ADVANTIUM_KITCHEN_TIME_REMAINING)
-        data["unit_type"] = self._stringify(self.unit_type)
+        data["unit_type"] = self._stringify(self.personality)
         if cook_time_remaining:
             data["cook_time_remaining"] = self._stringify(cook_time_remaining)
         if kitchen_timer:
@@ -271,8 +271,8 @@ class GeAdvantium(GeAbstractWaterHeater):
                     return
 
     async def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
-        unit_type = self.unit_type
-        target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE] else temp_120v
+        unit_type = self.personality
+        target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE, ErdPersonality.PERSONALITY_240V_STANDALONE_CAFE] else temp_120v
         if self.temperature_unit == SensorDeviceClass.FAHRENHEIT:
             return float(target_temp_f)
         else:
