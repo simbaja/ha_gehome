@@ -22,6 +22,7 @@ from .microwave import MicrowaveApi
 from .water_softener import WaterSoftenerApi
 from .water_heater import WaterHeaterApi
 from .oim import OimApi
+from .ucim import UcimApi
 from .coffee_maker import CcmApi
 from .dual_dishwasher import DualDishwasherApi
 from .espresso_maker import EspressoMakerApi
@@ -33,54 +34,33 @@ _LOGGER = logging.getLogger(__name__)
 def get_appliance_api_type(appliance_type: ErdApplianceType) -> Type:
     """Get the appropriate appliance type"""
     _LOGGER.debug(f"Found device type: {appliance_type}")
-    if appliance_type == ErdApplianceType.OVEN:
-        return OvenApi
-    if appliance_type == ErdApplianceType.COOKTOP:
-        return CooktopApi
-    if appliance_type == ErdApplianceType.ELECTRIC_COOKTOP:
-        return CooktopApi
-    if appliance_type == ErdApplianceType.FRIDGE:
-        return FridgeApi
-    if appliance_type == ErdApplianceType.BEVERAGE_CENTER:
-        return FridgeApi
-    if appliance_type == ErdApplianceType.DISH_WASHER:
-        return DishwasherApi
-    if appliance_type == ErdApplianceType.DUAL_DISH_WASHER:
-        return DualDishwasherApi
-    if appliance_type == ErdApplianceType.WASHER:
-        return WasherApi
-    if appliance_type == ErdApplianceType.DRYER:
-        return DryerApi
-    if appliance_type == ErdApplianceType.COMBINATION_WASHER_DRYER:
-        return WasherDryerApi
-    if appliance_type == ErdApplianceType.POE_WATER_FILTER:
-        return WaterFilterApi
-    if appliance_type == ErdApplianceType.WATER_SOFTENER:
-        return WaterSoftenerApi
-    if appliance_type == ErdApplianceType.WATER_HEATER:
-        return WaterHeaterApi
-    if appliance_type == ErdApplianceType.ADVANTIUM:
-        return AdvantiumApi
-    if appliance_type == ErdApplianceType.AIR_CONDITIONER:
-        return WacApi
-    if appliance_type == ErdApplianceType.SPLIT_AIR_CONDITIONER:
-        return SacApi
-    if appliance_type == ErdApplianceType.PORTABLE_AIR_CONDITIONER:
-        return PacApi
-    if appliance_type == ErdApplianceType.BUILT_IN_AIR_CONDITIONER:
-        return BiacApi
-    if appliance_type == ErdApplianceType.HOOD:
-        return HoodApi
-    if appliance_type == ErdApplianceType.MICROWAVE:
-        return MicrowaveApi        
-    if appliance_type == ErdApplianceType.OPAL_ICE_MAKER:
-        return OimApi
-    if appliance_type == ErdApplianceType.CAFE_COFFEE_MAKER:
-        return CcmApi
-    if appliance_type == ErdApplianceType.ESPRESSO_MAKER:
-        return EspressoMakerApi
-    if appliance_type == ErdApplianceType.DEHUMIDIFIER:
-        return DehumidifierApi
+    known_types = {
+        ErdApplianceType.OVEN: OvenApi,
+        ErdApplianceType.COOKTOP: CooktopApi,
+        ErdApplianceType.ELECTRIC_COOKTOP: CooktopApi,
+        ErdApplianceType.FRIDGE: FridgeApi,
+        ErdApplianceType.BEVERAGE_CENTER: FridgeApi,
+        ErdApplianceType.DISH_WASHER: DishwasherApi,
+        ErdApplianceType.DUAL_DISH_WASHER: DualDishwasherApi,
+        ErdApplianceType.WASHER: WasherApi,
+        ErdApplianceType.DRYER: DryerApi,
+        ErdApplianceType.COMBINATION_WASHER_DRYER: WasherDryerApi,
+        ErdApplianceType.POE_WATER_FILTER: WaterFilterApi,
+        ErdApplianceType.WATER_SOFTENER: WaterSoftenerApi,
+        ErdApplianceType.WATER_HEATER: WaterHeaterApi,
+        ErdApplianceType.ADVANTIUM: AdvantiumApi,
+        ErdApplianceType.AIR_CONDITIONER: WacApi,
+        ErdApplianceType.SPLIT_AIR_CONDITIONER: SacApi,
+        ErdApplianceType.PORTABLE_AIR_CONDITIONER: PacApi,
+        ErdApplianceType.BUILT_IN_AIR_CONDITIONER: BiacApi,
+        ErdApplianceType.HOOD: HoodApi,
+        ErdApplianceType.MICROWAVE: MicrowaveApi,
+        ErdApplianceType.OPAL_ICE_MAKER: OimApi,
+        ErdApplianceType.UNDER_COUNTER_ICE_MAKER: UcimApi,
+        ErdApplianceType.CAFE_COFFEE_MAKER: CcmApi,
+        ErdApplianceType.ESPRESSO_MAKER: EspressoMakerApi,
+        ErdApplianceType.DEHUMIDIFIER: DehumidifierApi
+    }
 
-    # Fallback
-    return ApplianceApi
+    # Get the appliance type
+    return known_types.get(appliance_type, ApplianceApi)
