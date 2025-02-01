@@ -36,7 +36,7 @@ class UcimApi(ApplianceApi):
             GeErdSwitch(self, ErdCode.OIM_POWER, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
             GeErdSensor(self, ErdCode.OIM_PRODUCTION),
             GeErdSensor(self, ErdCode.UCIM_CLEAN_STATUS),
-            GeErdSensor(self, ErdCode.UCIM_FILTER_USED_PERCENTAGE),
+            GeErdSensor(self, ErdCode.UCIM_FILTER_PERCENTAGE_USED),
             GeErdBinarySensor(self, ErdCode.UCIM_BIN_FULL, device_class_override="problem"),
         ]
 
