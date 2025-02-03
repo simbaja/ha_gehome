@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             if isinstance(entity, GeErdNumber)
             if not registry.async_is_registered(entity.entity_id)
         ]
-        _LOGGER.debug(f'Found {len(entities):d} unregisterd numbers')
+        _LOGGER.debug(f'Found {len(entities):d} unregistered numbers')
         async_add_entities(entities)
 
     #if we're already initialized at this point, call device
