@@ -22,7 +22,7 @@ class DishwasherApi(ApplianceApi):
             GeErdSensor(self, ErdCode.DISHWASHER_CYCLE_NAME),
             GeErdSensor(self, ErdCode.DISHWASHER_CYCLE_STATE, icon_override="mdi:state-machine"),
             GeErdSensor(self, ErdCode.DISHWASHER_OPERATING_MODE),
-            GeErdSensor(self, ErdCode.DISHWASHER_PODS_REMAINING_VALUE, uom_override="pods"),
+#            GeErdSensor(self, ErdCode.DISHWASHER_PODS_REMAINING_VALUE, uom_override="pods"),
             GeErdNumber(self, ErdCode.DISHWASHER_PODS_REMAINING_VALUE, uom_override="pods", min_value=0, max_value=255),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "add_rinse_aid", icon_override="mdi:shimmer"),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "clean_filter", icon_override="mdi:dishwasher-alert"),
