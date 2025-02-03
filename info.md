@@ -46,6 +46,11 @@ A/C Controls:
 
 #### Breaking Changes
 
+{% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
+- Changed dishwasher pods to number
+- Removed outdated laundry status sensor
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
 - Some enums changed names/values and may need updates to client code
 {% endif %}
@@ -72,6 +77,11 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
+- Added under counter ice maker controls and sensors
+- Changed versioning scheme for integration
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
 - Improved Support for Laundry
@@ -135,8 +145,8 @@ A/C Controls:
 
 #### Bugfixes
 
-{% if version_installed.split('.') | map('int') < '0.6.15'.split('.') | map('int') %}
-- Bugfix: More deprecation fixes
+{% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
+- Updated SDK to fix broken types
 {% endif %}
 
 

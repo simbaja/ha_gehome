@@ -1,6 +1,14 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.2.0
+
+- Breaking: Changed dishwasher pods to number
+- Breaking: Removed outdated laundry status sensor
+- Feature: Added under counter ice maker controls and sensors
+- Feature: Changed versioning scheme
+- Bugfix: Updated SDK to fix broken types
+
 ## 0.6.15
 
 - Feature: Improved Support for Laundry
