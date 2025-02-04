@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.2.1
+
+- Bugfix: Fixed #339
+
 ## 2025.2.0
 
 - Breaking: Changed dishwasher pods to number

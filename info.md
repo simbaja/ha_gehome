@@ -145,6 +145,11 @@ A/C Controls:
 
 #### Bugfixes
 
+{% if version_installed.split('.') | map('int') < '2025.2.1'.split('.') | map('int') %}
+- Fix for #339
+{% endif %}
+
+
 {% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
 - Updated SDK to fix broken types
 {% endif %}
