@@ -9,6 +9,7 @@ from gehomesdk import (
 )
 
 from custom_components.ge_home.entities.water_heater.ge_water_heater import GeWaterHeater
+from custom_components.ge_home.entities.water_heater.ge_water_heater_boost_switch import GeWaterHeaterBoostSwitch
 
 from .base import ApplianceApi
 from ..entities import (
@@ -35,9 +36,9 @@ class WaterHeaterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_HEATER_MODE_HOURS_REMAINING),
             GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME),
             GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME),
-            GeWaterHeater(self)
+            GeWaterHeater(self),
+            GeWaterHeaterBoostSwitch(self)
         ]
 
         entities = base_entities + wh_entities
         return entities
-        
