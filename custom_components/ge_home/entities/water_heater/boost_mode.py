@@ -1,11 +1,22 @@
 import logging
 from typing import Any
 
-from gehomesdk import ErdCodeType, ErdCode, ErdOnOff
+from gehomesdk import ErdCodeType, ErdCode, ErdOnOff, ErdWaterHeaterBoostMode
 from ...devices import ApplianceApi
-from ..common import GeErdSwitch, ErdOnOffBoolConverter
+from ..common import GeErdSwitch, BoolConverter
 
 _LOGGER = logging.getLogger(__name__)
+
+class WaterHeaterBoostModeBoolConverter(BoolConverter):
+    def boolify(self, value: ErdWaterHeaterBoostMode) -> bool:
+        # Convert ErdWaterHeaterBoostMode to bool
+        return value == ErdWaterHeaterBoostMode.ON
+    
+    def true_value(self) -> Any:
+        return ErdOnOff.ON
+    
+    def false_value(self) -> Any:
+        return ErdOnOff.OFF
 
 class GeWaterHeaterBoostModeSwitch(GeErdSwitch):
     """Switch to control the water heater boost mode"""
@@ -14,7 +25,7 @@ class GeWaterHeaterBoostModeSwitch(GeErdSwitch):
         super().__init__(
             api, 
             ErdCode.WH_HEATER_BOOST_MODE, 
-            ErdOnOffBoolConverter(), 
+            WaterHeaterBoostModeBoolConverter(), 
             icon_on_override="mdi:rocket-launch", 
             icon_off_override="mdi:rocket-launch-outline"
         )
