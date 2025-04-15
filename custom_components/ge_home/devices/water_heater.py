@@ -18,6 +18,7 @@ from ..entities import (
     GeErdSwitch, 
     ErdOnOffBoolConverter
 )
+from ..entities.water_heater.boost_mode import GeWaterHeaterBoostModeSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +36,9 @@ class WaterHeaterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_HEATER_MODE_HOURS_REMAINING),
             GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME),
             GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME),
-            GeWaterHeater(self)
+            GeWaterHeater(self),
+            GeWaterHeaterBoostModeSwitch(self)
         ]
 
         entities = base_entities + wh_entities
         return entities
-        
