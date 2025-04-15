@@ -39,13 +39,9 @@ class WaterHeaterApi(ApplianceApi):
             GeWaterHeater(self),
         ]
         
-        # Add boost mode button instead of switch
-        from ..entities.common.ge_erd_button import GeErdButton
-        from ..entities.common.ge_erd_entity import GeErdEntity
-        boost_button = GeErdButton(self, ErdCode.WH_HEATER_BOOST_STATE, erd_override="Boost Mode")
-        # Set icon for the button
-        boost_button._icon_override = "mdi:rocket-launch"
-        wh_entities.append(boost_button)
+        # Add boost mode switch
+        from ..entities.water_heater.boost_mode import GeWaterHeaterBoostModeSwitch
+        wh_entities.append(GeWaterHeaterBoostModeSwitch(self))
 
         entities = base_entities + wh_entities
         return entities

@@ -13,7 +13,7 @@ class GeWaterHeaterBoostModeSwitch(GeErdSwitch):
     def __init__(self, api: ApplianceApi):
         super().__init__(
             api, 
-            ErdCode.WH_HEATER_BOOST_STATE, 
+            ErdCode.WH_HEATER_BOOST_MODE, 
             ErdOnOffBoolConverter(), 
             icon_on_override="mdi:rocket-launch", 
             icon_off_override="mdi:rocket-launch-outline"
