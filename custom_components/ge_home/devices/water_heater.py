@@ -37,7 +37,8 @@ class WaterHeaterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME),
             GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME),
             GeWaterHeater(self),
-            GeWaterHeaterBoostModeSwitch(self)
+            GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_STATE, ErdOnOffBoolConverter(), 
+                        icon_on_override="mdi:rocket-launch", icon_off_override="mdi:rocket-launch-outline")
         ]
 
         entities = base_entities + wh_entities
