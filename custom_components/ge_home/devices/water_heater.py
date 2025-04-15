@@ -37,9 +37,15 @@ class WaterHeaterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME),
             GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME),
             GeWaterHeater(self),
-            GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_STATE, ErdOnOffBoolConverter(), 
-                        icon_on_override="mdi:rocket-launch", icon_off_override="mdi:rocket-launch-outline")
         ]
+        
+        # Add boost mode button instead of switch
+        from ..entities.common.ge_erd_button import GeErdButton
+        from ..entities.common.ge_erd_entity import GeErdEntity
+        boost_button = GeErdButton(self, ErdCode.WH_HEATER_BOOST_STATE, erd_override="Boost Mode")
+        # Set icon for the button
+        boost_button._icon_override = "mdi:rocket-launch"
+        wh_entities.append(boost_button)
 
         entities = base_entities + wh_entities
         return entities
