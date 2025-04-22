@@ -9,7 +9,6 @@ from gehomesdk import (
 )
 
 from custom_components.ge_home.entities.water_heater.ge_water_heater import GeWaterHeater
-from custom_components.ge_home.entities.water_heater.ge_water_heater_boost_switch import GeWaterHeaterBoostSwitch
 
 from .base import ApplianceApi
 from ..entities import (
