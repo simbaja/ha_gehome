@@ -15,7 +15,7 @@ class WhHeaterModeConverter(OptionsConverter):
         try:
             return ErdWaterHeaterMode[enum_val]
         except:
-            _LOGGER.warning(f"Could not heater mode to {enum_val}")
+            _LOGGER.warning(f"Could not convert heater mode to {enum_val}")
             return ErdWaterHeaterMode.UNKNOWN
     def to_option_string(self, value: ErdWaterHeaterMode) -> Optional[str]:
         try:

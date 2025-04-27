@@ -1,2 +1,4 @@
 from .heater_modes import WhHeaterModeConverter
 from .ge_water_heater import GeWaterHeater
+from .active_mode import GeWaterHeaterActiveModeSwitch
+from .boost_mode import GeWaterHeaterBoostModeSwitch
