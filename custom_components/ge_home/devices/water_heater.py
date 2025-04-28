@@ -18,6 +18,7 @@ from ..entities import (
     GeErdSwitch, 
     ErdOnOffBoolConverter
 )
+
 from ..entities.water_heater.boost_mode import GeWaterHeaterBoostModeSwitch
 from ..entities.water_heater.active_mode import GeWaterHeaterActiveModeSwitch
 

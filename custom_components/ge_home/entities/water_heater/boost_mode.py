@@ -10,13 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 class WaterHeaterBoostModeBoolConverter(BoolConverter):
     def boolify(self, value: ErdWaterHeaterBoostState) -> bool:
         # Convert ErdWaterHeaterBoostState to bool
-        return value == ErdWaterHeaterBoostState.ENABLED
+        return value == ErdWaterHeaterBoostState.ON
     
     def true_value(self) -> Any:
-        return ErdWaterHeaterBoostState.ENABLED
+        return ErdWaterHeaterBoostState.ON
     
     def false_value(self) -> Any:
-        return ErdWaterHeaterBoostState.DISABLED
+        return ErdWaterHeaterBoostState.OFF
 
 class GeWaterHeaterBoostModeSwitch(GeErdSwitch):
     """Switch to control the water heater boost mode"""

@@ -10,13 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 class WaterHeaterActiveModeBoolConverter(BoolConverter):
     def boolify(self, value: ErdWaterHeaterActiveState) -> bool:
         # Convert ErdWaterHeaterActiveState to bool
-        return value == ErdWaterHeaterActiveState.ENABLED
+        return value == ErdWaterHeaterActiveState.ON
     
     def true_value(self) -> Any:
-        return ErdWaterHeaterActiveState.ENABLED
+        return ErdWaterHeaterActiveState.OFF
     
     def false_value(self) -> Any:
-        return ErdWaterHeaterActiveState.DISABLED
+        return ErdWaterHeaterActiveState.OFF
 
 class GeWaterHeaterActiveModeSwitch(GeErdSwitch):
     """Switch to control the water heater Active mode"""
@@ -26,8 +26,8 @@ class GeWaterHeaterActiveModeSwitch(GeErdSwitch):
             api, 
             ErdCode.WH_HEATER_ACTIVE_STATE, 
             WaterHeaterActiveModeBoolConverter(), 
-            icon_on_override="mdi:rocket-launch", 
-            icon_off_override="mdi:rocket-launch-outline"
+            icon_on_override="mdi:power", 
+            icon_off_override="mdi:power-standby"
         )
         self._attr_name = "Active Mode"
 
