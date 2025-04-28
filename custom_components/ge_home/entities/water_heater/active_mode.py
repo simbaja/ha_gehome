@@ -13,7 +13,7 @@ class WaterHeaterActiveModeBoolConverter(BoolConverter):
         return value == ErdWaterHeaterActiveState.ON
     
     def true_value(self) -> Any:
-        return ErdWaterHeaterActiveState.OFF
+        return ErdWaterHeaterActiveState.ON
     
     def false_value(self) -> Any:
         return ErdWaterHeaterActiveState.OFF
