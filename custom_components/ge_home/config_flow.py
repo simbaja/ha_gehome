@@ -8,9 +8,9 @@ import asyncio
 import async_timeout
 
 from gehomesdk import (
-    GeAuthFailedError, 
-    GeNotAuthenticatedError, 
-    GeGeneralServerError, 
+    GeAuthFailedError,
+    GeNotAuthenticatedError,
+    GeGeneralServerError,
     async_get_oauth2_token,
     LOGIN_REGIONS
 )
@@ -19,6 +19,9 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 from .const import DOMAIN  # pylint:disable=unused-import
 from .exceptions import HaAuthError, HaCannotConnect, HaAlreadyConfigured
 
@@ -26,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GEHOME_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str, 
+        vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_REGION): vol.In(LOGIN_REGIONS.keys())
     }
@@ -35,7 +38,7 @@ GEHOME_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
+    session = async_get_clientsession(hass)
 
     # noinspection PyBroadException
     try:
@@ -72,7 +75,7 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except HaCannotConnect:
                 errors["base"] = "cannot_connect"
             except HaAuthError:
-                errors["base"] = "invalid_auth"      
+                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -85,7 +88,7 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         _LOGGER.debug(f"Existing accounts: {existing_accounts}")
         if username in existing_accounts:
-            raise HaAlreadyConfigured  
+            raise HaAlreadyConfigured
 
     async def async_step_user(self, user_input: Optional[Dict] = None):
         """Handle the initial step."""
