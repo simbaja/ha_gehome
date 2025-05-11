@@ -18,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
-from homeassistant.helpers.aiohttp_client import async_get_clientsession  # FIXED: Proper import of client session
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .exceptions import HaAuthError, HaCannotConnect, HaAlreadyConfigured
@@ -36,7 +36,7 @@ GEHOME_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    session = async_get_clientsession(hass)  # FIXED: Corrected session retrieval
+    session = async_get_clientsession(hass)
 
     # noinspection PyBroadException
     try:
