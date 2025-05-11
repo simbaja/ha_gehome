@@ -3,9 +3,17 @@ from ...devices import ApplianceApi
 from ..common import GeErdNumber
 from .ge_ccm_cached_value import GeCcmCachedValue
 
+DEFAULT_MIN_TEMP = 100
+DEFAULT_MAX_TEMP = 225
+
 class GeCcmBrewTemperatureNumber(GeErdNumber, GeCcmCachedValue):
     def __init__(self, api: ApplianceApi):
-        min_temp, max_temp, _ = api.appliance.get_erd_value(ErdCode.CCM_BREW_TEMPERATURE_RANGE)
+        try:
+            min_temp, max_temp, _ = api.appliance.get_erd_value(ErdCode.CCM_BREW_TEMPERATURE_RANGE)
+        except:
+            min_temp = DEFAULT_MIN_TEMP
+            max_temp = DEFAULT_MAX_TEMP
+ 
         GeErdNumber.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_TEMPERATURE, min_value=min_temp, max_value=max_temp, mode="slider")
         GeCcmCachedValue.__init__(self)
 

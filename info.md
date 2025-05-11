@@ -72,11 +72,19 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
+- Improved documentation around terms of acceptance
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '0.5.0'.split('.') | map('int') %}
 - Added logic to prevent multiple configurations of the same GE account
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
+- Added boost/active states for water heaters
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
 - Added under counter ice maker controls and sensors
@@ -144,6 +152,11 @@ A/C Controls:
 {% endif %}
 
 #### Bugfixes
+
+{% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
+- Fixed helper deprecations
+{% endif %}
+
 
 {% if version_installed.split('.') | map('int') < '2025.2.1'.split('.') | map('int') %}
 - Fix for #339

@@ -67,13 +67,14 @@ Once the HACS Integration of GE Home is completed:
 1. Navigate to Settings --> Devices & Services
 2. Click **Add Integration** blue button on the bottom-right of the page
 3. Locate the **GE Home (SmartHQ)** "Brand" (Integration)
-4. Click on the integration, and you will be prompted to enter a Username, Password and Location (US or EU)
-5. Enter the email address you used to register/connect your device as the Username
-6. Same with the password
-7. Select the region you registered your device in (US or EU).
-8. Once you submit, the integration will log in and get all your connected devices.
-9. You can define in which area you device is, then click **Finish**
-10. Your sensors should appear as **sensor.<serial_number>_<sensor_function>**
+4. Open a new browser tab and navigate to <https://accounts.brillion.geappliances.com> where you can verify your username/password (helpful) but more importantly Accept the TermsOfUseAgreement (required!)
+5. Click on the integration, and you will be prompted to enter a Username, Password and Location (US or EU)
+6. Enter the email address you used to register/connect your device as the Username
+7. Same with the password
+8. Select the region you registered your device in (US or EU).
+9. Once you submit, the integration will log in and get all your connected devices.
+10. You can define in which area you device is, then click **Finish**
+11. Your sensors should appear as **sensor.<serial_number>_<sensor_function>**
     ie: sensor.fs12345678_dishwasher_cycle_name
 
 ## Change Log

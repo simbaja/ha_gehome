@@ -1,6 +1,12 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.5.0
+
+- Bugfix: Fixed helper deprecations
+- Feature: Added boost/active states for water heaters
+- Change: Improved documentation around terms of acceptance
+
 ## 2025.2.1
 
 - Bugfix: Fixed #339
