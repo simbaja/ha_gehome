@@ -29,6 +29,9 @@ class WaterHeaterApi(ApplianceApi):
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
 
+        boost_mode: ErdOnOff = self.try_get_erd_value(ErdCode.WH_HEATER_BOOST_STATE)
+        active: ErdOnOff = self.try_get_erd_value(ErdCode.WH_HEATER_ACTIVE_STATE)
+
         wh_entities = [
             GeErdSensor(self, ErdCode.WH_HEATER_TARGET_TEMPERATURE),
             GeErdSensor(self, ErdCode.WH_HEATER_TEMPERATURE),
@@ -37,6 +40,14 @@ class WaterHeaterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME),
             GeWaterHeater(self)
         ]
+
+        if(boost_mode and boost_mode != ErdOnOff.NA):
+            wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_BOOST_STATE))
+            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:upload", icon_off_override="mdi:upload-off"))
+
+        if(active and active != ErdOnOff.NA):
+            wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_ACTIVE_STATE))
+            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_ACTIVE_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:radiator", icon_off_override="mdi:radiator-off"))
 
         entities = base_entities + wh_entities
         return entities
