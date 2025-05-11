@@ -43,11 +43,11 @@ class WaterHeaterApi(ApplianceApi):
 
         if(boost_mode and boost_mode != ErdOnOff.NA):
             wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_BOOST_STATE))
-            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:upload", icon_off_override="mdi:upload-off"))
+            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:rocket-launch", icon_off_override="mdi:rocket-launch-outline"))
 
         if(active and active != ErdOnOff.NA):
             wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_ACTIVE_STATE))
-            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_ACTIVE_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:radiator", icon_off_override="mdi:radiator-off"))
+            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_ACTIVE_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:power", icon_off_override="mdi:power-standby"))
 
         entities = base_entities + wh_entities
         return entities
