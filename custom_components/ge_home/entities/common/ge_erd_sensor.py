@@ -1,3 +1,4 @@
+from datetime import timedelta
 import logging
 from typing import Optional
 from gehomesdk.erd.erd_data_type import ErdDataType
@@ -38,6 +39,9 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             if self._data_type in [ErdDataType.INT, ErdDataType.FLOAT]:
                 return self._convert_numeric_value_from_device(value)
 
+            if self._data_type == ErdDataType.TIMESPAN:
+                return self._convert_timespan_value_from_device(value)
+
             # otherwise, return a stringified version
             # TODO: perhaps enhance so that there's a list of variables available
             #       for the stringify function to consume...
@@ -76,8 +80,16 @@ class GeErdSensor(GeErdEntity, SensorEntity):
 
         if self._data_type == ErdDataType.INT:
             return int(round(value))
-        else:
-            return value
+        return value
+
+    def _convert_timespan_value_from_device(self, value):
+        """Convert to expected data type"""
+
+        if value is None:
+            return 0
+        if not isinstance(value, timedelta):
+            raise ValueError(f"Expected timedelta, got {type(value)}")
+        return value.total_seconds()
 
     def _get_uom(self):
         """Select appropriate units"""
@@ -114,6 +126,8 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             #if self._measurement_system == ErdMeasurementUnits.METRIC:
             #    return "l"
             return "gal"
+        if self.erd_code_class == ErdCodeClass.TIMER:
+            return "s"
         return None
 
     def _get_device_class(self) -> Optional[str]:
@@ -132,6 +146,8 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             return SensorDeviceClass.ENERGY
         if self.erd_code_class == ErdCodeClass.HUMIDITY:
             return SensorDeviceClass.HUMIDITY
+        if self.erd_code_class == ErdCodeClass.TIMER:
+            return SensorDeviceClass.DURATION
 
         return None
 
