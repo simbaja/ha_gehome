@@ -23,12 +23,16 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         device_class_override: str = None,
         state_class_override: str = None,
         uom_override: str = None,
-        data_type_override: ErdDataType = None
+        data_type_override: ErdDataType = None,
+        suggested_uom: str = None,
+        suggested_precision: int = None
     ):
         super().__init__(api, erd_code, erd_override, icon_override, device_class_override)
         self._uom_override = uom_override
         self._state_class_override = state_class_override
         self._data_type_override = data_type_override
+        self._suggested_uom = suggested_uom
+        self._suggested_precision = suggested_precision
 
     @property
     def native_value(self):
@@ -52,6 +56,14 @@ class GeErdSensor(GeErdEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> Optional[str]:
         return self._get_uom()
+
+    @property
+    def suggested_unit_of_measurement(self) -> Optional[str]:
+        return self._suggested_uom
+
+    @property
+    def suggested_precision(self) -> Optional[int]:
+        return self._suggested_precision
 
     @property
     def state_class(self) -> Optional[str]:
