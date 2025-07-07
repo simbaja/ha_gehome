@@ -5,6 +5,8 @@ import async_timeout
 import logging
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple, List
 
+logging.getLogger('slixmpp.stringprep').setLevel(logging.ERROR)
+
 from gehomesdk import (
     EVENT_APPLIANCE_INITIAL_UPDATE,
     EVENT_APPLIANCE_UPDATE_RECEIVED,
