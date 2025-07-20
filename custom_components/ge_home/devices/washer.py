@@ -5,7 +5,9 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdSwitch
+from ..entities.laundry.ge_washer_cycle_switch import GeWasherCycleSwitch
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +32,9 @@ class WasherApi(ApplianceApi):
 
         washer_entities = self.get_washer_entities()      
 
+        if self.has_erd_code(ErdCode.LAUNDRY_REMOTE_STATUS):
+            washer_entities.append(GeWasherCycleSwitch(self))
+
         entities = base_entities + common_entities + washer_entities
         return entities
         
@@ -44,7 +49,7 @@ class WasherApi(ApplianceApi):
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_DOOR_LOCK):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_DOOR_LOCK)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_STATUS):
-            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])           
+            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])          
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_SELECTED):
             washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_SELECTED)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TIMESAVER):
