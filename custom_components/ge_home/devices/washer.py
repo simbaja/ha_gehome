@@ -5,8 +5,8 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdSwitch
-from ..entities.laundry.ge_washer_cycle_switch import GeWasherCycleSwitch
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdButton
+from ..entities.laundry.ge_washer_cycle_button import GeWasherCycleButton
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,16 +30,15 @@ class WasherApi(ApplianceApi):
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS),
         ]
 
-        washer_entities = self.get_washer_entities()      
+        washer_entities = self.get_washer_entities()
 
-        if self.has_erd_code(ErdCode.LAUNDRY_REMOTE_STATUS):
-            washer_entities.append(GeWasherCycleSwitch(self))
+        washer_entities.append(GeWasherCycleButton(self))
 
         entities = base_entities + common_entities + washer_entities
         return entities
-        
+
     def get_washer_entities(self) -> List[Entity]:
-        washer_entities = [         
+        washer_entities = [
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SOIL_LEVEL, icon_override="mdi:emoticon-poop"),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_WASHTEMP_LEVEL),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SPINTIME_LEVEL, icon_override="mdi:speedometer"),
@@ -49,19 +48,22 @@ class WasherApi(ApplianceApi):
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_DOOR_LOCK):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_DOOR_LOCK)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_STATUS):
-            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])          
+            washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_STATUS)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TANK_SELECTED):
             washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_TANK_SELECTED)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TIMESAVER):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_TIMESAVER, icon_on_override="mdi:sort-clock-ascending", icon_off_override="mdi:sort-clock-ascending-outline")])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_POWERSTEAM):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_POWERSTEAM, icon_on_override="mdi:kettle-steam", icon_off_override="mdi:kettle-steam-outline")])
+        
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_PREWASH):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_PREWASH, icon_on_override="mdi:water-plus", icon_off_override="mdi:water-remove-outline")])
+        
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_TUMBLECARE):
             washer_entities.extend([GeErdBinarySensor(self, ErdCode.LAUNDRY_WASHER_TUMBLECARE)])
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_SMART_DISPENSE):
             washer_entities.extend([GeErdPropertySensor(self, ErdCode.LAUNDRY_WASHER_SMART_DISPENSE, "loads_left", uom_override="loads")])
+        
         if self.has_erd_code(ErdCode.LAUNDRY_WASHER_SMART_DISPENSE_TANK_STATUS):
             washer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SMART_DISPENSE_TANK_STATUS)])
 

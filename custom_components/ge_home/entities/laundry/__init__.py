@@ -1,1 +1,2 @@
-from.ge_washer_cycle_switch import GeWasherCycleSwitch
+from .ge_washer_cycle_button import GeWasherCycleButton
+from .ge_dryer_cycle_button import GeDryerCycleButton
