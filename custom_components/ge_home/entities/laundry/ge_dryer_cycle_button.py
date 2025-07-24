@@ -31,9 +31,9 @@ class GeDryerCycleButton(GeErdButton):
 
     @property
     def available(self) -> bool:
-        """The button is only available to press if the machine is in Delay Run."""
+        """The button is only available if remote start is enabled on the appliance."""
         try:
-            return str(self.appliance.get_erd_value(self.erd_code)) == "Delay Run"
+            return self.appliance.get_erd_value(ErdCode.LAUNDRY_REMOTE_STATUS)
         except:
             return False
 
