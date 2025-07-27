@@ -5,7 +5,9 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdButton
+from ..entities.laundry.ge_dryer_cycle_button import GeDryerCycleButton
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,19 +27,19 @@ class DryerApi(ApplianceApi):
             GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, icon_on_override="mdi:tumble-dryer", icon_off_override="mdi:tumble-dryer"),
-            GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_BLOCKED_VENT_FAULT, icon_on_override="mid:alert-circle", icon_off_override="mdi:alert-circle"),
+            GeErdBinarySensor(self, ErdCode.LAUNDRY_DRYER_BLOCKED_VENT_FAULT, icon_on_override="mdi:alert-circle", icon_off_override="mdi:alert-circle"),
         ]
 
         dryer_entities = self.get_dryer_entities()
+        
+        # Add the start cycle button
+        dryer_entities.append(GeDryerCycleButton(self))
 
         entities = base_entities + common_entities + dryer_entities
         return entities
 
     def get_dryer_entities(self):
-        #Not all options appear to exist on every dryer... we'll look for the presence of
-        #a code to figure out which sensors are applicable beyond the common ones.
-        dryer_entities = [         
-        ]
+        dryer_entities = []
 
         if self.has_erd_code(ErdCode.LAUNDRY_DRYER_DRYNESS_LEVEL):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_DRYNESS_LEVEL)])
@@ -63,4 +65,3 @@ class DryerApi(ApplianceApi):
             dryer_entities.extend([GeErdSensor(self, ErdCode.LAUNDRY_DRYER_ECODRY_OPTION_SELECTION)])
 
         return dryer_entities
-        
