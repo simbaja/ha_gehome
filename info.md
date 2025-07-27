@@ -72,6 +72,10 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2025.7.0'.split('.') | map('int') %}
+- Silenced string prep warning [#386] (@derekcentrico)
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
 - Improved documentation around terms of acceptance
 {% endif %}
@@ -81,6 +85,11 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2025.7.0'.split('.') | map('int') %}
+- Enabled Washer/Dryer remote start [#369] (@derekcentrico)
+- Enabled K-cup refrigerator functionality [#101] (@derekcentrico)
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
 - Added boost/active states for water heaters
