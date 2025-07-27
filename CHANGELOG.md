@@ -1,6 +1,12 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.7.0
+
+- Change: Silenced string prep warning [#386] (@derekcentrico)
+- Feature: Enabled Washer/Dryer remote start [#369] (@derekcentrico)
+- Feature: Enabled K-cup refrigerator functionality [#101] (@derekcentrico)
+
 ## 2025.5.0
 
 - Bugfix: Fixed helper deprecations
