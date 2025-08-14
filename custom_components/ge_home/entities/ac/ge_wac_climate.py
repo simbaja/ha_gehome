@@ -2,7 +2,7 @@ import logging
 from typing import Any, List, Optional
 
 from homeassistant.components.climate import HVACMode
-from gehomesdk import ErdAcOperationMode
+from gehomesdk import ErdAcOperationMode, ErdCode, ErdSacAvailableModes
 from ...devices import ApplianceApi
 from ..common import GeClimate, OptionsConverter
 from .fan_mode_options import AcFanModeOptionsConverter, AcFanOnlyFanModeOptionsConverter
@@ -10,14 +10,22 @@ from .fan_mode_options import AcFanModeOptionsConverter, AcFanOnlyFanModeOptions
 _LOGGER = logging.getLogger(__name__)
 
 class WacHvacModeOptionsConverter(OptionsConverter):
+    def __init__(self, available_modes: ErdSacAvailableModes):
+        self._available_modes = available_modes
+
     @property
     def options(self) -> List[str]:
-        return [HVACMode.AUTO, HVACMode.COOL, HVACMode.FAN_ONLY]
+        modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.FAN_ONLY]
+        if self._available_modes and self._available_modes.has_heat:
+            modes.append(HVACMode.HEAT)
+        return modes
+
     def from_option_string(self, value: str) -> Any:
         try:
             return {
                 HVACMode.AUTO: ErdAcOperationMode.ENERGY_SAVER,
                 HVACMode.COOL: ErdAcOperationMode.COOL,
+                HVACMode.HEAT: ErdAcOperationMode.HEAT,
                 HVACMode.FAN_ONLY: ErdAcOperationMode.FAN_ONLY
             }.get(value)
         except:
@@ -38,4 +46,5 @@ class WacHvacModeOptionsConverter(OptionsConverter):
 class GeWacClimate(GeClimate):
     """Class for Window AC units"""
     def __init__(self, api: ApplianceApi):
-        super().__init__(api, WacHvacModeOptionsConverter(), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        available_modes = api.try_get_erd_value(ErdCode.SAC_AVAILABLE_MODES)
+        super().__init__(api, WacHvacModeOptionsConverter(available_modes), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
