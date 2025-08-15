@@ -37,6 +37,7 @@ class WacHvacModeOptionsConverter(OptionsConverter):
                 ErdAcOperationMode.ENERGY_SAVER: HVACMode.AUTO,
                 ErdAcOperationMode.AUTO: HVACMode.AUTO,
                 ErdAcOperationMode.COOL: HVACMode.COOL,
+                ErdAcOperationMode.HEAT: HVACMode.HEAT,
                 ErdAcOperationMode.FAN_ONLY: HVACMode.FAN_ONLY
             }.get(value)
         except:
@@ -48,3 +49,5 @@ class GeWacClimate(GeClimate):
     def __init__(self, api: ApplianceApi):
         available_modes = api.try_get_erd_value(ErdCode.SAC_AVAILABLE_MODES)
         super().__init__(api, WacHvacModeOptionsConverter(available_modes), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        #construct the converter based on the available modes
+        self._hvac_mode_converter = WacHvacModeOptionsConverter(available_modes)
