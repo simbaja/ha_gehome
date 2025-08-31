@@ -130,10 +130,10 @@ class ApplianceApi:
 
     def build_entities_list(self) -> None:
         """Build the entities list, adding anything new."""
-        from ..entities import GeErdEntity, GeErdButton, GeErdSwitch
+        from ..entities import GeErdEntity, GeErdButton
         entities = [
             e for e in self.get_all_entities()
-            if not isinstance(e, GeErdEntity) or isinstance(e, GeErdButton) or isinstance(e, GeErdSwitch) or e.erd_code in self.appliance.known_properties
+            if not isinstance(e, GeErdEntity) or isinstance(e, GeErdButton) or e.erd_code in self.appliance.known_properties
         ]
 
         for entity in entities:
