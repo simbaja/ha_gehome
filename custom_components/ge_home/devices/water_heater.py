@@ -13,9 +13,7 @@ from custom_components.ge_home.entities.water_heater.ge_water_heater import GeWa
 from .base import ApplianceApi
 from ..entities import (
     GeErdSensor, 
-    GeErdBinarySensor,
-    GeErdSelect,
-    GeErdSwitch, 
+    GeErdBinarySensorSwitch,
     ErdOnOffBoolConverter
 )
 
@@ -42,12 +40,10 @@ class WaterHeaterApi(ApplianceApi):
         ]
 
         if(boost_mode and boost_mode != ErdOnOff.NA):
-            wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_BOOST_STATE))
-            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_BOOST_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:rocket-launch", icon_off_override="mdi:rocket-launch-outline"))
+            wh_entities.append(GeErdBinarySensorSwitch(self, ErdCode.WH_HEATER_BOOST_STATE, ErdCode.WH_HEATER_BOOST_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:rocket-launch", icon_off_override="mdi:rocket-launch-outline"))
 
         if(active and active != ErdOnOff.NA):
-            wh_entities.append(GeErdSensor(self, ErdCode.WH_HEATER_ACTIVE_STATE))
-            wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_ACTIVE_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:power", icon_off_override="mdi:power-standby"))
+            wh_entities.append(GeErdBinarySensorSwitch(self, ErdCode.WH_HEATER_ACTIVE_STATE, ErdCode.WH_HEATER_ACTIVE_CONTROL, ErdOnOffBoolConverter(), icon_on_override="mdi:power", icon_off_override="mdi:power-standby"))
 
         entities = base_entities + wh_entities
         return entities
