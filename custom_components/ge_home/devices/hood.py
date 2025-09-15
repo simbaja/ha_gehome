@@ -7,8 +7,8 @@ from gehomesdk import (
     ErdApplianceType,
     ErdHoodFanSpeedAvailability,
     ErdHoodLightLevelAvailability,
-    ErdOnOff,
-    ErdCodeType  # Make sure ErdCodeType is imported
+    ErdOnOff
+    # NOTE: We are no longer importing ErdCodeType here
 )
 
 from .base import ApplianceApi
@@ -34,9 +34,9 @@ class HoodApi(ApplianceApi):
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
         
-        # Define the unique ERD codes for the Haier FPA Hood using ErdCodeType
-        ERD_HAIER_FAN_SPEED = ErdCodeType("0x5B13", "Haier Hood Fan Speed")
-        ERD_HAIER_LIGHT_STATE = ErdCodeType("0x5B17", "Haier Hood Light State")
+        # Define the unique ERD codes for the Haier FPA Hood as simple strings.
+        ERD_HAIER_FAN_SPEED = "0x5B13"
+        ERD_HAIER_LIGHT_STATE = "0x5B17"
 
         # Check if this is a Haier FPA Hood by looking for its specific ERD code
         if self.has_erd_code(ERD_HAIER_FAN_SPEED):
