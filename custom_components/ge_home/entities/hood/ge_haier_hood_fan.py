@@ -25,7 +25,7 @@ class GeHaierHoodFan(GeEntity, FanEntity):
     @property
     def name(self) -> str:
         """Return the name of the fan."""
-        return f"{self.appliance.name} Fan"
+        return f"{self.api.name} Fan"
 
     @property
     def supported_features(self) -> FanEntityFeature:

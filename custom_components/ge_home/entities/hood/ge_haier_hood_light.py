@@ -24,7 +24,7 @@ class GeHaierHoodLight(GeEntity, LightEntity):
     @property
     def name(self) -> str:
         """Return the name of the light."""
-        return f"{self.appliance.name} Light"
+        return f"{self.api.name} Light"
 
     @property
     def is_on(self) -> bool:
