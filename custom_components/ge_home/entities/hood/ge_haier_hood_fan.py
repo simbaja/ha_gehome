@@ -14,10 +14,13 @@ class GeHaierHoodFan(GeEntity, FanEntity):
     """A fan entity for a Haier Hood appliance."""
 
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        # Correctly call the parent constructor with ONLY the api object
         super().__init__(api)
-        # Store the ERD code on this instance for the other methods to use
         self.erd_code = erd_code
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for the fan."""
+        return f"{self.serial_or_mac}_{self.erd_code}"
 
     @property
     def supported_features(self) -> FanEntityFeature:
