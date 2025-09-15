@@ -13,7 +13,10 @@ class GeHaierHoodLight(GeEntity, LightEntity):
     """A light entity for a Haier Hood appliance."""
 
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        super().__init__(api, erd_code)
+        # Correctly call the parent constructor with ONLY the api object
+        super().__init__(api)
+        # Store the ERD code on this instance for the other methods to use
+        self.erd_code = erd_code
 
     @property
     def is_on(self) -> bool:
