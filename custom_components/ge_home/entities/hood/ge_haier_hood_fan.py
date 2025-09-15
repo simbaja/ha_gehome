@@ -23,6 +23,11 @@ class GeHaierHoodFan(GeEntity, FanEntity):
         return f"{self.serial_or_mac}_{self.erd_code}"
 
     @property
+    def name(self) -> str:
+        """Return the name of the fan."""
+        return f"{self.appliance.name} Fan"
+
+    @property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features. We use preset modes for clearer control."""
         return FanEntityFeature.PRESET_MODE

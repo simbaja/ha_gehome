@@ -22,6 +22,11 @@ class GeHaierHoodLight(GeEntity, LightEntity):
         return f"{self.serial_or_mac}_{self.erd_code}"
 
     @property
+    def name(self) -> str:
+        """Return the name of the light."""
+        return f"{self.appliance.name} Light"
+
+    @property
     def is_on(self) -> bool:
         """Return True if the light is on."""
         return self.appliance.get_erd_value(self.erd_code) == 1
