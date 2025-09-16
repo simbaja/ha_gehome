@@ -1,74 +1,62 @@
 import logging
-from typing import Any, List, Optional
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from gehomesdk import ErdCodeType
-
-from ...devices import ApplianceApi
-from ..common import GeEntity
-from .const import FAN_SPEED_MAP, FAN_SPEED_MAP_REVERSE
 
 _LOGGER = logging.getLogger(__name__)
 
-class GeHaierHoodFan(GeEntity, FanEntity):
-    """A fan entity for a Haier Hood appliance."""
+# Mapping raw Haier fan levels → HA percentages
+FAN_SPEED_MAP = {
+    0: "off",
+    1: "low",
+    2: "medium",
+    3: "high",
+    4: "boost",
+}
 
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        super().__init__(api)
-        self.erd_code = erd_code
+class GeHaierHoodFan(FanEntity):
+    """Fan control for Haier FPA range hoods."""
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for the fan."""
-        return f"{self.serial_or_mac}_{self.erd_code}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the fan."""
-        return f"{self.api.name} Fan"
-
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features. We use preset modes for clearer control."""
-        return FanEntityFeature.PRESET_MODE
+    def __init__(self, api, erd_code):
+        self._api = api
+        self._appliance = api.appliance
+        self._erd_code = erd_code
+        self._attr_supported_features = FanEntityFeature.SET_SPEED
+        self._attr_name = f"{self._appliance.mac_addr} Hood Fan"
+        self._attr_unique_id = f"{self._appliance.mac_addr}_{erd_code}"
 
     @property
-    def is_on(self) -> bool:
-        """Return True if the fan is on."""
-        return self.appliance.get_erd_value(self.erd_code) > 0
+    def available(self):
+        return self._appliance.has_erd_code(self._erd_code)
 
     @property
-    def preset_modes(self) -> List[str]:
-        """Return the list of available preset modes (speeds)."""
-        return [mode for mode in FAN_SPEED_MAP if mode != "Off"]
+    def is_on(self):
+        return self.fan_speed != "off"
 
     @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode."""
-        speed = self.appliance.get_erd_value(self.erd_code)
-        if speed == FAN_SPEED_MAP["Off"]:
-            return None
-        return FAN_SPEED_MAP_REVERSE.get(speed)
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the fan speed."""
-        if preset_mode not in self.preset_modes:
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
-
-        speed = FAN_SPEED_MAP[preset_mode]
-        _LOGGER.debug(f"Setting {self.unique_id} preset mode to {preset_mode} (speed {speed})")
-        await self.appliance.async_set_erd_value(self.erd_code, speed)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the fan on, defaulting to the 'Low' speed."""
-        _LOGGER.debug(f"Turning on {self.unique_id} to Low speed")
-        await self.async_set_preset_mode("Low")
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the fan off."""
-        _LOGGER.debug(f"Turning off {self.unique_id}")
-        await self.appliance.async_set_erd_value(self.erd_code, FAN_SPEED_MAP["Off"])
+    def percentage(self):
+        raw_val = self._appliance.get_erd_value(self._erd_code) or 0
+        if raw_val == 0:
+            return 0
+        # Map evenly across 4 steps (25, 50, 75, 100)
+        return raw_val * 25
 
     @property
-    def icon(self) -> str:
-        return "mdi:fan"
+    def speed_count(self):
+        return len(FAN_SPEED_MAP)
+
+    @property
+    def fan_speed(self):
+        raw_val = self._appliance.get_erd_value(self._erd_code) or 0
+        return FAN_SPEED_MAP.get(raw_val, "off")
+
+    async def async_set_percentage(self, percentage: int):
+        raw_val = round(percentage / 25)
+        _LOGGER.debug(f"Setting hood fan to {raw_val} for {self._appliance.mac_addr}")
+        await self._appliance.async_set_erd_value(self._erd_code, raw_val)
+
+    async def async_turn_on(self, percentage: int | None = None, **kwargs):
+        if percentage is None:
+            percentage = 25
+        await self.async_set_percentage(percentage)
+
+    async def async_turn_off(self, **kwargs):
+        await self._appliance.async_set_erd_value(self._erd_code, 0)
