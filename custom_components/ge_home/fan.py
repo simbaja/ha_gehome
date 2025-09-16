@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
     @callback
     def async_devices_discovered(apis: list[ApplianceApi]):
-        _LOGGER.debug(f"Found {len(apis):d} appliance APIs")
+        _LOGGER.debug(f"Found {len(apis):d} appliance APIs for Fans")
         entities = [
             entity
             for api in apis

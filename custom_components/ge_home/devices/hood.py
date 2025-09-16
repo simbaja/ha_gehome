@@ -7,19 +7,17 @@ from gehomesdk import (
     ErdApplianceType,
     ErdHoodFanSpeedAvailability,
     ErdHoodLightLevelAvailability,
-    ErdOnOff
-    # NOTE: We are no longer importing ErdCodeType here
+    ErdOnOff,
+    ErdIntConverter  # <-- Import the converter
 )
 
 from .base import ApplianceApi
 from ..entities import (
-    # Existing entities
     GeHoodLightLevelSelect, 
     GeHoodFanSpeedSelect, 
     GeErdTimerSensor, 
     GeErdSwitch, 
     ErdOnOffBoolConverter,
-    # New entities for Haier Hood
     GeHaierHoodFan,
     GeHaierHoodLight
 )
@@ -31,19 +29,24 @@ class HoodApi(ApplianceApi):
     """API class for Hood objects"""
     APPLIANCE_TYPE = ErdApplianceType.HOOD
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Define and register the custom ERD codes for the Haier Hood
+        self.ERD_HAIER_FAN_SPEED = "0x5B13"
+        self.ERD_HAIER_LIGHT_STATE = "0x5B17"
+        
+        if self.has_erd_code(self.ERD_HAIER_FAN_SPEED):
+            self.appliance.add_erd_converter(self.ERD_HAIER_FAN_SPEED, ErdIntConverter())
+            self.appliance.add_erd_converter(self.ERD_HAIER_LIGHT_STATE, ErdIntConverter())
+
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
         
-        # Define the unique ERD codes for the Haier FPA Hood as simple strings.
-        ERD_HAIER_FAN_SPEED = "0x5B13"
-        ERD_HAIER_LIGHT_STATE = "0x5B17"
-
-        # Check if this is a Haier FPA Hood by looking for its specific ERD code
-        if self.has_erd_code(ERD_HAIER_FAN_SPEED):
+        if self.has_erd_code(self.ERD_HAIER_FAN_SPEED):
             _LOGGER.debug("Detected Haier FPA Hood, creating Fan and Light entities")
             hood_entities = [
-                GeHaierHoodFan(self, ERD_HAIER_FAN_SPEED),
-                GeHaierHoodLight(self, ERD_HAIER_LIGHT_STATE)
+                GeHaierHoodFan(self, self.ERD_HAIER_FAN_SPEED),
+                GeHaierHoodLight(self, self.ERD_HAIER_LIGHT_STATE)
             ]
         else:
             _LOGGER.debug("Detected standard GE Hood, creating Select entities")
