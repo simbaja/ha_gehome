@@ -12,6 +12,17 @@ from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
 from .update_coordinator import GeHomeUpdateCoordinator
 
+# NEW: imports for Haier hood ERDs
+from gehomesdk.erd.erd_registry import ErdValueRegistry
+from .erd.haier_hood_codes import (
+    ERD_HAIER_HOOD_FAN_SPEED,
+    ERD_HAIER_HOOD_LIGHT_LEVEL,
+)
+from .erd.haier_hood_converters import (
+    HaierHoodFanSpeedConverter,
+    HaierHoodLightLevelConverter,
+)
+
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -19,12 +30,12 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
+
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
-
         new = {**config_entry.data}
         new[CONF_REGION] = "US"
 
@@ -41,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
     #try to get existing coordinator
-    existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN],entry.entry_id)
+    existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN], entry.entry_id)
 
     coordinator = GeHomeUpdateCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -50,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         if existing:
             await coordinator.async_reset()
-    except:
+    except Exception:
         _LOGGER.warning("Could not reset existing coordinator.")
     
     try:
@@ -62,6 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryAuthFailed("Could not authenticate to SmartHQ")
         
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
+
+    # NEW: register Haier hood converters
+    reg = ErdValueRegistry()
+    reg.register_converter(ERD_HAIER_HOOD_FAN_SPEED, HaierHoodFanSpeedConverter())
+    reg.register_converter(ERD_HAIER_HOOD_LIGHT_LEVEL, HaierHoodLightLevelConverter())
 
     return True
 
