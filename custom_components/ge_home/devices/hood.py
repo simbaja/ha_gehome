@@ -9,7 +9,6 @@ from gehomesdk import (
     ErdHoodLightLevelAvailability,
     ErdOnOff
 )
-# Correctly import ErdIntConverter from its specific submodule
 from gehomesdk.erd.converters import ErdIntConverter
 
 from .base import ApplianceApi
@@ -32,13 +31,20 @@ class HoodApi(ApplianceApi):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Define and register the custom ERD codes for the Haier Hood
+        # Define the custom ERD codes
         self.ERD_HAIER_FAN_SPEED = "0x5B13"
         self.ERD_HAIER_LIGHT_STATE = "0x5B17"
         
+        # If this is a Haier Hood, we must manually register the converters
+        # for our new codes in the SDK's internal encoder registry.
         if self.has_erd_code(self.ERD_HAIER_FAN_SPEED):
-            self.appliance.add_erd_converter(self.ERD_HAIER_FAN_SPEED, ErdIntConverter())
-            self.appliance.add_erd_converter(self.ERD_HAIER_LIGHT_STATE, ErdIntConverter())
+            encoder = self.appliance._encoder
+            if self.ERD_HAIER_FAN_SPEED not in encoder._registry:
+                _LOGGER.debug(f"Registering custom converter for {self.ERD_HAIER_FAN_SPEED}")
+                encoder._registry[self.ERD_HAIER_FAN_SPEED] = ErdIntConverter()
+            if self.ERD_HAIER_LIGHT_STATE not in encoder._registry:
+                _LOGGER.debug(f"Registering custom converter for {self.ERD_HAIER_LIGHT_STATE}")
+                encoder._registry[self.ERD_HAIER_LIGHT_STATE] = ErdIntConverter()
 
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
