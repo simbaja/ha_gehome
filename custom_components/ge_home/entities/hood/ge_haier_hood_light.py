@@ -1,33 +1,38 @@
 import logging
-from homeassistant.components.light import LightEntity, ColorMode
+from typing import List, Any, Optional
+
+from ...devices import ApplianceApi
+from ..common import GeErdSelect, OptionsConverter
 
 _LOGGER = logging.getLogger(__name__)
 
-class GeHaierHoodLight(LightEntity):
-    """Light control for Haier FPA range hoods."""
 
-    def __init__(self, api, erd_code):
-        self._api = api
-        self._appliance = api.appliance
-        self._erd_code = erd_code
-        self._attr_supported_color_modes = {ColorMode.ONOFF}
-        self._attr_color_mode = ColorMode.ONOFF
-        self._attr_name = f"{self._appliance.mac_addr} Hood Light"
-        self._attr_unique_id = f"{self._appliance.mac_addr}_{erd_code}"
+class HaierHoodLightOptionsConverter(OptionsConverter):
+    """Converter for Haier hood light level options."""
+
+    # Assuming Haier hoods support OFF / DIM / HIGH
+    VALID_OPTIONS = ["OFF", "DIM", "HIGH"]
 
     @property
-    def available(self):
-        return self._appliance.has_erd_code(self._erd_code)
+    def options(self) -> List[str]:
+        return self.VALID_OPTIONS
 
-    @property
-    def is_on(self):
-        val = self._appliance.get_erd_value(self._erd_code) or 0
-        return val == 1
+    def from_option_string(self, value: str) -> Any:
+        try:
+            return value.upper()
+        except Exception:
+            _LOGGER.warning(f"Invalid Haier hood light option: {value}")
+            return "OFF"
 
-    async def async_turn_on(self, **kwargs):
-        _LOGGER.debug(f"Turning on hood light for {self._appliance.mac_addr}")
-        await self._appliance.async_set_erd_value(self._erd_code, 1)
+    def to_option_string(self, value: Any) -> Optional[str]:
+        try:
+            return str(value).upper()
+        except Exception:
+            return "OFF"
 
-    async def async_turn_off(self, **kwargs):
-        _LOGGER.debug(f"Turning off hood light for {self._appliance.mac_addr}")
-        await self._appliance.async_set_erd_value(self._erd_code, 0)
+
+class GeHaierHoodLight(GeErdSelect):
+    """Select entity for Haier hood light level."""
+
+    def __init__(self, api: ApplianceApi, erd_code: str):
+        super().__init__(api, erd_code, HaierHoodLightOptionsConverter())

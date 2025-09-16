@@ -1,3 +1,4 @@
+# custom_components/ge_home/devices/hood.py
 import logging
 from typing import List
 
@@ -8,9 +9,7 @@ from gehomesdk import (
     ErdHoodFanSpeedAvailability,
     ErdHoodLightLevelAvailability,
     ErdOnOff,
-    ErdCodeType,
 )
-from gehomesdk.erd.converters import ErdIntConverter
 
 from .base import ApplianceApi
 from ..entities import (
@@ -27,60 +26,54 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HoodApi(ApplianceApi):
-    """API class for GE/Haier Hood objects"""
+    """API class for Hood objects (GE + Haier)"""
+
     APPLIANCE_TYPE = ErdApplianceType.HOOD
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Haier-specific custom ERDs
-        self.ERD_HAIER_FAN_SPEED = ErdCodeType("0x5B13")
-        self.ERD_HAIER_LIGHT_STATE = ErdCodeType("0x5B17")
-
-        encoder = self.appliance._encoder
-        if self.ERD_HAIER_FAN_SPEED not in encoder._registry:
-            _LOGGER.debug(f"Registering converter for {self.ERD_HAIER_FAN_SPEED}")
-            encoder._registry[self.ERD_HAIER_FAN_SPEED] = ErdIntConverter()
-        if self.ERD_HAIER_LIGHT_STATE not in encoder._registry:
-            _LOGGER.debug(f"Registering converter for {self.ERD_HAIER_LIGHT_STATE}")
-            encoder._registry[self.ERD_HAIER_LIGHT_STATE] = ErdIntConverter()
+    # Haier-specific ERDs
+    ERD_HAIER_FAN_SPEED = "0x5B13"
+    ERD_HAIER_LIGHT_LEVEL = "0x5B14"
 
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
 
-        if self.has_erd_code(self.ERD_HAIER_FAN_SPEED):
-            _LOGGER.debug("Detected Haier FPA Hood → creating Haier-specific entities")
-            hood_entities = [
-                GeHaierHoodFan(self, self.ERD_HAIER_FAN_SPEED),
-                GeHaierHoodLight(self, self.ERD_HAIER_LIGHT_STATE),
-            ]
-        else:
-            _LOGGER.debug("Detected GE Profile Hood → using Profile entities")
-            fan_availability: ErdHoodFanSpeedAvailability = self.try_get_erd_value(
-                ErdCode.HOOD_FAN_SPEED_AVAILABILITY
-            )
-            light_availability: ErdHoodLightLevelAvailability = self.try_get_erd_value(
-                ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY
-            )
-            timer_availability: ErdOnOff = self.try_get_erd_value(
-                ErdCode.HOOD_TIMER_AVAILABILITY
-            )
+        # GE availabilities
+        fan_availability: ErdHoodFanSpeedAvailability = self.try_get_erd_value(
+            ErdCode.HOOD_FAN_SPEED_AVAILABILITY
+        )
+        light_availability: ErdHoodLightLevelAvailability = self.try_get_erd_value(
+            ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY
+        )
+        timer_availability: ErdOnOff = self.try_get_erd_value(ErdCode.HOOD_TIMER_AVAILABILITY)
 
-            hood_entities = [
-                GeErdSwitch(
-                    self,
-                    ErdCode.HOOD_DELAY_OFF,
-                    bool_converter=ErdOnOffBoolConverter(),
-                    icon_on_override="mdi:power-on",
-                    icon_off_override="mdi:power-off",
-                )
-            ]
+        hood_entities: List[Entity] = [
+            # Looks like this is always available?
+            GeErdSwitch(
+                self,
+                ErdCode.HOOD_DELAY_OFF,
+                bool_converter=ErdOnOffBoolConverter(),
+                icon_on_override="mdi:power-on",
+                icon_off_override="mdi:power-off",
+            ),
+        ]
 
-            if fan_availability and fan_availability.is_available:
-                hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_FAN_SPEED))
-            if light_availability and light_availability.is_available:
-                hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_LIGHT_LEVEL))
-            if timer_availability == ErdOnOff.ON:
-                hood_entities.append(GeErdTimerSensor(self, ErdCode.HOOD_TIMER))
+        # --- GE hoods ---
+        if fan_availability and fan_availability.is_available:
+            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_FAN_SPEED))
+        if light_availability and light_availability.is_available:
+            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_LIGHT_LEVEL))
+        if timer_availability == ErdOnOff.ON:
+            hood_entities.append(GeErdTimerSensor(self, ErdCode.HOOD_TIMER))
 
-        return base_entities + hood_entities
+        # --- Haier hoods ---
+        # If SDK doesn’t provide availability ERDs, always expose both.
+        try:
+            if self.try_get_erd_value(self.ERD_HAIER_FAN_SPEED) is not None:
+                hood_entities.append(GeHaierHoodFan(self, self.ERD_HAIER_FAN_SPEED))
+            if self.try_get_erd_value(self.ERD_HAIER_LIGHT_LEVEL) is not None:
+                hood_entities.append(GeHaierHoodLight(self, self.ERD_HAIER_LIGHT_LEVEL))
+        except Exception as err:
+            _LOGGER.warning(f"Error while adding Haier hood entities: {err}")
+
+        entities = base_entities + hood_entities
+        return entities
