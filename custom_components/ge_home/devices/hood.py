@@ -7,9 +7,10 @@ from gehomesdk import (
     ErdApplianceType,
     ErdHoodFanSpeedAvailability,
     ErdHoodLightLevelAvailability,
-    ErdOnOff,
-    ErdIntConverter  # <-- Import the converter
+    ErdOnOff
 )
+# Correctly import ErdIntConverter from its specific submodule
+from gehomesdk.erd.converters import ErdIntConverter
 
 from .base import ApplianceApi
 from ..entities import (
