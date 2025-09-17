@@ -6,16 +6,10 @@ from homeassistant.helpers.entity import Entity
 
 from gehomesdk import (
     ErdCode,
-    ErdCodeType,
     ErdApplianceType,
     ErdHoodFanSpeedAvailability,
     ErdHoodLightLevelAvailability,
     ErdOnOff,
-    ERD_VALUE_REGISTRY,
-)
-from gehomesdk.erd.values.haier.haier_hood import (
-    ErdHaierHoodFanSpeed,
-    ErdHaierHoodLightLevel,
 )
 
 from .base import ApplianceApi
@@ -28,10 +22,6 @@ from ..entities import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# Register Haier hood ERD codes with the SDK’s registry
-ERD_VALUE_REGISTRY[ErdCodeType.HAIER_HOOD_FAN_SPEED] = ErdHaierHoodFanSpeed
-ERD_VALUE_REGISTRY[ErdCodeType.HAIER_HOOD_LIGHT_LEVEL] = ErdHaierHoodLightLevel
 
 
 class HoodApi(ApplianceApi):
