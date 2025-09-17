@@ -12,17 +12,6 @@ from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
 from .update_coordinator import GeHomeUpdateCoordinator
 
-# NEW: imports for Haier hood ERDs
-from gehomesdk.erd.erd_registry import ErdValueRegistry
-from .erd.haier_hood_codes import (
-    ERD_HAIER_HOOD_FAN_SPEED,
-    ERD_HAIER_HOOD_LIGHT_LEVEL,
-)
-from .erd.haier_hood_converters import (
-    HaierHoodFanSpeedConverter,
-    HaierHoodLightLevelConverter,
-)
-
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -51,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ge_home from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    #try to get existing coordinator
+    # try to get existing coordinator
     existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN], entry.entry_id)
 
     coordinator = GeHomeUpdateCoordinator(hass, entry)
@@ -73,11 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryAuthFailed("Could not authenticate to SmartHQ")
         
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
-
-    # NEW: register Haier hood converters
-    reg = ErdValueRegistry()
-    reg.register_converter(ERD_HAIER_HOOD_FAN_SPEED, HaierHoodFanSpeedConverter())
-    reg.register_converter(ERD_HAIER_HOOD_LIGHT_LEVEL, HaierHoodLightLevelConverter())
 
     return True
 
