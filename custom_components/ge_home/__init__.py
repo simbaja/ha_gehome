@@ -8,12 +8,28 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_REGION
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+
 from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
 from .update_coordinator import GeHomeUpdateCoordinator
 
+# NEW: import registry and haier hood extensions
+from gehomesdk.erd.erd_value_registry import ErdValueRegistry
+from .erd.haier_hood_codes import (
+    ErdHaierHoodFanSpeed,
+    ErdHaierHoodLightLevel,
+)
+from .erd.haier_hood_converters import (
+    ErdHaierHoodFanSpeedConverter,
+    ErdHaierHoodLightLevelConverter,
+)
+
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+# Register Haier hood-specific converters with the SDK
+ErdValueRegistry.register(ErdHaierHoodFanSpeed, ErdHaierHoodFanSpeedConverter())
+ErdValueRegistry.register(ErdHaierHoodLightLevel, ErdHaierHoodLightLevelConverter())
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
