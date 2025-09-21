@@ -1,4 +1,5 @@
 """The ge_home integration."""
+from __future__ import annotations
 
 import logging
 import voluptuous as vol
@@ -12,19 +13,19 @@ from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
 from .update_coordinator import GeHomeUpdateCoordinator
 
-# Try to register Haier hood ERD converters globally if the SDK supports it.
-# (If not, HoodApi will attach per-appliance handlers at runtime.)
+# Attempt global Haier hood ERD registration; if the running SDK doesn't support it,
+# our HoodApi path will fall back to per-appliance patching at runtime.
 from .erd import registry_compat  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -38,12 +39,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ge_home from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     # try to get existing coordinator
-    existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN], entry.entry_id)
+    existing: GeHomeUpdateCoordinator | None = dict.get(hass.data[DOMAIN], entry.entry_id)
 
     coordinator = GeHomeUpdateCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     coordinator: GeHomeUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     ok = await coordinator.async_reset()
@@ -76,6 +77,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return ok
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)

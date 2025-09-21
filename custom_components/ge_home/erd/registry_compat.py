@@ -2,7 +2,7 @@
 SDK-agnostic registration for Haier hood ERD encoders/decoders.
 
 Works with:
-- Newer SDKs exposing gehomesdk.erd.erd_value_registry
+- Newer SDKs (object or function registries)
 - Older SDKs with per-appliance encoder/decoder registries
 """
 from __future__ import annotations
@@ -15,6 +15,10 @@ from gehomesdk.ge_appliance import GeAppliance
 from .haier_hood_codes import (
     ERD_HAIER_HOOD_FAN_SPEED,
     ERD_HAIER_HOOD_LIGHT_LEVEL,
+    ERD_HAIER_HOOD_FAN_SPEED_INT,
+    ERD_HAIER_HOOD_LIGHT_LEVEL_INT,
+    ERD_HAIER_HOOD_FAN_SPEED_STR,
+    ERD_HAIER_HOOD_LIGHT_LEVEL_STR,
 )
 from .haier_hood_converters import (
     HaierHoodFanSpeedConverter,
@@ -24,46 +28,89 @@ from .haier_hood_converters import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _try_global_register() -> bool:
-    """Try the modern, global registry API if present."""
+def _register_into_mapping(mapping: dict, keys: list[Any], conv: Any) -> None:
+    for k in keys:
+        mapping[k] = conv
+
+
+def _global_register_all_variants() -> bool:
+    """
+    Try multiple global APIs and register BOTH numeric and string keys.
+    Returns True if any succeeded (even partially).
+    """
+    ok_any = False
+
+    # A) Function helpers (some SDK builds)
     try:
-        # New-ish names in the SDK (function-style helpers)
         from gehomesdk.erd.erd_value_registry import (  # type: ignore
             register_erd_encoder,
             register_erd_decoder,
         )
 
-        register_erd_decoder(ERD_HAIER_HOOD_FAN_SPEED, HaierHoodFanSpeedConverter())
-        register_erd_encoder(ERD_HAIER_HOOD_FAN_SPEED, HaierHoodFanSpeedConverter())
+        for (int_code, str_code, conv) in [
+            (ERD_HAIER_HOOD_FAN_SPEED_INT, ERD_HAIER_HOOD_FAN_SPEED_STR, HaierHoodFanSpeedConverter()),
+            (ERD_HAIER_HOOD_LIGHT_LEVEL_INT, ERD_HAIER_HOOD_LIGHT_LEVEL_STR, HaierHoodLightLevelConverter()),
+        ]:
+            # numeric + both hex string casings
+            for key in (int_code, str_code, str_code.lower()):
+                register_erd_decoder(key, conv)
+                register_erd_encoder(key, conv)
+        _LOGGER.debug("GE Home: Registered Haier hood ERDs via function-style registry")
+        ok_any = True
+    except Exception:
+        pass
 
-        register_erd_decoder(ERD_HAIER_HOOD_LIGHT_LEVEL, HaierHoodLightLevelConverter())
-        register_erd_encoder(ERD_HAIER_HOOD_LIGHT_LEVEL, HaierHoodLightLevelConverter())
+    # B) Object registry (ERD_VALUE_REGISTRY) with .register or ._registry
+    try:
+        try:
+            from gehomesdk.erd.erd_value_registry import ERD_VALUE_REGISTRY as REG  # type: ignore
+        except Exception:
+            from gehomesdk.erd.erd_value_registry import ErdValueRegistry as REG  # type: ignore
 
-        _LOGGER.debug("GE Home: Registered Haier hood ERDs via global registry API")
-        return True
-    except Exception as ex:
-        _LOGGER.debug("GE Home: No global ERD registry API (%s). Will patch per-appliance.", ex)
-        return False
+        backing = getattr(REG, "_registry", None)
+        has_register = hasattr(REG, "register")
+
+        def _do_reg(key: Any, conv: Any):
+            nonlocal ok_any
+            try:
+                if has_register:
+                    REG.register(key, conv)
+                elif isinstance(backing, dict):
+                    backing[key] = conv
+                else:
+                    return
+                ok_any = True
+            except Exception:
+                pass
+
+        for (int_code, str_code, conv) in [
+            (ERD_HAIER_HOOD_FAN_SPEED_INT, ERD_HAIER_HOOD_FAN_SPEED_STR, HaierHoodFanSpeedConverter()),
+            (ERD_HAIER_HOOD_LIGHT_LEVEL_INT, ERD_HAIER_HOOD_LIGHT_LEVEL_STR, HaierHoodLightLevelConverter()),
+        ]:
+            for key in (int_code, str_code, str_code.lower(), ERD_HAIER_HOOD_FAN_SPEED, ERD_HAIER_HOOD_LIGHT_LEVEL):
+                _do_reg(key, conv)
+
+        if ok_any:
+            _LOGGER.debug("GE Home: Registered Haier hood ERDs via object-style registry")
+    except Exception:
+        pass
+
+    return ok_any
 
 
-_GLOBAL_OK = _try_global_register()
+_GLOBAL_OK = _global_register_all_variants()
 
 
 def _find_registry_dict(obj: Any) -> Optional[dict]:
-    """Return the inner {ErdCode|str: converter} dict from many possible SDK layouts."""
+    """Return the inner {key: converter} dict from many possible SDK layouts."""
     if obj is None:
         return None
-
-    # Direct dict
     if isinstance(obj, dict):
         return obj
-
-    # Common attribute spellings
     for attr in ("_registry", "registry", "_erd_encoder_registry", "_erd_decoder_registry"):
         reg = getattr(obj, attr, None)
         if isinstance(reg, dict):
             return reg
-
     return None
 
 
@@ -101,15 +148,17 @@ def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
         if enc_reg is None or dec_reg is None:
             raise RuntimeError("Could not locate appliance encoder/decoder registries")
 
-        if ERD_HAIER_HOOD_FAN_SPEED not in dec_reg:
-            dec_reg[ERD_HAIER_HOOD_FAN_SPEED] = HaierHoodFanSpeedConverter()
-        if ERD_HAIER_HOOD_FAN_SPEED not in enc_reg:
-            enc_reg[ERD_HAIER_HOOD_FAN_SPEED] = HaierHoodFanSpeedConverter()
+        # Register with BOTH integer and string keys so encoder lookups never miss
+        fan_conv = HaierHoodFanSpeedConverter()
+        light_conv = HaierHoodLightLevelConverter()
 
-        if ERD_HAIER_HOOD_LIGHT_LEVEL not in dec_reg:
-            dec_reg[ERD_HAIER_HOOD_LIGHT_LEVEL] = HaierHoodLightLevelConverter()
-        if ERD_HAIER_HOOD_LIGHT_LEVEL not in enc_reg:
-            enc_reg[ERD_HAIER_HOOD_LIGHT_LEVEL] = HaierHoodLightLevelConverter()
+        for reg, conv, int_code, str_code in [
+            (dec_reg, fan_conv, ERD_HAIER_HOOD_FAN_SPEED_INT, ERD_HAIER_HOOD_FAN_SPEED_STR),
+            (enc_reg, fan_conv, ERD_HAIER_HOOD_FAN_SPEED_INT, ERD_HAIER_HOOD_FAN_SPEED_STR),
+            (dec_reg, light_conv, ERD_HAIER_HOOD_LIGHT_LEVEL_INT, ERD_HAIER_HOOD_LIGHT_LEVEL_STR),
+            (enc_reg, light_conv, ERD_HAIER_HOOD_LIGHT_LEVEL_INT, ERD_HAIER_HOOD_LIGHT_LEVEL_STR),
+        ]:
+            _register_into_mapping(reg, [int_code, str_code, str_code.lower()], conv)
 
         _LOGGER.debug("GE Home: Patched appliance-level ERD handlers for Haier hood")
 
