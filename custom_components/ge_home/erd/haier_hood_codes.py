@@ -1,41 +1,38 @@
-"""ERD code constants and simple enums for Haier/FPA hood (SDK-version-safe)."""
+"""ERD code constants and simple enums for Haier hood (SDK-version-safe)."""
 from __future__ import annotations
-
 from enum import IntEnum
 from typing import Union
 
+# Safe ERD code type alias 
 try:
-    # Some SDKs expose ErdCode; others only accept plain strings.
+    # Some SDKs expose ErdCode; others only accept strings.
     from gehomesdk.erd import ErdCode  # type: ignore
     ErdCodeStr = Union["ErdCode", str]
-except Exception:  # SDK without ErdCode type
+except Exception:
     ErdCode = None  # type: ignore
     ErdCodeStr = str
 
 
-def _erd(code_hex: str) -> ErdCodeStr:
-    """Return an ErdCode instance when available, else the '0xNNNN' string."""
+def _erd(code: str) -> ErdCodeStr:
+    """
+    Return an ErdCode instance when possible, otherwise a plain string.
+    Do NOT construct typing.Unions at runtime; just return one of the
+    acceptable runtime types.
+    """
     try:
         if ErdCode:
-            return ErdCode(code_hex)  # type: ignore[arg-type]
+            return ErdCode(code)  # newer SDKs
     except Exception:
         pass
-    return code_hex
+    return code  # oldest SDKs accept raw strings
 
 
-# Integers (useful for dict-based registries that key by int)
-ERD_HAIER_HOOD_FAN_SPEED_INT: int = 0x5B13
-ERD_HAIER_HOOD_LIGHT_LEVEL_INT: int = 0x5B15
-
-# Canonical hex strings (some SDK registries key by string)
-ERD_HAIER_HOOD_FAN_SPEED_STR: str = "0x5B13"
-ERD_HAIER_HOOD_LIGHT_LEVEL_STR: str = "0x5B15"
-
-# Default public constants (ErdCode object when present, else string)
-ERD_HAIER_HOOD_FAN_SPEED: ErdCodeStr = _erd(ERD_HAIER_HOOD_FAN_SPEED_STR)
-ERD_HAIER_HOOD_LIGHT_LEVEL: ErdCodeStr = _erd(ERD_HAIER_HOOD_LIGHT_LEVEL_STR)
+# Haier hood ERDs (documented from device traffic)
+ERD_HAIER_HOOD_FAN_SPEED: ErdCodeStr = _erd("0x5B13")
+ERD_HAIER_HOOD_LIGHT_LEVEL: ErdCodeStr = _erd("0x5B15")
 
 
+#  Value enums with helpers 
 class HaierHoodFanSpeed(IntEnum):
     OFF = 0
     LOW = 1
@@ -54,6 +51,7 @@ class HaierHoodFanSpeed(IntEnum):
 
 
 class HaierHoodLightLevel(IntEnum):
+    # Device reports 0..4 with 4 meaning "Max"
     OFF = 0
     LOW = 1
     MEDIUM = 2
