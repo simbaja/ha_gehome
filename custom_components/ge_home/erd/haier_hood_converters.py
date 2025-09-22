@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any, Iterable
 
-from .haier_hood_codes import HaierHoodFanSpeed, HaierHoodLightLevel
+from .haier_hood_codes import HaierHoodFanSpeed, HaierHoodLightState
 
 
 class _BaseByteToEnum:
@@ -33,7 +33,7 @@ class _BaseByteToEnum:
                     return int(member)
         raise ValueError(f"Unsupported value for {self.__class__.__name__}: {val!r}")
 
-    #  SDK registry protocol (byte <-> enum)
+    # --------- SDK registry protocol (byte <-> enum)
     def erd_decode(self, raw: bytes) -> Any:
         return self._enum(self._as_int(raw))  # type: ignore
 
@@ -66,5 +66,5 @@ class HaierHoodFanSpeedConverter(_BaseByteToEnum):
     _enum = HaierHoodFanSpeed
 
 
-class HaierHoodLightLevelConverter(_BaseByteToEnum):
-    _enum = HaierHoodLightLevel
+class HaierHoodLightStateConverter(_BaseByteToEnum):
+    _enum = HaierHoodLightState
