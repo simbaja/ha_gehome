@@ -3,115 +3,104 @@ SDK-agnostic registration for Haier hood ERD encoders/decoders.
 
 Works with:
 - Newer SDKs exposing gehomesdk.erd.erd_value_registry
-- Older SDKs with per-appliance encoder/decoder registries
-- Worst case: a safe monkey-patch on GeAppliance.encode_erd_value
+- Older SDKs that hang encoder/decoder registries off the appliance or modules
 """
 from __future__ import annotations
 
-import inspect
 import logging
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 from gehomesdk.ge_appliance import GeAppliance
 
 from .haier_hood_codes import (
     ERD_HAIER_HOOD_FAN_SPEED,
-    ERD_HAIER_HOOD_LIGHT_ON,
+    ERD_HAIER_HOOD_LIGHT_LEVEL,  # alias -> 0x5B17
 )
 from .haier_hood_converters import (
     HaierHoodFanSpeedConverter,
-    HaierHoodLightStateConverter,
+    HaierHoodLightLevelConverter,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-_FAN_CODE_STR = "0x5B13"
-_LIGHT_CODE_STR = "0x5B17"
 
-_FAN_CONV = HaierHoodFanSpeedConverter()
-_LIGHT_CONV = HaierHoodLightStateConverter()
-
-
-def _to_all_keys(code_like: Any) -> Tuple[Any, ...]:
-    """Return a tuple containing both the plain string and an ErdCode instance (if available)."""
-    keys = {str(code_like)}
+#  helpers 
+def _register_both_key_types(reg: dict, hex_code: str, converter: Any) -> None:
+    """Register under both the string key and ErdCode(..) key if available."""
+    # Always string
+    if hex_code not in reg:
+        reg[hex_code] = converter
+    # ErdCode variant (if SDK exposes ErdCode)
     try:
         from gehomesdk.erd import ErdCode  # type: ignore
 
-        try:
-            keys.add(ErdCode(str(code_like)))
-        except Exception:
-            pass
+        ec = ErdCode(hex_code)
+        if ec not in reg:
+            reg[ec] = converter
     except Exception:
         pass
-    return tuple(keys)
 
 
 def _try_global_register() -> bool:
     """Try the modern, global registry API if present."""
-    # Newer SDKs: dedicated helpers
     try:
+        # New-ish names in the SDK (function-style helpers)
         from gehomesdk.erd.erd_value_registry import (  # type: ignore
             register_erd_encoder,
             register_erd_decoder,
         )
 
-        for k in _to_all_keys(ERD_HAIER_HOOD_FAN_SPEED):
-            register_erd_decoder(k, _FAN_CONV)
-            register_erd_encoder(k, _FAN_CONV)
-        for k in _to_all_keys(ERD_HAIER_HOOD_LIGHT_ON):
-            register_erd_decoder(k, _LIGHT_CONV)
-            register_erd_encoder(k, _LIGHT_CONV)
+        # Register with both key types to be safe
+        for hex_code, conv in (
+            ("0x5B13", HaierHoodFanSpeedConverter()),
+            ("0x5B17", HaierHoodLightLevelConverter()),
+        ):
+            try:
+                # string key
+                register_erd_decoder(hex_code, conv)
+                register_erd_encoder(hex_code, conv)
+            except Exception:
+                pass
+            try:
+                from gehomesdk.erd import ErdCode  # type: ignore
+
+                register_erd_decoder(ErdCode(hex_code), conv)
+                register_erd_encoder(ErdCode(hex_code), conv)
+            except Exception:
+                pass
 
         _LOGGER.debug("GE Home: Registered Haier hood ERDs via global registry API")
         return True
     except Exception as ex:
-        _LOGGER.debug("GE Home: No global ERD registry API (%s). Will patch per-appliance.", ex)
-
-    # Some builds expose a module-level dict
-    try:
-        from gehomesdk.erd import erd_value_registry as _mod  # type: ignore
-
-        reg = getattr(_mod, "REGISTRY", None) or getattr(_mod, "_REGISTRY", None)
-        if isinstance(reg, dict):
-            for k in _to_all_keys(ERD_HAIER_HOOD_FAN_SPEED):
-                reg.setdefault("decoder", {})[k] = _FAN_CONV
-                reg.setdefault("encoder", {})[k] = _FAN_CONV
-            for k in _to_all_keys(ERD_HAIER_HOOD_LIGHT_ON):
-                reg.setdefault("decoder", {})[k] = _LIGHT_CONV
-                reg.setdefault("encoder", {})[k] = _LIGHT_CONV
-            _LOGGER.debug("GE Home: Registered Haier hood ERDs via legacy global dict")
-            return True
-    except Exception:
-        pass
-
-    return False
+        _LOGGER.debug(
+            "GE Home: No global ERD registry API (%s). Will patch per-appliance.", ex
+        )
+        return False
 
 
 _GLOBAL_OK = _try_global_register()
 
 
-def _find_registry_dict(obj: Any) -> Optional[dict]:
-    """Return the inner {ErdCode|str: converter} dict from many possible SDK layouts."""
+def _maybe_dict(obj: Any) -> Optional[dict]:
+    """Return a dict if obj looks like a registry or contains one."""
     if obj is None:
         return None
 
+    # Direct dict
     if isinstance(obj, dict):
         return obj
 
-    # common attribute spellings
-    for attr in (
-        "_registry",
-        "registry",
-        "_erd_encoder_registry",
-        "_erd_decoder_registry",
-        "converters",
-        "converter_map",
-        "_converters",
-    ):
+    # Common attribute spellings on instances/modules/wrappers
+    for attr in ("_registry", "registry", "_erd_encoder_registry", "_erd_decoder_registry"):
         reg = getattr(obj, attr, None)
         if isinstance(reg, dict):
             return reg
+        # nested object holding the dict (eg. registry._registry)
+        if reg is not None:
+            for inner in ("_registry", "registry", "map", "_map", "values", "_values"):
+                inner_val = getattr(reg, inner, None)
+                if isinstance(inner_val, dict):
+                    return inner_val
 
     return None
 
@@ -119,59 +108,44 @@ def _find_registry_dict(obj: Any) -> Optional[dict]:
 def _get_encoder_decoder_regs(appliance: GeAppliance) -> tuple[Optional[dict], Optional[dict]]:
     """Probe multiple SDK layouts to find encoder/decoder registry dicts."""
     enc_candidates = [
-        getattr(appliance, name, None)
-        for name in ("_encoder", "_erd_encoder", "encoder", "erd_encoder", "value_encoder")
+        getattr(appliance, name, None) for name in ("_encoder", "_erd_encoder", "encoder")
     ]
     dec_candidates = [
-        getattr(appliance, name, None)
-        for name in ("_decoder", "_erd_decoder", "decoder", "erd_decoder", "value_decoder")
+        getattr(appliance, name, None) for name in ("_decoder", "_erd_decoder", "decoder")
     ]
+
+    # Also try the modules directly (older SDKs sometimes stash here)
+    try:
+        import gehomesdk.erd.erd_encoder as enc_mod  # type: ignore
+        enc_candidates.append(enc_mod)
+    except Exception:
+        pass
+    try:
+        import gehomesdk.erd.erd_decoder as dec_mod  # type: ignore
+        dec_candidates.append(dec_mod)
+    except Exception:
+        pass
 
     enc_reg = None
     dec_reg = None
 
     for cand in enc_candidates:
-        enc_reg = _find_registry_dict(cand) or _find_registry_dict(getattr(cand, "_registry", None))
+        enc_reg = _maybe_dict(cand) or _maybe_dict(getattr(cand, "_registry", None))
         if enc_reg:
             break
 
     for cand in dec_candidates:
-        dec_reg = _find_registry_dict(cand) or _find_registry_dict(getattr(cand, "_registry", None))
+        dec_reg = _maybe_dict(cand) or _maybe_dict(getattr(cand, "_registry", None))
         if dec_reg:
             break
 
+    if not enc_reg or not dec_reg:
+        _LOGGER.debug(
+            "GE Home: encoder candidate types=%s; decoder candidate types=%s",
+            [type(c).__name__ for c in enc_candidates if c is not None],
+            [type(c).__name__ for c in dec_candidates if c is not None],
+        )
     return enc_reg, dec_reg
-
-
-def _register_in_dict(reg: dict, code_like: Any, conv: Any) -> None:
-    for k in _to_all_keys(code_like):
-        reg[k] = conv
-        # also be sure a plain uppercase string works (some SDKs normalize)
-        reg[str(k).upper()] = conv  # type: ignore
-
-
-def _install_encode_fallback() -> None:
-    """Last resort: patch GeAppliance.encode_erd_value to encode our two ERDs."""
-    if getattr(GeAppliance, "_haier_hood_encode_patch", False):
-        return
-
-    orig = GeAppliance.encode_erd_value  # type: ignore[attr-defined]
-
-    def patched(self: GeAppliance, erd_code: Any, value: Any):  # type: ignore[no-redef]
-        code_str = str(erd_code).upper()
-        try:
-            if code_str == _FAN_CODE_STR.upper():
-                return _FAN_CONV.erd_encode(value)
-            if code_str == _LIGHT_CODE_STR.upper():
-                return _LIGHT_CONV.erd_encode(value)
-        except Exception as ex:
-            _LOGGER.warning("GE Home: Haier hood fallback encode failed for %s: %s", code_str, ex)
-
-        return orig(self, erd_code, value)
-
-    GeAppliance.encode_erd_value = patched  # type: ignore[assignment]
-    GeAppliance._haier_hood_encode_patch = True  # type: ignore[attr-defined]
-    _LOGGER.debug("GE Home: Installed Haier hood encode fallback")
 
 
 def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
@@ -184,20 +158,16 @@ def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
 
     try:
         enc_reg, dec_reg = _get_encoder_decoder_regs(appliance)
+        if enc_reg is None or dec_reg is None:
+            raise RuntimeError("Could not locate appliance encoder/decoder registries")
 
-        if enc_reg and dec_reg:
-            _register_in_dict(dec_reg, ERD_HAIER_HOOD_FAN_SPEED, _FAN_CONV)
-            _register_in_dict(enc_reg, ERD_HAIER_HOOD_FAN_SPEED, _FAN_CONV)
+        # Register both string and ErdCode keys (SDK differences)
+        _register_both_key_types(dec_reg, "0x5B13", HaierHoodFanSpeedConverter())
+        _register_both_key_types(enc_reg, "0x5B13", HaierHoodFanSpeedConverter())
 
-            _register_in_dict(dec_reg, ERD_HAIER_HOOD_LIGHT_ON, _LIGHT_CONV)
-            _register_in_dict(enc_reg, ERD_HAIER_HOOD_LIGHT_ON, _LIGHT_CONV)
+        _register_both_key_types(dec_reg, "0x5B17", HaierHoodLightLevelConverter())
+        _register_both_key_types(enc_reg, "0x5B17", HaierHoodLightLevelConverter())
 
-            _LOGGER.debug("GE Home: Patched appliance-level ERD handlers for Haier hood")
-            return
-
-        # If we couldn't find registries on this SDK, ensure the write path still works.
-        _install_encode_fallback()
-
+        _LOGGER.debug("GE Home: Patched appliance-level ERD handlers for Haier hood")
     except Exception:
-        _LOGGER.exception("GE Home: Failed to attach Haier hood handlers to appliance; using fallback")
-        _install_encode_fallback()
+        _LOGGER.exception("GE Home: Failed to attach Haier hood handlers to appliance")
