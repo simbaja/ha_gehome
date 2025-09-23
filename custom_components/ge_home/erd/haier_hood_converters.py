@@ -1,133 +1,100 @@
 from __future__ import annotations
+from typing import Any
 
-import base64
-from typing import Any, Iterable
+# helpers
 
-
-# Helpers 
-
-def _b64(b: bytes) -> str:
-    """JSON-safe payload for the websocket client."""
-    return base64.b64encode(b).decode("ascii")
-
-
-def _as_bytes(x: Any) -> bytes:
-    """Robustly coerce various inputs to a single byte we can reason about."""
-    if isinstance(x, (bytes, bytearray)):
-        return bytes(x)
-    if isinstance(x, str):
-        # Might be an option string ("Low"), or base64 ("AQ=="), or hex ("01")
-        xs = x.strip()
+def _to_byte(v: Any) -> int:
+    """Coerce a value to a single 0..255 int."""
+    if isinstance(v, (bytes, bytearray)) and v:
+        return v[0]
+    if isinstance(v, str):
+        s = v.strip().lower()
+        # try simple hex like "00" / "1" first
         try:
-            # base64 path
-            dec = base64.b64decode(xs, validate=True)
-            if dec:
-                return bytes(dec[:1])
+            return max(0, min(255, int(s, 16)))
         except Exception:
             pass
-        # hex-ish path
-        if len(xs) in (1, 2):
-            try:
-                return bytes([int(xs, 16)])
-            except Exception:
-                pass
-    if isinstance(x, bool):
-        return b"\x01" if x else b"\x00"
+        # try plain int in string
+        try:
+            return max(0, min(255, int(s)))
+        except Exception:
+            pass
+        if s in ("on", "true", "yes"):
+            return 1
+        if s in ("off", "false", "no"):
+            return 0
     try:
-        iv = int(x)
-        return bytes([max(0, min(255, iv))])
+        return max(0, min(255, int(v)))
     except Exception:
-        return b"\x00"
+        return 0
 
 
-# Converters used by the registry AND the Select entities
+# Fan speed (ERD 0x5B13) 
 
 class HaierHoodFanSpeedConverter:
     """
-    Fan speed presets on ERD 0x5B13.
-
-    Options exposed to the Select entity: "Off", "Low", "Medium", "High", "Boost"
-    Encoded wire values: 0x00 .. 0x04
+    Options: Off(0), Low(1), Medium(2), High(3), Boost(4)
+    Encode for GE setErd: HEX STRING like "00".."04"
     """
 
-    options: tuple[str, ...] = ("Off", "Low", "Medium", "High", "Boost")
+    options = ("Off", "Low", "Medium", "High", "Boost")
 
-    # Select helpers (entity <-> human text)
+    # Used by the Select entity to display a nice label
     def to_option_string(self, raw_value: Any) -> str:
-        b = _as_bytes(raw_value)
-        idx = b[0] if b else 0
-        if 0 <= idx < len(self.options):
-            return self.options[idx]
-        return "Off"
+        idx = _to_byte(raw_value)
+        return self.options[idx] if 0 <= idx < len(self.options) else "Off"
 
-    def from_option_string(self, option: str) -> str:
-        """
-        Return a value that our erd_encode() can consume directly.
-        We return the *label* so callers can just pipe it to erd_encode().
-        """
+    # Select -> value we pass on to erd_encode()
+    def from_option_string(self, option: str) -> int:
         o = (option or "").strip().lower()
         for i, name in enumerate(self.options):
             if name.lower() == o:
-                # Keep it as a string; erd_encode() handles labels.
-                return name
-        return "Off"
+                return i
+        return 0
 
-    # Registry (SDK) encode/decode
-    def erd_decode(self, raw: bytes | str | Any) -> bytes:
-        """
-        The SDK calls this when *reading* from the websocket.
-        Returning the bytes keeps things maximally compatible with the rest of the HA integration,
-        which already knows how to present them via to_option_string().
-        """
-        return _as_bytes(raw)
+    # (for the entity’s “raw write” fast path)
+    def to_bytes(self, option_or_value: Any) -> bytes:
+        # Accept either an option label or a numeric-ish value
+        if isinstance(option_or_value, str) and not option_or_value.strip().isdigit():
+            code = self.from_option_string(option_or_value)
+        else:
+            code = _to_byte(option_or_value)
+        code = max(0, min(4, code))
+        return bytes([code])
+
+    # Registry (SDK) decode/encode
+    def erd_decode(self, raw: Any) -> bytes:
+        # Keep bytes on reads; the integration already knows how to show them
+        return self.to_bytes(raw)
 
     def erd_encode(self, value: Any) -> str:
-        """
-        The SDK calls this when *writing*.
-        MUST return a JSON-serializable value: we return base64 text.
-        Accepts either an option label ("Low") or a numeric code (0..4).
-        """
-        # Map label -> index
-        if isinstance(value, str) and not value.strip().isdigit():
-            v = value.strip().lower()
-            for i, name in enumerate(self.options):
-                if name.lower() == v:
-                    return _b64(bytes([i]))
-            return _b64(b"\x00")
+        # MUST return JSON-serializable; GE expects hex strings for this ERD
+        b = self.to_bytes(value)
+        return f"{b[0]:02X}"
 
-        # Numeric-ish path
-        b = _as_bytes(value)
-        code = max(0, min(4, b[0] if b else 0))
-        return _b64(bytes([code]))
 
+# Light level (ERD 0x5B17) 
 
 class HaierHoodLightLevelConverter:
     """
-    Light level on ERD 0x5B17 (simple on/off).
-
-    Options: "Off", "On"
-    Encoded wire values: 0x00 (Off), 0x01 (On)
+    Options: Off(0), On(1)
+    Encode for GE setErd: HEX STRING "00" or "01"
     """
 
-    options: tuple[str, ...] = ("Off", "On")
+    options = ("Off", "On")
 
-    # --- Select helpers ---
     def to_option_string(self, raw_value: Any) -> str:
-        b = _as_bytes(raw_value)
-        return "On" if (b and b[0] == 0x01) else "Off"
+        return "On" if _to_byte(raw_value) == 1 else "Off"
 
-    def from_option_string(self, option: str) -> str:
+    def from_option_string(self, option: str) -> int:
         o = (option or "").strip().lower()
-        return "On" if o in ("on", "1", "true", "yes") else "Off"
+        return 1 if o in ("on", "1", "true", "yes") else 0
 
-    # --- Registry encode/decode ---
-    def erd_decode(self, raw: bytes | str | Any) -> bytes:
-        return _as_bytes(raw)
+    def to_bytes(self, option_or_value: Any) -> bytes:
+        return b"\x01" if self.from_option_string(option_or_value) == 1 else b"\x00"
+
+    def erd_decode(self, raw: Any) -> bytes:
+        return self.to_bytes(raw)
 
     def erd_encode(self, value: Any) -> str:
-        # Accept label, int, or bool; return base64 text
-        if isinstance(value, str):
-            v = value.strip().lower() in ("on", "1", "true", "yes")
-        else:
-            v = bool(value)
-        return _b64(b"\x01" if v else b"\x00")
+        return "01" if self.from_option_string(value) == 1 else "00"
