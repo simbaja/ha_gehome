@@ -1,6 +1,5 @@
 """
 SDK-agnostic registration for Haier hood ERD encoders/decoders.
-
 Works with:
 - Newer SDKs exposing gehomesdk.erd.erd_value_registry
 - Older SDKs where encoder/decoder registries are hanging off the appliance
@@ -14,8 +13,10 @@ from typing import Any, Optional
 from gehomesdk.ge_appliance import GeAppliance
 
 from .haier_hood_codes import (
-    ERD_HAIER_HOOD_FAN_SPEED,
-    ERD_HAIER_HOOD_LIGHT_LEVEL,  # alias to 0x5B17 (binary on/off)
+    ERD_HAIER_HOOD_FAN_COMMAND,
+    ERD_HAIER_HOOD_FAN_STATUS,
+    ERD_HAIER_HOOD_LIGHT_COMMAND,
+    ERD_HAIER_HOOD_LIGHT_STATUS,
 )
 from .haier_hood_converters import (
     HaierHoodFanSpeedConverter,
@@ -40,7 +41,6 @@ def _erd_hex(code: Any) -> str:
 def _register_in_target(target: Any, key: Any, conv: Any) -> bool:
     """
     Try many ways to add (key -> conv) into a registry-like object.
-
     Supports:
     - Mapping semantics via __setitem__
     - Methods: register(key, conv), add(key, conv), set(key, conv)
@@ -102,6 +102,8 @@ def _try_global_register() -> bool:
         for hex_code, conv in (
             ("0x5B13", HaierHoodFanSpeedConverter()),
             ("0x5B17", HaierHoodLightLevelConverter()),
+            ("0x5B15", HaierHoodFanSpeedConverter()),
+            ("0x5B16", HaierHoodLightLevelConverter()),
         ):
             # String key
             try:
@@ -196,7 +198,7 @@ def _get_encoder_decoder_regs(appliance: GeAppliance) -> tuple[Optional[Any], Op
     return enc_reg, dec_reg
 
 
-def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
+def ensure_haier_hood_handlers_for_appappliance(appliance: GeAppliance) -> None:
     """
     If the SDK doesn't have a global registry, attach our handlers directly to this appliance's
     encoder/decoder registries. Safe to call multiple times.
@@ -215,11 +217,15 @@ def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
         if enc_reg is not None:
             registered_any |= _register_both_key_types(enc_reg, "0x5B13", HaierHoodFanSpeedConverter())
             registered_any |= _register_both_key_types(enc_reg, "0x5B17", HaierHoodLightLevelConverter())
+            registered_any |= _register_both_key_types(enc_reg, "0x5B15", HaierHoodFanSpeedConverter())
+            registered_any |= _register_both_key_types(enc_reg, "0x5B16", HaierHoodLightLevelConverter())
 
-        # Register on DECODER (nice to have; reading already works for you)
+        # Register on DECODER (nice to have)
         if dec_reg is not None:
             registered_any |= _register_both_key_types(dec_reg, "0x5B13", HaierHoodFanSpeedConverter())
             registered_any |= _register_both_key_types(dec_reg, "0x5B17", HaierHoodLightLevelConverter())
+            registered_any |= _register_both_key_types(dec_reg, "0x5B15", HaierHoodFanSpeedConverter())
+            registered_any |= _register_both_key_types(dec_reg, "0x5B16", HaierHoodLightLevelConverter())
 
         if not registered_any:
             # Keep the exception (with our debug above) so we can see layouts if it still fails.
