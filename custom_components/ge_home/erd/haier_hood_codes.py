@@ -24,16 +24,18 @@ def _erd(code: str) -> ErdCodeStr:
 
 
 #  Haier hood ERDs 
-# Fan speed: 0..4  (Off/Low/Medium/High/Boost)
-ERD_HAIER_HOOD_FAN_SPEED: ErdCodeStr = _erd("0x5B13")
+# Status ERDs (read-only)
+ERD_HAIER_HOOD_FAN_STATUS: ErdCodeStr = _erd("0x5B13")  # Fan speed: 0..4
+ERD_HAIER_HOOD_LIGHT_STATUS: ErdCodeStr = _erd("0x5B17") # Light on/off: 0..1
 
-# Light is actually a binary on/off on this model.
-# Correct ERD for light on/off:
-ERD_HAIER_HOOD_LIGHT_ONOFF: ErdCodeStr = _erd("0x5B17")
+# Command ERDs (write-only - HYPOTHESIS)
+ERD_HAIER_HOOD_FAN_COMMAND: ErdCodeStr = _erd("0x5B15")
+ERD_HAIER_HOOD_LIGHT_COMMAND: ErdCodeStr = _erd("0x5B16")
 
 # Back-compat alias (older entity code imported this symbol):
-# Keep the name but point it to the correct on/off ERD.
-ERD_HAIER_HOOD_LIGHT_LEVEL: ErdCodeStr = ERD_HAIER_HOOD_LIGHT_ONOFF  # alias
+# Keep the name but point it to the correct STATUS ERD.
+ERD_HAIER_HOOD_FAN_SPEED: ErdCodeStr = ERD_HAIER_HOOD_FAN_STATUS  # alias
+ERD_HAIER_HOOD_LIGHT_LEVEL: ErdCodeStr = ERD_HAIER_HOOD_LIGHT_STATUS  # alias
 
 
 #  Value enums with small helpers 

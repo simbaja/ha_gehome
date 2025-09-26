@@ -15,7 +15,12 @@ from ..entities import (
     GeHaierHoodFan,
     GeHaierHoodLight,
 )
-from ..erd.haier_hood_codes import ERD_HAIER_HOOD_FAN_SPEED, ERD_HAIER_HOOD_LIGHT_LEVEL
+from ..erd.haier_hood_codes import (
+    ERD_HAIER_HOOD_FAN_STATUS,
+    ERD_HAIER_HOOD_LIGHT_STATUS,
+    ERD_HAIER_HOOD_FAN_COMMAND,
+    ERD_HAIER_HOOD_LIGHT_COMMAND,
+)
 from ..erd.registry_compat import ensure_haier_hood_handlers_for_appliance
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +55,8 @@ class HoodApi(ApplianceApi):
                 _LOGGER.exception("Failed to ensure Haier hood ERD handlers")
 
             entities.extend([
-                GeHaierHoodFan(self, ERD_HAIER_HOOD_FAN_SPEED),
-                GeHaierHoodLight(self, ERD_HAIER_HOOD_LIGHT_LEVEL),
+                GeHaierHoodFan(self, ERD_HAIER_HOOD_FAN_STATUS, ERD_HAIER_HOOD_FAN_COMMAND),
+                GeHaierHoodLight(self, ERD_HAIER_HOOD_LIGHT_STATUS, ERD_HAIER_HOOD_LIGHT_COMMAND),
             ])
         else:
             # GE/Monogram/etc will keep upstream behavior (availability ERDs)
