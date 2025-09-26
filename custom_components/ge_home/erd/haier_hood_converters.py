@@ -91,10 +91,16 @@ class HaierHoodLightLevelConverter:
         return 1 if o in ("on", "1", "true", "yes") else 0
 
     def to_bytes(self, option_or_value: Any) -> bytes:
-        return b"\x01" if self.from_option_string(option_or_value) == 1 else b"\x00"
+        val = 0
+        if isinstance(option_or_value, str):
+            val = self.from_option_string(option_or_value)
+        else:
+            val = _to_byte(option_or_value)
+        return b"\x01" if val == 1 else b"\x00"
 
     def erd_decode(self, raw: Any) -> bytes:
         return self.to_bytes(raw)
 
     def erd_encode(self, value: Any) -> str:
-        return "01" if self.from_option_string(value) == 1 else "00"
+        # GE expects hex strings "00" or "01" for this ERD
+        return "01" if _to_byte(value) == 1 else "00"
