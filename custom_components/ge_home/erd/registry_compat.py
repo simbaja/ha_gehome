@@ -198,7 +198,7 @@ def _get_encoder_decoder_regs(appliance: GeAppliance) -> tuple[Optional[Any], Op
     return enc_reg, dec_reg
 
 
-def ensure_haier_hood_handlers_for_appappliance(appliance: GeAppliance) -> None:
+def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
     """
     If the SDK doesn't have a global registry, attach our handlers directly to this appliance's
     encoder/decoder registries. Safe to call multiple times.
