@@ -102,8 +102,8 @@ def _try_global_register() -> bool:
         for hex_code, conv in (
             ("0x5B13", HaierHoodFanSpeedConverter()),
             ("0x5B17", HaierHoodLightLevelConverter()),
-            ("0x5B15", HaierHoodFanSpeedConverter()),
-            ("0x5B16", HaierHoodLightLevelConverter()),
+            ("0x5B14", HaierHoodFanSpeedConverter()),
+            ("0x5B18", HaierHoodLightLevelConverter()),
         ):
             # String key
             try:
@@ -217,15 +217,15 @@ def ensure_haier_hood_handlers_for_appliance(appliance: GeAppliance) -> None:
         if enc_reg is not None:
             registered_any |= _register_both_key_types(enc_reg, "0x5B13", HaierHoodFanSpeedConverter())
             registered_any |= _register_both_key_types(enc_reg, "0x5B17", HaierHoodLightLevelConverter())
-            registered_any |= _register_both_key_types(enc_reg, "0x5B15", HaierHoodFanSpeedConverter())
-            registered_any |= _register_both_key_types(enc_reg, "0x5B16", HaierHoodLightLevelConverter())
+            registered_any |= _register_both_key_types(enc_reg, "0x5B14", HaierHoodFanSpeedConverter())
+            registered_any |= _register_both_key_types(enc_reg, "0x5B18", HaierHoodLightLevelConverter())
 
         # Register on DECODER (nice to have)
         if dec_reg is not None:
             registered_any |= _register_both_key_types(dec_reg, "0x5B13", HaierHoodFanSpeedConverter())
             registered_any |= _register_both_key_types(dec_reg, "0x5B17", HaierHoodLightLevelConverter())
-            registered_any |= _register_both_key_types(dec_reg, "0x5B15", HaierHoodFanSpeedConverter())
-            registered_any |= _register_both_key_types(dec_reg, "0x5B16", HaierHoodLightLevelConverter())
+            registered_any |= _register_both_key_types(dec_reg, "0x5B14", HaierHoodFanSpeedConverter())
+            registered_any |= _register_both_key_types(dec_reg, "0x5B18", HaierHoodLightLevelConverter())
 
         if not registered_any:
             # Keep the exception (with our debug above) so we can see layouts if it still fails.

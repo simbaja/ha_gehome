@@ -28,9 +28,9 @@ def _erd(code: str) -> ErdCodeStr:
 ERD_HAIER_HOOD_FAN_STATUS: ErdCodeStr = _erd("0x5B13")  # Fan speed: 0..4
 ERD_HAIER_HOOD_LIGHT_STATUS: ErdCodeStr = _erd("0x5B17") # Light on/off: 0..1
 
-# Command ERDs (write-only - HYPOTHESIS)
-ERD_HAIER_HOOD_FAN_COMMAND: ErdCodeStr = _erd("0x5B15")
-ERD_HAIER_HOOD_LIGHT_COMMAND: ErdCodeStr = _erd("0x5B16")
+# Command ERDs (write-only - HYPOTHESIS 2)
+ERD_HAIER_HOOD_FAN_COMMAND: ErdCodeStr = _erd("0x5B14")
+ERD_HAIER_HOOD_LIGHT_COMMAND: ErdCodeStr = _erd("0x5B18")
 
 # Back-compat alias (older entity code imported this symbol):
 # Keep the name but point it to the correct STATUS ERD.
