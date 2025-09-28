@@ -140,7 +140,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     def regenerate_appliance_apis(self):
         """Regenerate the appliance_apis dictionary, adding elements as necessary."""
-        for jid, appliance in self.client.appliances.items():  # ✅ fixed .items()
+        for jid, appliance in self.client.appliances.items():
             if jid not in self._appliance_apis:
                 self._appliance_apis[jid] = self._get_appliance_api(appliance)
 
