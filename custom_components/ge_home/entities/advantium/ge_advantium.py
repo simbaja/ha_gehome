@@ -17,7 +17,6 @@ from gehomesdk.erd.values.advantium.advantium_enums import CookAction, CookMode
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.util.unit_conversion import TemperatureConverter
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
@@ -241,9 +240,6 @@ class GeAdvantium(GeAbstractWaterHeater):
         cook_status = self.current_cook_status
         cook_mode = cook_status.cook_mode  
 
-        _LOGGER.debug("Cook setting: %s", cook_setting)
-        _LOGGER.debug("Cook mode: %s", cook_mode)
-        _LOGGER.debug("Current operation mode: %s", self._current_operation_mode)
         #if we have a current mode
         if(self._current_operation_mode is not None):
             #and the cook mode is the same as what the appliance says, we'll just leave things alone
