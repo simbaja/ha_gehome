@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from homeassistant.helpers.entity import Entity
-from gehomesdk import ErdCode, ErdApplianceType, ErdOnOff, ErdBrand
+from gehomesdk import ErdCode, ErdApplianceType, ErdOnOff, ErdBrand, GeAppliance
 
 from .base import ApplianceApi
 from ..entities import (
@@ -29,6 +29,22 @@ _LOGGER = logging.getLogger(__name__)
 class HoodApi(ApplianceApi):
     """API class for Hood objects"""
     APPLIANCE_TYPE = ErdApplianceType.HOOD
+
+    @ApplianceApi.appliance.setter
+    def appliance(self, value: GeAppliance):
+        """Overrides the base appliance setter to re-apply patches on reconnect."""
+        # Call the parent's setter first to update the internal appliance object
+        # super(HoodApi, self.__class__).appliance.fset(self, value) -> This syntax is for Python 2
+        super(HoodApi, HoodApi).appliance.fset(self, value)
+
+        # After the new appliance object is in place, re-apply the patch if it's a Haier hood.
+        # This ensures the patch is present even after a client reconnect creates a new appliance instance.
+        if self.try_get_erd_value(ErdCode.BRAND) == ErdBrand.HEIER_FPA:
+            try:
+                _LOGGER.debug(f"Re-patching Haier hood handlers for new appliance instance: {value.mac_addr}")
+                ensure_haier_hood_handlers_for_appliance(value)
+            except Exception:
+                _LOGGER.exception("Failed to re-patch Haier hood ERD handlers on reconnect")
 
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
