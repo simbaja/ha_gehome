@@ -4,6 +4,7 @@ from typing import List
 
 from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdOnOff, ErdBrand, GeAppliance
+# The direct import of GeHomeUpdateCoordinator has been removed from here to prevent the circular import.
 from ..update_coordinator import GeHomeUpdateCoordinator
 
 from .base import ApplianceApi
