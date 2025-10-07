@@ -1,11 +1,13 @@
 from __future__ import annotations
 import logging
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdOnOff, ErdBrand, GeAppliance
-# The direct import of GeHomeUpdateCoordinator has been removed from here to prevent the circular import.
-from ..update_coordinator import GeHomeUpdateCoordinator
+
+# This block resolves the circular import by only importing for type checking
+if TYPE_CHECKING:
+    from ..update_coordinator import GeHomeUpdateCoordinator
 
 from .base import ApplianceApi
 from ..entities import (
@@ -33,7 +35,7 @@ class HoodApi(ApplianceApi):
     """API class for Hood objects"""
     APPLIANCE_TYPE = ErdApplianceType.HOOD
 
-    def __init__(self, coordinator: GeHomeUpdateCoordinator, appliance: GeAppliance):
+    def __init__(self, coordinator: "GeHomeUpdateCoordinator", appliance: GeAppliance):
         super().__init__(coordinator, appliance)
         # Determine and store the brand once during initialization
         self._brand = self.try_get_erd_value(ErdCode.BRAND)
