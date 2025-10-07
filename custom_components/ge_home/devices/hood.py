@@ -3,6 +3,7 @@ from typing import List
 
 from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdOnOff, ErdBrand, GeAppliance
+from ..update_coordinator import GeHomeUpdateCoordinator
 
 from .base import ApplianceApi
 from ..entities import (
@@ -30,16 +31,20 @@ class HoodApi(ApplianceApi):
     """API class for Hood objects"""
     APPLIANCE_TYPE = ErdApplianceType.HOOD
 
+    def __init__(self, coordinator: GeHomeUpdateCoordinator, appliance: GeAppliance):
+        super().__init__(coordinator, appliance)
+        # Determine and store the brand once during initialization
+        self._brand = self.try_get_erd_value(ErdCode.BRAND)
+
     @ApplianceApi.appliance.setter
     def appliance(self, value: GeAppliance):
         """Overrides the base appliance setter to re-apply patches on reconnect."""
         # Call the parent's setter first to update the internal appliance object
-        # super(HoodApi, self.__class__).appliance.fset(self, value) -> This syntax is for Python 2
         super(HoodApi, HoodApi).appliance.fset(self, value)
 
         # After the new appliance object is in place, re-apply the patch if it's a Haier hood.
-        # This ensures the patch is present even after a client reconnect creates a new appliance instance.
-        if self.try_get_erd_value(ErdCode.BRAND) == ErdBrand.HEIER_FPA:
+        # This check uses the stored brand, as the new `value` object may not be initialized yet.
+        if self._brand == ErdBrand.HEIER_FPA:
             try:
                 _LOGGER.debug(f"Re-patching Haier hood handlers for new appliance instance: {value.mac_addr}")
                 ensure_haier_hood_handlers_for_appliance(value)
@@ -61,9 +66,8 @@ class HoodApi(ApplianceApi):
             )
         )
 
-        brand = self.try_get_erd_value(ErdCode.BRAND)
-
-        if brand == ErdBrand.HEIER_FPA:
+        # Use the stored brand from __init__
+        if self._brand == ErdBrand.HEIER_FPA:
             # Haier/F&P hood -- add our direct ERD selects and make sure encoding/decoding is wired
             try:
                 ensure_haier_hood_handlers_for_appliance(self.appliance)
