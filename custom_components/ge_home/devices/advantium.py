@@ -13,6 +13,15 @@ class AdvantiumApi(ApplianceApi):
     """API class for Advantium objects"""
     APPLIANCE_TYPE = ErdApplianceType.ADVANTIUM
 
+    @property
+    def sw_version(self) -> str:
+        appVer = self.try_get_erd_value(ErdCode.APPLIANCE_SW_VERSION)
+        if appVer == "0.0.0.0":
+            appVer = self.try_get_erd_value(ErdCode.LCD_SW_VERSION)
+        wifiVer = self.try_get_erd_value(ErdCode.WIFI_MODULE_SW_VERSION)
+
+        return 'Appliance=' + str(appVer or 'Unknown') + '/Wifi=' + str(wifiVer or 'Unknown')
+
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
 
