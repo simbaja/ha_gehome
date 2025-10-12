@@ -3,6 +3,7 @@ from .bool_converter import BoolConverter, ErdOnOffBoolConverter
 from .ge_entity import GeEntity
 from .ge_erd_entity import GeErdEntity
 from .ge_erd_binary_sensor import GeErdBinarySensor
+from .ge_erd_binary_sensor_switch import GeErdBinarySensorSwitch
 from .ge_erd_property_binary_sensor import GeErdPropertyBinarySensor
 from .ge_erd_sensor import GeErdSensor
 from .ge_erd_light import GeErdLight
