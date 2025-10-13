@@ -128,7 +128,11 @@ class GeAdvantium(GeAbstractWaterHeater):
         """Return the temperature we try to reach."""
         try:
             cook_mode = self.current_cook_setting
-            if cook_mode.target_temperature and cook_mode.target_temperature > 0:
+            if (
+                cook_mode.cook_mode != CookMode.NO_MODE and 
+                cook_mode.target_temperature and 
+                cook_mode.target_temperature > 0
+            ):
                 return cook_mode.target_temperature
         except:
             pass
@@ -137,13 +141,13 @@ class GeAdvantium(GeAbstractWaterHeater):
     @property
     def min_temp(self) -> int:
         """Return the minimum temperature."""
-        min_temp, _ = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
+        min_temp, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
         return min_temp
 
     @property
     def max_temp(self) -> int:
         """Return the maximum temperature."""
-        _, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
+        min_temp, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
         return max_temp
 
     @property
@@ -178,8 +182,11 @@ class GeAdvantium(GeAbstractWaterHeater):
         target_temp = self._convert_target_temperature(setting.target_temperature_120v_f, setting.target_temperature_240v_f)
 
         #if we allow temperature to be set in this mode, and already have a temperature, use it
-        if setting.allow_temperature_set and self.target_temperature:
-            target_temp = self.target_temperature
+        if (
+            setting.allow_temperature_set and 
+            self.current_cook_status.cook_mode == setting.cook_mode and 
+            self.target_temperature):
+            target_temp = max(self.min_temp, min(self.max_temp, int(self.target_temperature)))
 
         #by default we will start an operation, but handle other actions too
         action = CookAction.START
@@ -191,15 +198,15 @@ class GeAdvantium(GeAbstractWaterHeater):
             action = CookAction.UPDATED
 
         #construct the new mode based on the existing mode
-        current_cook_mode = self.current_cook_setting
-        new_cook_mode_dict = current_cook_mode._asdict()        
-        new_cook_mode_dict["d"] = randrange(255)
-        new_cook_mode_dict["target_temperature"] = target_temp
-        if(setting.target_power_level != 0):
-            new_cook_mode_dict["power_level"] = setting.target_power_level
-        new_cook_mode_dict["cook_mode"] = setting.cook_mode
-        new_cook_mode_dict["cook_action"] = action
-        new_cook_mode = ErdAdvantiumCookSetting(**new_cook_mode_dict)
+        new_cook_mode = ErdAdvantiumCookSetting(
+            d=randrange(255),
+            cook_action=action,
+            cook_mode=setting.cook_mode,
+            target_temperature=target_temp or 0,
+            power_level=setting.target_power_level or 0,
+            warm_status=setting.warm_status or 0,
+        )
+        _LOGGER.debug("New ErdAdvantiumCookSetting: %s", new_cook_mode)
 
         await self.appliance.async_set_erd_value(ErdCode.ADVANTIUM_COOK_SETTING, new_cook_mode)
 
@@ -228,15 +235,14 @@ class GeAdvantium(GeAbstractWaterHeater):
         #construct the new mode based on the existing mode
         current_cook_mode = self.current_cook_setting
         new_cook_mode = current_cook_mode._replace(
-            d = randrange(255)
-            target_temperature = target_temp
-            cook_action = action
+            d = randrange(255),
+            target_temperature = target_temp,
+            cook_action = action,
         )
 
         await self.appliance.async_set_erd_value(ErdCode.ADVANTIUM_COOK_SETTING, new_cook_mode)            
 
     def _ensure_operation_mode(self):
-        cook_setting = self.current_cook_setting
         cook_status = self.current_cook_status
         cook_mode = cook_status.cook_mode  
 
@@ -246,8 +252,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             #and assume that things are in sync
             if ADVANTIUM_OPERATION_MODE_COOK_SETTING_MAPPING[self._current_operation_mode].cook_mode == cook_mode:
                 return
-            else:
-                self._current_operation_mode = None
+            self._current_operation_mode = None
         
         #synchronize the operation mode with the device state
         if cook_mode == CookMode.MICROWAVE:
@@ -265,9 +270,10 @@ class GeAdvantium(GeAbstractWaterHeater):
                 #warm matches on the mode, warm status, and target temp
                 if (cook_mode == value.cook_mode and 
                     cook_status.warm_status == value.warm_status and 
-                    cook_status.target_temperature == self._convert_target_temperature(
+                    cook_status.temperature == self._convert_target_temperature(
                         value.target_temperature_120v_f, value.target_temperature_240v_f)):
                     self._current_operation_mode = key
+                    break
 
         #just pick the first match based on cook mode if we made it here
         if self._current_operation_mode is None:
@@ -280,7 +286,7 @@ class GeAdvantium(GeAbstractWaterHeater):
         return
 
     def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
-        unit_type = self.personality
+        unit_type = self.personality        
         target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE, ErdPersonality.PERSONALITY_240V_STANDALONE_CAFE] else temp_120v
         return target_temp_f
 
