@@ -107,7 +107,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     @property
     def appliances(self) -> Iterable[GeAppliance]:
-        return self.client.appliances.values()
+        return (
+                    appliance for appliance in self.client.appliances.values() 
+                    if self._is_appliance_valid(appliance)
+        )
 
     @property
     def appliance_apis(self) -> Dict[str, ApplianceApi]:
@@ -125,7 +128,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     @property
     def online(self) -> bool:
         """
-        Indicates whether the services is online.  If it's retried several times, it's assumed
+        Indicates whether the services is online. If it's retried several times, it's assumed
         that it's offline for some reason
         """
         return self.connected or self._retry_count <= RETRY_OFFLINE_COUNT
@@ -138,16 +141,17 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         return self.client and self.client.connected
 
     def _get_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
+        self._dump_appliance(appliance)
         api_type = get_appliance_api_type(appliance.appliance_type)
         return api_type(self, appliance)
 
     def regenerate_appliance_apis(self):
         """Regenerate the appliance_apis dictionary, adding elements as necessary."""
         for jid, appliance in self.client.appliances.keys():
-            if jid not in self._appliance_apis:
+            if jid not in self._appliance_apis and self._is_appliance_valid(appliance):
                 self._appliance_apis[jid] = self._get_appliance_api(appliance)
 
-    def maybe_add_appliance_api(self, appliance: GeAppliance):
+    def _maybe_add_appliance_api(self, appliance: GeAppliance):
         mac_addr = appliance.mac_addr
         if mac_addr not in self.appliance_apis:
             _LOGGER.debug(f"Adding appliance api for appliance {mac_addr} ({appliance.appliance_type})")
@@ -276,6 +280,13 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Let HA know there's new state."""
         self.last_update_success = True
         appliance, _ = data
+
+        self._dump_appliance(appliance)
+        
+        if not self._is_appliance_valid(appliance):
+            _LOGGER.debug(f"on_device_update: skipping invalid appliance {appliance.mac_addr}")
+            return
+
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
@@ -325,10 +336,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             await self.async_maybe_trigger_all_ready()
 
     async def on_device_initial_update(self, appliance: GeAppliance):
+        self._dump_appliance(appliance)
+
+        if not self._is_appliance_valid(appliance):
+            _LOGGER.debug(f"on_device_initial_update: skipping invalid appliance {appliance.mac_addr}")
+            return
+
         """When an appliance first becomes ready, let the system know and schedule periodic updates."""
         _LOGGER.debug(f"Got initial update for {appliance.mac_addr}")
         self.last_update_success = True
-        self.maybe_add_appliance_api(appliance)
+        self._maybe_add_appliance_api(appliance)
         await self.async_maybe_trigger_all_ready()
         _LOGGER.debug(f"Requesting updates for {appliance.mac_addr}")
         while self.connected:
@@ -366,3 +383,33 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     def _get_retry_delay(self) -> int:
         delay = MIN_RETRY_DELAY * 2 ** (self._retry_count - 1)
         return min(delay, MAX_RETRY_DELAY)
+
+    def _is_appliance_valid(self, appliance: GeAppliance) -> True:
+        return appliance.appliance_type and appliance.available
+
+    def _dump_appliance(self, appliance: GeAppliance) -> None:
+        if not _LOGGER.isEnabledFor(logging.DEBUG):
+            return
+
+        import pprint
+        try:
+            _LOGGER.debug(f"--- COMPREHENSIVE DUMP FOR APPLIANCE: {appliance.mac_addr} ---")
+            appliance_data = {}            
+            # dir() gets all attrs, including properties and methods
+            for attr_name in dir(appliance):
+                # skip "magic" methods and "private" attributes to reduce noise
+                if attr_name.startswith('_'):
+                    continue                
+                try:
+                    value = getattr(appliance, attr_name)
+                    # for now skip methods - we only want data
+                    if callable(value):
+                        continue
+                    appliance_data[attr_name] = value
+                except Exception:
+                    # some props might fail if called out of context
+                    appliance_data[attr_name] = "Error: Could not read attribute"
+            _LOGGER.debug(pprint.pformat(appliance_data))
+            _LOGGER.debug("--- END OF COMPREHENSIVE DUMP ---")
+        except Exception as e:
+            _LOGGER.error(f"Could not dump appliance {appliance}: {e}")
