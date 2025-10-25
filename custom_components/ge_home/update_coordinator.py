@@ -384,7 +384,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         delay = MIN_RETRY_DELAY * 2 ** (self._retry_count - 1)
         return min(delay, MAX_RETRY_DELAY)
 
-    def _is_appliance_valid(self, appliance: GeAppliance) -> True:
+    def _is_appliance_valid(self, appliance: GeAppliance) -> bool:
         return appliance.appliance_type and appliance.available
 
     def _dump_appliance(self, appliance: GeAppliance) -> None:
