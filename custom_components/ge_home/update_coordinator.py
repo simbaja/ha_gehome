@@ -5,7 +5,14 @@ import async_timeout
 import logging
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple, List
 
-logging.getLogger('slixmpp.stringprep').setLevel(logging.ERROR)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import get_default_context 
 
 from gehomesdk import (
     EVENT_APPLIANCE_INITIAL_UPDATE,
@@ -16,18 +23,10 @@ from gehomesdk import (
     ErdCodeType,
     GeAppliance,
     GeWebsocketClient,
+    ErdApplianceType
 )
 from gehomesdk import GeAuthFailedError, GeGeneralServerError, GeNotAuthenticatedError
-from .exceptions import HaAuthError, HaCannotConnect
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.ssl import get_default_context 
 from .const import (
     DOMAIN,
     EVENT_ALL_APPLIANCES_READY,
@@ -38,6 +37,7 @@ from .const import (
     ASYNC_TIMEOUT,
 )
 from .devices import ApplianceApi, get_appliance_api_type
+from .exceptions import HaAuthError, HaCannotConnect, HaInvalidOperation
 
 PLATFORMS = [
     "binary_sensor", 
@@ -107,9 +107,12 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     @property
     def appliances(self) -> Iterable[GeAppliance]:
+        if self.client is None:
+            return []
+
         return (
-                    appliance for appliance in self.client.appliances.values() 
-                    if self._is_appliance_valid(appliance)
+            appliance for appliance in self.client.appliances.values() 
+            if self._is_appliance_valid(appliance)
         )
 
     @property
@@ -138,16 +141,23 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """
         Indicates whether the coordinator is connected
         """
-        return self.client and self.client.connected
+        return self.client is not None and self.client.connected
 
     def _get_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
+        if appliance is None:
+            return None
+
         self._dump_appliance(appliance)
-        api_type = get_appliance_api_type(appliance.appliance_type)
+        api_type = get_appliance_api_type(appliance.appliance_type or ErdApplianceType.UNKNOWN)
         return api_type(self, appliance)
 
     def regenerate_appliance_apis(self):
+        if self.client is None:
+            _LOGGER.warning("Attempted to regenerate appliances with no client.")
+            return
+
         """Regenerate the appliance_apis dictionary, adding elements as necessary."""
-        for jid, appliance in self.client.appliances.keys():
+        for jid, appliance in self.client.appliances.items():
             if jid not in self._appliance_apis and self._is_appliance_valid(appliance):
                 self._appliance_apis[jid] = self._get_appliance_api(appliance)
 
@@ -213,9 +223,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_begin_session(self):
         """Begins the ge_home session."""
         _LOGGER.debug("Beginning session")
+        
+        if self.client is None:
+            raise HaInvalidOperation("Attempted to start a session without a valid client.")
+        if self.hass is None or self.hass.loop is None:
+            raise HaInvalidOperation("No running HASS loop to start client.")
+
         session = async_get_clientsession(self.hass)
         await self.client.async_get_credentials(session)
-        fut = asyncio.ensure_future(self.client.async_run_client(), loop=self.hass.loop)
+
+        fut = self.hass.loop.create_task(self.client.async_run_client())
         _LOGGER.debug("Client running")
         return fut
 
@@ -236,6 +253,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     async def _kill_client(self):
         """Kill the client.  Leaving this in for testing purposes."""
+        if self.client is None:
+            _LOGGER.warning("Client is already deallocated, cannot kill.")
+            return
+        
         await asyncio.sleep(30)
         _LOGGER.critical("Killing the connection.  Popcorn time.")
         await self.client.disconnect()
@@ -245,6 +266,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Prepare to reconnect ge_home session."""
         if log:
             _LOGGER.info("Will try to reconnect to ge_home service")
+        if self.hass is None or self.hass.loop is None:
+            raise HaInvalidOperation("No running HASS loop to reconnect client.")
+
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
@@ -255,7 +279,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         )
 
         try:
-            with async_timeout.timeout(ASYNC_TIMEOUT):
+            async with async_timeout.timeout(ASYNC_TIMEOUT):
                 await self.async_start_client()
         except Exception as err:
             _LOGGER.warning(f"could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
@@ -317,7 +341,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.debug(f"Refreshing state for {entity} ({entity.unique_id}, {entity.entity_id}")
                     entity.async_write_ha_state()
                 except:
-                    _LOGGER.warning(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=1)
+                    _LOGGER.warning(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=True)
 
     @property
     def all_appliances_updated(self) -> bool:
@@ -326,6 +350,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     async def on_appliance_list(self, _):
         """When we get an appliance list, mark it and maybe trigger all ready."""
+
         _LOGGER.debug("Got roster update")
         self.last_update_success = True
         if not self._got_roster:
@@ -336,19 +361,26 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             await self.async_maybe_trigger_all_ready()
 
     async def on_device_initial_update(self, appliance: GeAppliance):
+        """When an appliance first becomes ready, let the system know and schedule periodic updates."""
+
         self._dump_appliance(appliance)
 
         if not self._is_appliance_valid(appliance):
             _LOGGER.debug(f"on_device_initial_update: skipping invalid appliance {appliance.mac_addr}")
             return
 
-        """When an appliance first becomes ready, let the system know and schedule periodic updates."""
         _LOGGER.debug(f"Got initial update for {appliance.mac_addr}")
+
         self.last_update_success = True
         self._maybe_add_appliance_api(appliance)
         await self.async_maybe_trigger_all_ready()
         _LOGGER.debug(f"Requesting updates for {appliance.mac_addr}")
+
         while self.connected:
+            if self.client is None:
+                _LOGGER.debug("Lost the client, stopping device updates.")
+                break
+
             await asyncio.sleep(UPDATE_INTERVAL)
             if self.connected and self.client.available:
                 await appliance.async_request_update()
@@ -371,6 +403,11 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         if self._init_done:
             # Been here, done this
             return
+        
+        if self.client is None:
+            _LOGGER.warning("Client is already deallocated, cannot trigger ready.")
+            return
+                
         if self._got_roster and self.all_appliances_updated:
             _LOGGER.debug("Ready to go, sending ready signal")
             self._init_done = True
@@ -378,14 +415,14 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             async_dispatcher_send(
                 self.hass, 
                 self.signal_ready, 
-                list(self.appliance_apis.values()))            
+                list(self.appliance_apis.values()))
 
     def _get_retry_delay(self) -> int:
         delay = MIN_RETRY_DELAY * 2 ** (self._retry_count - 1)
         return min(delay, MAX_RETRY_DELAY)
 
     def _is_appliance_valid(self, appliance: GeAppliance) -> bool:
-        return appliance.appliance_type and appliance.available
+        return appliance.appliance_type is not None and appliance.available
 
     def _dump_appliance(self, appliance: GeAppliance) -> None:
         if not _LOGGER.isEnabledFor(logging.DEBUG):

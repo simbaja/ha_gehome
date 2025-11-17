@@ -8,3 +8,5 @@ class HaAuthError(ha_exc.HomeAssistantError):
     """Error to indicate authentication failure."""
 class HaAlreadyConfigured(ha_exc.HomeAssistantError):
     """Error to indicate that the account is already configured"""
+class HaInvalidOperation(ha_exc.HomeAssistantError):
+    """Error to indcate that an invalid operation was attempted"""

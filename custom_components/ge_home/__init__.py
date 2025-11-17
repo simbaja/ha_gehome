@@ -1,12 +1,12 @@
 """The ge_home integration."""
 
 import logging
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import voluptuous as vol
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_REGION
+from homeassistant.const import CONF_REGION, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
@@ -38,18 +38,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ge_home from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    coordinators = hass.data.setdefault(DOMAIN, {})  # type: dict[str, GeHomeUpdateCoordinator]
 
     #try to get existing coordinator
-    existing: GeHomeUpdateCoordinator = dict.get(hass.data[DOMAIN],entry.entry_id)
+    existing = cast(
+        GeHomeUpdateCoordinator | None,
+        coordinators.get(entry.entry_id),
+    )
 
     coordinator = GeHomeUpdateCoordinator(hass, entry)
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    coordinators[entry.entry_id] = coordinator
 
     # try to unload the existing coordinator
     try:
         if existing:
-            await coordinator.async_reset()
+            await existing.async_reset()
     except:
         _LOGGER.warning("Could not reset existing coordinator.")
     

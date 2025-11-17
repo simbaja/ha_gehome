@@ -1,5 +1,6 @@
 """GE Home Humidifier Entities"""
 import logging
+from collections.abc import Collection
 from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,13 +16,13 @@ from .update_coordinator import GeHomeUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable):
-    """GE Home Water Heaters."""
+    """GE Home Humidifiers"""
     _LOGGER.debug('Adding GE "Humidifiers"')
     coordinator: GeHomeUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     registry = er.async_get(hass)
 
     @callback
-    def async_devices_discovered(apis: list[ApplianceApi]):
+    def async_devices_discovered(apis: Collection[ApplianceApi]):
         _LOGGER.debug(f'Found {len(apis):d} appliance APIs')
         entities = [
             entity 
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             if isinstance(entity, GeHumidifier)
             if not registry.async_is_registered(entity.entity_id)
         ]
-        _LOGGER.debug(f'Found {len(entities):d} unregistered humidifiers')
+        _LOGGER.debug(f'Found {len(entities):d} unregistered humidifiers to register')
         async_add_entities(entities)
 
     #if we're already initialized at this point, call device
