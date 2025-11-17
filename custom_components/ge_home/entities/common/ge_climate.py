@@ -36,7 +36,8 @@ class GeClimate(GeEntity, ClimateEntity):
         current_temperature_erd_code: ErdCodeType = ErdCode.AC_AMBIENT_TEMPERATURE,
         target_temperature_erd_code: ErdCodeType = ErdCode.AC_TARGET_TEMPERATURE,
         hvac_mode_erd_code: ErdCodeType = ErdCode.AC_OPERATION_MODE,
-        fan_mode_erd_code: ErdCodeType = ErdCode.AC_FAN_SETTING
+        fan_mode_erd_code: ErdCodeType = ErdCode.AC_FAN_SETTING,
+        target_heating_temperature_erd_code: ErdCodeType = ErdCode.AC_TARGET_HEATING_TEMPERATURE,
 
     ):
         super().__init__(api)
@@ -51,6 +52,7 @@ class GeClimate(GeEntity, ClimateEntity):
         self._target_temperature_erd_code = api.appliance.translate_erd_code(target_temperature_erd_code)
         self._hvac_mode_erd_code = api.appliance.translate_erd_code(hvac_mode_erd_code)
         self._fan_mode_erd_code = api.appliance.translate_erd_code(fan_mode_erd_code)
+        self._target_heating_temperature_erd_code = api.appliance.translate_erd_code(target_heating_temperature_erd_code)
 
     @property
     def unique_id(self) -> str:
@@ -66,6 +68,8 @@ class GeClimate(GeEntity, ClimateEntity):
 
     @property
     def target_temperature_erd_code(self):
+        if self.hvac_mode == HVACMode.HEAT:
+            return self._target_heating_temperature_erd_code
         return self._target_temperature_erd_code
 
     @property
