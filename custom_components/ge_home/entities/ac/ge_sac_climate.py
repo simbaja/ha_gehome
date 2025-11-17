@@ -12,7 +12,7 @@ from .fan_mode_options import AcFanOnlyFanModeOptionsConverter, AcFanModeOptions
 _LOGGER = logging.getLogger(__name__)
 
 class SacHvacModeOptionsConverter(OptionsConverter):
-    def __init__(self, available_modes: ErdAcAvailableModes):
+    def __init__(self, available_modes: Optional[ErdAcAvailableModes] = None):
         self._available_modes = available_modes
 
     @property
@@ -59,7 +59,7 @@ class GeSacClimate(GeClimate):
     """Class for Split AC units"""
     def __init__(self, api: ApplianceApi):
         #initialize the climate control
-        super().__init__(api, SacHvacModeOptionsConverter(ErdAcAvailableModes()), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        super().__init__(api, SacHvacModeOptionsConverter(), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
         #get a couple ERDs that shouldn't change if available
         self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)

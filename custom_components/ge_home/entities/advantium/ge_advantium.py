@@ -12,10 +12,12 @@ from gehomesdk import (
     ErdAdvantiumCookSetting, 
     AdvantiumOperationMode, 
     AdvantiumCookSetting,
+    AdvantiumCookAction, 
+    AdvantiumCookMode, 
+    AdvantiumWarmStatus,
     ErdAdvantiumRemoteCookModeConfig,
     ADVANTIUM_OPERATION_MODE_COOK_SETTING_MAPPING     
 )
-from gehomesdk.erd.values.advantium.advantium_enums import CookAction, CookMode, WarmStatus
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
@@ -81,13 +83,13 @@ class GeAdvantium(GeAbstractWaterHeater):
     def operation_list(self) -> List[str]:
         invalid = []
         if not self._remote_config.broil_enable:
-            invalid.append(CookMode.BROIL)
+            invalid.append(AdvantiumCookMode.BROIL)
         if not self._remote_config.convection_bake_enable:
-            invalid.append(CookMode.CONVECTION_BAKE)
+            invalid.append(AdvantiumCookMode.CONVECTION_BAKE)
         if not self._remote_config.proof_enable:
-            invalid.append(CookMode.PROOF)
+            invalid.append(AdvantiumCookMode.PROOF)
         if not self._remote_config.warm_enable:
-            invalid.append(CookMode.WARM)
+            invalid.append(AdvantiumCookMode.WARM)
 
         return [
             k.stringify()
@@ -137,7 +139,7 @@ class GeAdvantium(GeAbstractWaterHeater):
         try:
             cook_mode = self.current_cook_setting
             if (
-                cook_mode.cook_mode != CookMode.NO_MODE and 
+                cook_mode.cook_mode != AdvantiumCookMode.NO_MODE and 
                 cook_mode.target_temperature and 
                 cook_mode.target_temperature > 0
             ):
@@ -197,13 +199,13 @@ class GeAdvantium(GeAbstractWaterHeater):
             target_temp = max(self.min_temp, min(self.max_temp, int(self.target_temperature)))
 
         #by default we will start an operation, but handle other actions too
-        action = CookAction.START
+        action = AdvantiumCookAction.START
         if mode == AdvantiumOperationMode.OFF:
-            action = CookAction.STOP
-        elif self.current_cook_setting.cook_action == CookAction.PAUSE:
-            action = CookAction.RESUME
-        elif self.current_cook_setting.cook_action in [CookAction.START, CookAction.RESUME]:
-            action = CookAction.UPDATED
+            action = AdvantiumCookAction.STOP
+        elif self.current_cook_setting.cook_action == AdvantiumCookAction.PAUSE:
+            action = AdvantiumCookAction.RESUME
+        elif self.current_cook_setting.cook_action in [AdvantiumCookAction.START, AdvantiumCookAction.RESUME]:
+            action = AdvantiumCookAction.UPDATED
 
         #construct the new mode based on the existing mode
         new_cook_mode = ErdAdvantiumCookSetting(
@@ -212,7 +214,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             cook_mode=setting.cook_mode,
             target_temperature=target_temp or 0,
             power_level=setting.target_power_level or 0,
-            warm_status=setting.warm_status or WarmStatus.OFF,
+            warm_status=setting.warm_status or AdvantiumWarmStatus.OFF,
         )
         _LOGGER.debug("New ErdAdvantiumCookSetting: %s", new_cook_mode)
 
@@ -238,7 +240,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             return
 
         #should only need to update
-        action = CookAction.UPDATED
+        action = AdvantiumCookAction.UPDATED
 
         #construct the new mode based on the existing mode
         current_cook_mode = self.current_cook_setting
@@ -263,7 +265,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             self._current_operation_mode = None
         
         #synchronize the operation mode with the device state
-        if cook_mode == CookMode.MICROWAVE:
+        if cook_mode == AdvantiumCookMode.MICROWAVE:
             #microwave matches on cook mode and power level
             if cook_status.power_level == 3:
                 self._current_operation_mode = AdvantiumOperationMode.MICROWAVE_PL3
@@ -273,7 +275,7 @@ class GeAdvantium(GeAbstractWaterHeater):
                 self._current_operation_mode = AdvantiumOperationMode.MICROWAVE_PL7
             else:
                 self._current_operation_mode = AdvantiumOperationMode.MICROWAVE_PL10
-        elif cook_mode == CookMode.WARM:
+        elif cook_mode == AdvantiumCookMode.WARM:
             for key, value in ADVANTIUM_OPERATION_MODE_COOK_SETTING_MAPPING.items():
                 #warm matches on the mode, warm status, and target temp
                 if (cook_mode == value.cook_mode and 

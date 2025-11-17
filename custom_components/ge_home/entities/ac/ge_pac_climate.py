@@ -12,7 +12,7 @@ from .fan_mode_options import AcFanOnlyFanModeOptionsConverter
 _LOGGER = logging.getLogger(__name__)
 
 class PacHvacModeOptionsConverter(OptionsConverter):
-    def __init__(self, available_modes: ErdAcAvailableModes):
+    def __init__(self, available_modes: Optional[ErdAcAvailableModes] = None):
         self._available_modes = available_modes
 
     @property
@@ -56,7 +56,7 @@ class GePacClimate(GeClimate):
     """Class for Portable AC units"""
     def __init__(self, api: ApplianceApi):
         #initialize the climate control with defaults
-        super().__init__(api, PacHvacModeOptionsConverter(ErdAcAvailableModes()), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        super().__init__(api, PacHvacModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
         #get a couple ERDs that shouldn't change if available
         self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)

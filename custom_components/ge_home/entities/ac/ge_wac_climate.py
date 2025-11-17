@@ -11,7 +11,7 @@ from .fan_mode_options import AcFanModeOptionsConverter, AcFanOnlyFanModeOptions
 _LOGGER = logging.getLogger(__name__)
 
 class WacHvacModeOptionsConverter(OptionsConverter):
-    def __init__(self, available_modes: ErdAcAvailableModes):
+    def __init__(self, available_modes: Optional[ErdAcAvailableModes] = None):
         self._available_modes = available_modes
 
     @property
@@ -52,7 +52,7 @@ class WacHvacModeOptionsConverter(OptionsConverter):
 class GeWacClimate(GeClimate):
     """Class for Window AC units"""
     def __init__(self, api: ApplianceApi):
-        super().__init__(api, WacHvacModeOptionsConverter(ErdAcAvailableModes()), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        super().__init__(api, WacHvacModeOptionsConverter(), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
         #get a couple ERDs that shouldn't change if available
         self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
