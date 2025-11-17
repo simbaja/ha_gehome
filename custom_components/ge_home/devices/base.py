@@ -2,12 +2,16 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 
-from gehomesdk import GeAppliance
-from gehomesdk.erd import ErdCode, ErdCodeType, ErdApplianceType
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.device_registry import DeviceInfo
+from gehomesdk import (
+    GeAppliance,
+    ErdCode, 
+    ErdCodeType, 
+    ErdApplianceType
+)
 
 from ..const import DOMAIN
 
@@ -29,7 +33,7 @@ class ApplianceApi:
         self._hass = coordinator.hass
         self.coordinator = coordinator
         self.initial_update = False
-        self._entities = {}  # type: Optional[Dict[str, Entity]]
+        self._entities: Dict[str, Entity] = {}
 
     @property
     def hass(self) -> HomeAssistant:
@@ -54,7 +58,7 @@ class ApplianceApi:
         #Note - online will be there since we're using the GE coordinator
         #Didn't want to deal with the circular references to get the type hints
         #working.
-        return self.appliance.available and self.coordinator.online
+        return self.appliance.available and self.coordinator.online # type: ignore
 
     @property
     def serial_number(self) -> str:
@@ -100,7 +104,7 @@ class ApplianceApi:
         return f"GE {appliance_type} {self.serial_or_mac}"
 
     @property
-    def device_info(self) -> Dict:
+    def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
 
         return {
@@ -112,7 +116,7 @@ class ApplianceApi:
         }
 
     @property
-    def entities(self) -> List[Entity]:
+    def entities(self) -> List[Entity]:       
         return list(self._entities.values())
 
     def get_all_entities(self) -> List[Entity]:
@@ -137,7 +141,7 @@ class ApplianceApi:
         ]
 
         for entity in entities:
-            if entity.unique_id not in self._entities:
+            if entity.unique_id is not None and entity.unique_id not in self._entities:
                 self._entities[entity.unique_id] = entity
 
     def try_get_erd_value(self, code: ErdCodeType):

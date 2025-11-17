@@ -1,8 +1,10 @@
 """GE Home Sensor Entities - Advantium"""
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Set
+from propcache.api import cached_property
+from typing import Any, List, Mapping, Optional, cast
 from random import randrange
 
+from homeassistant.const import ATTR_TEMPERATURE
 from gehomesdk import (
     ErdCode,
     ErdPersonality,
@@ -13,10 +15,8 @@ from gehomesdk import (
     ErdAdvantiumRemoteCookModeConfig,
     ADVANTIUM_OPERATION_MODE_COOK_SETTING_MAPPING     
 )
-from gehomesdk.erd.values.advantium.advantium_enums import CookAction, CookMode
+from gehomesdk.erd.values.advantium.advantium_enums import CookAction, CookMode, WarmStatus
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_TEMPERATURE
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
@@ -27,11 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 class GeAdvantium(GeAbstractWaterHeater):
     """GE Appliance Advantium"""
 
-    icon = "mdi:microwave"
-
     def __init__(self, api: ApplianceApi):
         super().__init__(api)
         self._current_operation_mode = None
+
+    @cached_property
+    def icon(self) -> Optional[str]:
+        return "mdi:microwave"        
 
     @property
     def supported_features(self):
@@ -40,11 +42,11 @@ class GeAdvantium(GeAbstractWaterHeater):
         else:
             return SUPPORT_NONE
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self.serial_number}"
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         return f"{self.serial_number} Advantium"
 
@@ -61,18 +63,21 @@ class GeAdvantium(GeAbstractWaterHeater):
         value = self.appliance.get_erd_value(ErdCode.UPPER_OVEN_REMOTE_ENABLED)
         return value == True
 
-    @property
+    @cached_property
     def current_temperature(self) -> Optional[int]:
         return self.appliance.get_erd_value(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)
 
-    @property
+    @cached_property
     def current_operation(self) -> Optional[str]:
+        if self.current_operation_mode is None:
+            return None
+        
         try:
             return self.current_operation_mode.stringify()
         except:
             return None
 
-    @property
+    @cached_property
     def operation_list(self) -> List[str]:
         invalid = []
         if not self._remote_config.broil_enable:
@@ -92,15 +97,15 @@ class GeAdvantium(GeAbstractWaterHeater):
     @property
     def current_cook_setting(self) -> ErdAdvantiumCookSetting:
         """Get the current cook setting."""
-        return self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_SETTING)
+        return cast(ErdAdvantiumCookSetting, self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_SETTING))
 
     @property
     def current_cook_status(self) -> ErdAdvantiumCookStatus:
         """Get the current status."""
-        return self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_STATUS)
+        return cast(ErdAdvantiumCookStatus, self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_STATUS))
 
     @property
-    def current_operation_mode(self) -> AdvantiumOperationMode:
+    def current_operation_mode(self) -> AdvantiumOperationMode | None:
         """Gets the current operation mode"""
         self._ensure_operation_mode()
         return self._current_operation_mode
@@ -118,12 +123,15 @@ class GeAdvantium(GeAbstractWaterHeater):
     @property
     def can_set_temperature(self) -> bool:
         """Indicates whether we can set the temperature based on the current mode"""
-        try:            
+        
+        if self.current_operation_setting is None:
+            return False       
+        try:           
             return self.current_operation_setting.allow_temperature_set
         except:
             return False
 
-    @property
+    @cached_property
     def target_temperature(self) -> Optional[int]:
         """Return the temperature we try to reach."""
         try:
@@ -141,16 +149,16 @@ class GeAdvantium(GeAbstractWaterHeater):
     @property
     def min_temp(self) -> int:
         """Return the minimum temperature."""
-        min_temp, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
+        min_temp, _ = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
         return min_temp
 
     @property
     def max_temp(self) -> int:
         """Return the maximum temperature."""
-        min_temp, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
+        _, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
         return max_temp
 
-    @property
+    @cached_property
     def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
         data = {}
 
@@ -204,7 +212,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             cook_mode=setting.cook_mode,
             target_temperature=target_temp or 0,
             power_level=setting.target_power_level or 0,
-            warm_status=setting.warm_status or 0,
+            warm_status=setting.warm_status or WarmStatus.OFF,
         )
         _LOGGER.debug("New ErdAdvantiumCookSetting: %s", new_cook_mode)
 
@@ -285,11 +293,11 @@ class GeAdvantium(GeAbstractWaterHeater):
         _LOGGER.debug("Operation mode is set to %s", self._current_operation_mode)
         return
 
-    def _convert_target_temperature(self, temp_120v: int, temp_240v: int):
+    def _convert_target_temperature(self, temp_120v: Optional[int], temp_240v: Optional[int]):
         unit_type = self.personality        
         target_temp_f = temp_240v if unit_type in [ErdPersonality.PERSONALITY_240V_MONOGRAM, ErdPersonality.PERSONALITY_240V_CAFE, ErdPersonality.PERSONALITY_240V_STANDALONE_CAFE] else temp_120v
         return target_temp_f
 
-    async def async_device_update(self, warning: bool) -> None:
+    async def async_device_update(self, warning: bool = True) -> None:
         await super().async_device_update(warning=warning)
         self._ensure_operation_mode()        

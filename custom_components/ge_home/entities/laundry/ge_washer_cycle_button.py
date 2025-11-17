@@ -1,4 +1,5 @@
 import logging
+from propcache.api import cached_property
 from typing import Any
 from datetime import timedelta
 
@@ -14,22 +15,22 @@ class GeWasherCycleButton(GeErdButton):
     def __init__(self, api):
         super().__init__(api, ErdCode.LAUNDRY_MACHINE_STATE)
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return a unique ID for the button."""
         return f"{self.serial_or_mac}_start_cycle_button"
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Return the name of the button."""
         return f"{self.serial_or_mac} Start Cycle"
 
-    @property
+    @cached_property
     def icon(self):
         """Return the icon."""
         return "mdi:play-circle"
 
-    @property
+    @cached_property
     def available(self) -> bool:
         """The button is only available if remote start is enabled on the appliance."""
         try:

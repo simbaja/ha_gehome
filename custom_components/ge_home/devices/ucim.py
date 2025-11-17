@@ -2,11 +2,7 @@ import logging
 from typing import List
 
 from homeassistant.helpers.entity import Entity
-from gehomesdk import (
-    ErdCode, 
-    ErdApplianceType,
-    ErdOnOff
-)
+from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
 from ..entities import (

@@ -49,27 +49,27 @@ class FridgeApi(ApplianceApi):
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
 
-        fridge_entities = []
-        freezer_entities = []
-        dispenser_entities = []
+        fridge_entities: List[Entity] = []
+        freezer_entities: List[Entity] = []
+        dispenser_entities: List[Entity] = []
 
         # Get the statuses used to determine presence
 
-        ice_maker_control: IceMakerControlStatus = self.try_get_erd_value(ErdCode.ICE_MAKER_CONTROL)
-        ice_bucket_status: FridgeIceBucketStatus = self.try_get_erd_value(ErdCode.ICE_MAKER_BUCKET_STATUS)
-        water_filter: ErdFilterStatus = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
-        air_filter: ErdFilterStatus = self.try_get_erd_value(ErdCode.AIR_FILTER_STATUS)
-        hot_water_status: HotWaterStatus = self.try_get_erd_value(ErdCode.HOT_WATER_STATUS)
-        fridge_model_info: FridgeModelInfo = self.try_get_erd_value(ErdCode.FRIDGE_MODEL_INFO)
-        convertable_drawer: ErdConvertableDrawerMode = self.try_get_erd_value(ErdCode.CONVERTABLE_DRAWER_MODE)
+        ice_maker_control: IceMakerControlStatus | None = self.try_get_erd_value(ErdCode.ICE_MAKER_CONTROL)
+        ice_bucket_status: FridgeIceBucketStatus | None = self.try_get_erd_value(ErdCode.ICE_MAKER_BUCKET_STATUS)
+        water_filter: ErdFilterStatus | None = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
+        air_filter: ErdFilterStatus | None = self.try_get_erd_value(ErdCode.AIR_FILTER_STATUS)
+        hot_water_status: HotWaterStatus | None = self.try_get_erd_value(ErdCode.HOT_WATER_STATUS)
+        fridge_model_info: FridgeModelInfo | None = self.try_get_erd_value(ErdCode.FRIDGE_MODEL_INFO)
+        convertable_drawer: ErdConvertableDrawerMode | None = self.try_get_erd_value(ErdCode.CONVERTABLE_DRAWER_MODE)
 
-        interior_light: int = self.try_get_erd_value(ErdCode.INTERIOR_LIGHT)
-        proximity_light: ErdOnOff = self.try_get_erd_value(ErdCode.PROXIMITY_LIGHT)
-        display_mode: ErdOnOff = self.try_get_erd_value(ErdCode.DISPLAY_MODE)
-        lockout_mode: ErdOnOff = self.try_get_erd_value(ErdCode.LOCKOUT_MODE)
-        turbo_cool: ErdOnOff = self.try_get_erd_value(ErdCode.TURBO_COOL_STATUS)
-        turbo_freeze: ErdOnOff = self.try_get_erd_value(ErdCode.TURBO_FREEZE_STATUS)
-        ice_boost: ErdOnOff = self.try_get_erd_value(ErdCode.FRIDGE_ICE_BOOST)
+        interior_light: int | None = self.try_get_erd_value(ErdCode.INTERIOR_LIGHT)
+        proximity_light: ErdOnOff | None = self.try_get_erd_value(ErdCode.PROXIMITY_LIGHT)
+        display_mode: ErdOnOff | None = self.try_get_erd_value(ErdCode.DISPLAY_MODE)
+        lockout_mode: ErdOnOff | None = self.try_get_erd_value(ErdCode.LOCKOUT_MODE)
+        turbo_cool: ErdOnOff | None = self.try_get_erd_value(ErdCode.TURBO_COOL_STATUS)
+        turbo_freeze: ErdOnOff | None = self.try_get_erd_value(ErdCode.TURBO_FREEZE_STATUS)
+        ice_boost: ErdOnOff | None = self.try_get_erd_value(ErdCode.FRIDGE_ICE_BOOST)
 
         units = self.hass.config.units
 

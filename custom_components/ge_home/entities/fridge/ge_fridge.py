@@ -1,9 +1,11 @@
 """GE Home Sensor Entities - Fridge"""
 import logging
-from typing import Any, Dict
+from propcache.api import cached_property
+from typing import Any, Dict, Optional
 
 from gehomesdk import (
     ErdCode,
+    ErdCodeType,
     ErdDoorStatus,
     ErdFilterStatus
 )
@@ -19,10 +21,23 @@ from .ge_abstract_fridge import (
 _LOGGER = logging.getLogger(__name__)
 
 class GeFridge(GeAbstractFridge):
-    heater_type = HEATER_TYPE_FRIDGE
-    turbo_erd_code = ErdCode.TURBO_COOL_STATUS
-    turbo_mode = OP_MODE_TURBO_COOL
-    icon = "mdi:fridge-bottom"
+
+
+    @property
+    def heater_type(self) -> str:
+        return HEATER_TYPE_FRIDGE
+    
+    @cached_property
+    def icon(self) -> Optional[str]:
+        return "mdi:fridge-bottom"   
+    
+    @property
+    def turbo_erd_code(self) -> ErdCodeType:
+        return ErdCode.TURBO_COOL_STATUS
+
+    @property
+    def turbo_mode(self) -> str:
+        return OP_MODE_TURBO_COOL
 
     @property
     def other_state_attrs(self) -> Dict[str, Any]:

@@ -6,8 +6,7 @@ from gehomesdk import (
     ErdCode, 
     ErdApplianceType,
     ErdHoodFanSpeedAvailability,
-    ErdHoodLightLevelAvailability,
-    ErdOnOff
+    ErdHoodLightLevelAvailability
 )
 
 from .base import ApplianceApi
@@ -31,8 +30,8 @@ class MicrowaveApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         #get the availabilities
-        fan_availability: ErdHoodFanSpeedAvailability = self.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
-        light_availability: ErdHoodLightLevelAvailability = self.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
+        fan_availability: ErdHoodFanSpeedAvailability | None = self.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
+        light_availability: ErdHoodLightLevelAvailability | None = self.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
 
         mwave_entities = [
             GeErdBinarySensor(self, ErdCode.MICROWAVE_REMOTE_ENABLE),

@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdButton
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor
 from ..entities.laundry.ge_washer_cycle_button import GeWasherCycleButton
 
 
@@ -38,7 +38,7 @@ class WasherApi(ApplianceApi):
         return entities
 
     def get_washer_entities(self) -> List[Entity]:
-        washer_entities = [
+        washer_entities: List[Entity] = [
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SOIL_LEVEL, icon_override="mdi:emoticon-poop"),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_WASHTEMP_LEVEL),
             GeErdSensor(self, ErdCode.LAUNDRY_WASHER_SPINTIME_LEVEL, icon_override="mdi:speedometer"),

@@ -1,6 +1,7 @@
 import abc
 import logging
-from typing import Coroutine, Any, Optional
+from propcache.api import cached_property
+from typing import Any, Optional
 
 from homeassistant.components.humidifier import HumidifierEntity, HumidifierDeviceClass
 from homeassistant.components.humidifier.const import HumidifierEntityFeature
@@ -38,43 +39,43 @@ class GeHumidifier(GeEntity, HumidifierEntity, metaclass=abc.ABCMeta):
         self._range_max = range_max
         self._target_precision = target_precision
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self.serial_or_mac}_{self._device_class}"
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         return f"{self.serial_or_mac} {self._device_class.title()}"
 
-    @property
+    @cached_property
     def target_humidity(self) -> int | None:
         return int(self.appliance.get_erd_value(self._target_humidity_erd_code))
 
-    @property
+    @cached_property
     def current_humidity(self) -> int | None:
         return int(self.appliance.get_erd_value(self._current_humidity_erd_code))
 
-    @property
+    @cached_property
     def min_humidity(self) -> int:
         return self._range_min
 
-    @property
+    @cached_property
     def max_humidity(self) -> int:
         return self._range_max
 
-    @property
+    @cached_property
     def supported_features(self) -> HumidifierEntityFeature:
         return HumidifierEntityFeature(HumidifierEntityFeature.MODES)
 
-    @property
+    @cached_property
     def is_on(self) -> bool:
         return self.appliance.get_erd_value(self._power_status_erd_code) == ErdOnOff.ON
 
-    @property
-    def device_class(self):
+    @cached_property
+    def device_class(self) -> HumidifierDeviceClass | None:
         return self._device_class
 
-    async def async_set_humidity(self, humidity: int) -> Coroutine[Any, Any, None]:
+    async def async_set_humidity(self, humidity: int) -> None:
         # round to target precision
         target = round(humidity / self._target_precision) * self._target_precision
 
@@ -94,12 +95,12 @@ class GeHumidifier(GeEntity, HumidifierEntity, metaclass=abc.ABCMeta):
             target,
         )
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any):
         await self.appliance.async_set_erd_value(
             self._power_status_erd_code, ErdOnOff.ON
         )
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any):
         await self.appliance.async_set_erd_value(
             self._power_status_erd_code, ErdOnOff.OFF
         )

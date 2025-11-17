@@ -1,12 +1,15 @@
 import logging
+from propcache.api import cached_property
 from typing import Optional
-from gehomesdk.erd.erd_data_type import ErdDataType
+
 from homeassistant.components.number import (
     NumberEntity,
+    NumberMode,
     NumberDeviceClass,
 )
 from homeassistant.const import UnitOfTemperature
-from gehomesdk import ErdCodeType, ErdCodeClass
+from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType
+
 from .ge_erd_entity import GeErdEntity
 from ...devices import ApplianceApi
 
@@ -19,15 +22,15 @@ class GeErdNumber(GeErdEntity, NumberEntity):
         self, 
         api: ApplianceApi, 
         erd_code: ErdCodeType, 
-        erd_override: str = None, 
-        icon_override: str = None, 
-        device_class_override: str = None,
-        uom_override: str = None,
-        data_type_override: ErdDataType = None,
+        erd_override: Optional[str] = None, 
+        icon_override: Optional[str] = None, 
+        device_class_override: Optional[str] = None,
+        uom_override: Optional[str] = None,
+        data_type_override: Optional[ErdDataType] = None,
         min_value: float = 1,
         max_value: float = 100,
         step_value: float = 1,
-        mode: str = "auto"
+        mode: NumberMode = NumberMode.AUTO
     ):
         super().__init__(api, erd_code, erd_override, icon_override, device_class_override)
         self._uom_override = uom_override
@@ -37,15 +40,15 @@ class GeErdNumber(GeErdEntity, NumberEntity):
         self._native_step = step_value
         self._mode = mode
 
-    @property
-    def native_value(self):
+    @cached_property
+    def native_value(self) -> float | None:
         try:
             value = self.appliance.get_erd_value(self.erd_code)
             return self._convert_value_from_device(value)
         except KeyError:
             return None
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> Optional[str]:
         return self._get_uom()
 
@@ -56,29 +59,44 @@ class GeErdNumber(GeErdEntity, NumberEntity):
 
         return self.appliance.get_erd_code_data_type(self.erd_code)
 
-    @property
+    @cached_property
     def native_min_value(self) -> float:
-        return self._convert_value_from_device(self._native_min_value)
+        return self._native_min_value
 
-    @property
+    @cached_property
     def native_max_value(self) -> float:
-        return self._convert_value_from_device(self._native_max_value)
+        return self._native_max_value
 
-    @property
+    @cached_property
     def native_step(self) -> float:
         return self._native_step
 
-    @property
-    def mode(self) -> float:
+    @cached_property
+    def mode(self) -> NumberMode:
         return self._mode
+    
+    @cached_property
+    def device_class(self) -> NumberDeviceClass | None:
+        # Use GeEntity’s logic, but adapt to HA’s NumberDeviceClass expectations
+        dc = super(GeErdEntity, self).device_class  # call GeEntity version
 
-    def _convert_value_from_device(self, value):
+        if isinstance(dc, str):
+            try:
+                return NumberDeviceClass(dc)
+            except ValueError:
+                return None
+
+        return dc    
+
+    def _convert_value_from_device(self, value) -> float | None:
         """Convert to expected data type"""
-
-        if self._data_type == ErdDataType.INT:
-            return int(round(value))
-        else:
-            return value
+        try:
+            if self._data_type == ErdDataType.INT:
+                return float(round(value))
+            else:
+                return float(value)
+        except:
+            return None
 
     def _get_uom(self):
         """Select appropriate units"""
@@ -106,14 +124,6 @@ class GeErdNumber(GeErdEntity, NumberEntity):
             return NumberDeviceClass.TEMPERATURE
 
         return None
-
-    def _get_icon(self):
-        if self.erd_code_class == ErdCodeClass.DOOR:
-            if self.state.lower().endswith("open"):
-                return "mdi:door-open"
-            if self.state.lower().endswith("closed"):
-                return "mdi:door-closed"
-        return super()._get_icon()
 
     async def async_set_native_value(self, value):
         """Sets the ERD value, assumes that the data type is correct"""

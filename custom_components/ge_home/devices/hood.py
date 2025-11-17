@@ -30,11 +30,11 @@ class HoodApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         #get the availabilities
-        fan_availability: ErdHoodFanSpeedAvailability = self.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
-        light_availability: ErdHoodLightLevelAvailability = self.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
-        timer_availability: ErdOnOff = self.try_get_erd_value(ErdCode.HOOD_TIMER_AVAILABILITY)
+        fan_availability: ErdHoodFanSpeedAvailability | None = self.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
+        light_availability: ErdHoodLightLevelAvailability | None = self.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
+        timer_availability: ErdOnOff | None = self.try_get_erd_value(ErdCode.HOOD_TIMER_AVAILABILITY)
 
-        hood_entities = [
+        hood_entities: List[Entity] = [
             #looks like this is always available?
             GeErdSwitch(self, ErdCode.HOOD_DELAY_OFF, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
         ]

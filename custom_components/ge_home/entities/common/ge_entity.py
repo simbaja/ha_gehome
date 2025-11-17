@@ -1,5 +1,8 @@
 from datetime import timedelta
-from typing import Optional, Dict, Any
+from propcache.api import cached_property
+from typing import Optional, Any
+
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from gehomesdk import GeAppliance
 from ...devices import ApplianceApi
@@ -12,23 +15,23 @@ class GeEntity:
         self._api = api
         self._added = False
 
-    @property
-    def unique_id(self) -> str:
+    @cached_property
+    def unique_id(self) -> str | None:
         raise NotImplementedError
 
     @property
     def api(self) -> ApplianceApi:
         return self._api
 
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    @cached_property
+    def device_info(self) -> DeviceInfo | None:
         return self.api.device_info
 
     @property
     def serial_number(self):
         return self.api.serial_number
 
-    @property
+    @cached_property
     def available(self) -> bool:
         return self.api.available
 
@@ -44,15 +47,15 @@ class GeEntity:
     def serial_or_mac(self) -> str:
         return self.api.serial_or_mac
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         raise NotImplementedError
 
-    @property
+    @cached_property
     def icon(self) -> Optional[str]:
         return self._get_icon()
 
-    @property
+    @cached_property
     def device_class(self) -> Optional[str]:
         return self._get_device_class()    
 
@@ -68,14 +71,14 @@ class GeEntity:
         """Run when entity will be removed from hass."""
         self._added = False
 
-    def _stringify(self, value: any, **kwargs) -> Optional[str]:
+    def _stringify(self, value: Any, **kwargs) -> Optional[str]:
         if isinstance(value, timedelta):
             return str(value)[:-3] if value else ""
         if value is None:
             return None
         return self.appliance.stringify_erd_value(value, **kwargs)
 
-    def _boolify(self, value: any) -> Optional[bool]:
+    def _boolify(self, value: Any) -> Optional[bool]:
         return self.appliance.boolify_erd_value(value)
 
     def _get_icon(self) -> Optional[str]:

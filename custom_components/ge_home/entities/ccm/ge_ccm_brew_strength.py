@@ -1,4 +1,5 @@
 import logging
+from propcache.api import cached_property
 from typing import List, Any, Optional
 
 from gehomesdk import ErdCode, ErdCcmBrewStrength
@@ -8,9 +9,11 @@ from .ge_ccm_cached_value import GeCcmCachedValue
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_BREW_STRENGTH = ErdCcmBrewStrength.MEDIUM
+
 class GeCcmBrewStrengthOptionsConverter(OptionsConverter):
     def __init__(self):
-        self._default = ErdCcmBrewStrength.MEDIUM
+        self._default = DEFAULT_BREW_STRENGTH
 
     @property
     def options(self) -> List[str]:
@@ -36,12 +39,12 @@ class GeCcmBrewStrengthSelect(GeErdSelect, GeCcmCachedValue):
 
     @property
     def brew_strength(self) -> ErdCcmBrewStrength:
-        return self._converter.from_option_string(self.current_option)
+        return self._converter.from_option_string(self.current_option or DEFAULT_BREW_STRENGTH.name)
 
-    async def async_select_option(self, value):
-        GeCcmCachedValue.set_value(self, value)
+    async def async_select_option(self, option):
+        GeCcmCachedValue.set_value(self, option)
         self.schedule_update_ha_state()
 
-    @property
+    @cached_property
     def current_option(self):
         return self.get_value(device_value = super().current_option)

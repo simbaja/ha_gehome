@@ -1,4 +1,5 @@
 import logging
+from propcache.api import cached_property
 from gehomesdk import ErdCode, IceMakerControlStatus, ErdOnOff
 
 from ...devices import ApplianceApi
@@ -15,7 +16,7 @@ class GeFridgeIceControlSwitch(GeErdSwitch):
     def control_status(self) -> IceMakerControlStatus:
         return self.appliance.get_erd_value(ErdCode.ICE_MAKER_CONTROL)
 
-    @property
+    @cached_property
     def is_on(self) -> bool:
         if self._control_type == "fridge":
             return self.control_status.status_fridge == ErdOnOff.ON

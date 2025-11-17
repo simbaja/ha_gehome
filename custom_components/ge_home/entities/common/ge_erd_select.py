@@ -1,5 +1,6 @@
 
 import logging
+from propcache.api import cached_property
 from typing import Any, List, Optional
 
 from homeassistant.components.select import SelectEntity
@@ -13,17 +14,23 @@ _LOGGER = logging.getLogger(__name__)
   
 class GeErdSelect(GeErdEntity, SelectEntity):
     """ERD-based selector entity"""
-    device_class = "select"
 
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, converter: OptionsConverter, erd_override: str = None, icon_override: str = None, device_class_override: str = None):
-        super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_override, device_class_override=device_class_override)
+    def __init__(
+            self, 
+            api: ApplianceApi, 
+            erd_code: ErdCodeType, 
+            converter: OptionsConverter, 
+            erd_override: Optional[str] = None, 
+            icon_override: Optional[str] = None
+        ):
+        super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_override)
         self._converter = converter
 
-    @property
+    @cached_property
     def current_option(self):
         return self._converter.to_option_string(self.appliance.get_erd_value(self.erd_code))
 
-    @property
+    @cached_property
     def options(self) -> List[str]:
         "Return a list of options"
         return self._converter.options

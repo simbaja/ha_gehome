@@ -1,15 +1,13 @@
 """GE Home Sensor Entities - Abstract Fridge"""
-import importlib
-import sys
-import os
-import abc
 import logging
+from propcache.api import cached_property
 from typing import Any, Dict, List, Optional
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util.unit_conversion import TemperatureConverter
 from gehomesdk import (
     ErdCode,
+    ErdCodeType,
     ErdOnOff,
     ErdFullNotFull,
     FridgeDoorStatus,
@@ -18,7 +16,9 @@ from gehomesdk import (
     FridgeIceBucketStatus,
     IceMakerControlStatus
 )
+
 from ...const import DOMAIN
+from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .const import *
 
@@ -27,27 +27,33 @@ _LOGGER = logging.getLogger(__name__)
 class GeAbstractFridge(GeAbstractWaterHeater):
     """Mock a fridge or freezer as a water heater."""
 
-    # These values are from the Fisher & Paykel RF610AA in imperial units
-    # They're to be used as hardcoded limits when ErdCode.SETPOINT_LIMITS is unavailable.
-    temp_limits = {}
-    temp_limits["fridge_min"] = 32
-    temp_limits["fridge_max"] = 46
-    temp_limits["freezer_min"] = -6
-    temp_limits["freezer_max"] = 7
+    def __init__(
+        self,
+        api: ApplianceApi
+    ):
+        super().__init__(api)
+
+        # These values are from the Fisher & Paykel RF610AA in imperial units
+        # They're to be used as hardcoded limits when ErdCode.SETPOINT_LIMITS is unavailable.
+        self.temp_limits = {}
+        self.temp_limits["fridge_min"] = 32
+        self.temp_limits["fridge_max"] = 46
+        self.temp_limits["freezer_min"] = -6
+        self.temp_limits["freezer_max"] = 7
 
     @property
     def heater_type(self) -> str:
         raise NotImplementedError
 
     @property
-    def turbo_erd_code(self) -> str:
+    def turbo_erd_code(self) -> ErdCodeType:
         raise NotImplementedError
 
     @property
     def turbo_mode(self) -> str:
         raise NotImplementedError
 
-    @property
+    @cached_property
     def operation_list(self) -> List[str]:
         try:
             return [OP_MODE_NORMAL, OP_MODE_SABBATH, self.turbo_mode]
@@ -55,11 +61,11 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             _LOGGER.debug("Turbo mode not supported.")
             return [OP_MODE_NORMAL, OP_MODE_SABBATH]
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self.serial_number}_{self.heater_type}"
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         return f"{self.serial_or_mac} {self.heater_type.title()}"
 
@@ -68,13 +74,13 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         """Get the current temperature settings tuple."""
         return self.appliance.get_erd_value(ErdCode.TEMPERATURE_SETTING)
 
-    @property
-    def target_temperature(self) -> int:
+    @cached_property
+    def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         return getattr(self.target_temps, self.heater_type)
 
-    @property
-    def current_temperature(self) -> int:
+    @cached_property
+    def current_temperature(self) -> int | None:
         """Return the current temperature."""
         try:
             current_temps = self.appliance.get_erd_value(ErdCode.CURRENT_TEMPERATURE)
@@ -128,7 +134,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
             return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
-    @property
+    @cached_property
     def current_operation(self) -> str:
         """Get the current operation mode."""
         if self.appliance.get_erd_value(ErdCode.SABBATH_MODE):
@@ -168,14 +174,14 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         data = {}
 
         if self.api.has_erd_code(ErdCode.ICE_MAKER_BUCKET_STATUS):
-            erd_val: FridgeIceBucketStatus = self.appliance.get_erd_value(ErdCode.ICE_MAKER_BUCKET_STATUS)
-            ice_bucket_status = getattr(erd_val, f"state_full_{self.heater_type}")
+            erd_imbs: FridgeIceBucketStatus = self.appliance.get_erd_value(ErdCode.ICE_MAKER_BUCKET_STATUS)
+            ice_bucket_status = getattr(erd_imbs, f"state_full_{self.heater_type}")
             if ice_bucket_status != ErdFullNotFull.NA:
                 data["ice_bucket"] = self._stringify(ice_bucket_status)
 
         if self.api.has_erd_code(ErdCode.ICE_MAKER_CONTROL):
-            erd_val: IceMakerControlStatus = self.appliance.get_erd_value(ErdCode.ICE_MAKER_CONTROL)
-            ice_control_status = getattr(erd_val, f"status_{self.heater_type}")
+            erd_imc: IceMakerControlStatus = self.appliance.get_erd_value(ErdCode.ICE_MAKER_CONTROL)
+            ice_control_status = getattr(erd_imc, f"status_{self.heater_type}")
             if ice_control_status != ErdOnOff.NA:
                 data["ice_maker"] = self._stringify(ice_control_status)
 
@@ -191,7 +197,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         """Other state attributes for the entity"""
         return {}
 
-    @property
+    @cached_property
     def extra_state_attributes(self) -> Dict[str, Any]:
         door_attrs = self.door_state_attrs
         ice_maker_attrs = self.ice_maker_state_attrs

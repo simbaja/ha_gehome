@@ -1,10 +1,11 @@
 import logging
+from propcache.api import cached_property
 from typing import Optional
-from gehomesdk.erd.erd_data_type import ErdDataType
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfTemperature
-from gehomesdk import ErdCodeType, ErdCodeClass
+from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType
+
 from .ge_erd_entity import GeErdEntity
 from ...devices import ApplianceApi
 
@@ -17,19 +18,19 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         self, 
         api: ApplianceApi, 
         erd_code: ErdCodeType, 
-        erd_override: str = None, 
-        icon_override: str = None, 
-        device_class_override: str = None,
-        state_class_override: str = None,
-        uom_override: str = None,
-        data_type_override: ErdDataType = None
+        erd_override: Optional[str] = None, 
+        icon_override: Optional[str] = None, 
+        device_class_override: Optional[str] = None,
+        state_class_override: Optional[str] = None,
+        uom_override: Optional[str] = None,
+        data_type_override: Optional[ErdDataType] = None
     ):
         super().__init__(api, erd_code, erd_override, icon_override, device_class_override)
         self._uom_override = uom_override
         self._state_class_override = state_class_override
         self._data_type_override = data_type_override
 
-    @property
+    @cached_property
     def native_value(self):
         try:
             value = self.appliance.get_erd_value(self.erd_code)
@@ -45,13 +46,26 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         except KeyError:
             return None
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> Optional[str]:
         return self._get_uom()
 
-    @property
+    @cached_property
     def state_class(self) -> Optional[str]:
         return self._get_state_class()
+    
+    @cached_property
+    def device_class(self) -> SensorDeviceClass | None:
+        # Use GeEntity’s logic, but adapt to HA’s SensorDeviceClass expectations
+        dc = super(GeErdEntity, self).device_class  # call GeEntity version
+
+        if isinstance(dc, str):
+            try:
+                return SensorDeviceClass(dc)
+            except ValueError:
+                return None
+
+        return dc    
 
     @property
     def _data_type(self) -> ErdDataType:
@@ -147,14 +161,6 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             return SensorStateClass.TOTAL_INCREASING
         
         return None
-
-    def _get_icon(self):
-        if self.erd_code_class == ErdCodeClass.DOOR:
-            if self.state.lower().endswith("open"):
-                return "mdi:door-open"
-            if self.state.lower().endswith("closed"):
-                return "mdi:door-closed"
-        return super()._get_icon()
 
     async def set_value(self, value):
         """Sets the ERD value, assumes that the data type is correct"""

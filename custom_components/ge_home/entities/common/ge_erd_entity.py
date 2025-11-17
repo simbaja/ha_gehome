@@ -1,5 +1,6 @@
 from datetime import timedelta
-from typing import Optional
+from propcache.api import cached_property
+from typing import Optional, Any
 
 from gehomesdk import ErdCode, ErdCodeType, ErdCodeClass, ErdMeasurementUnits
 
@@ -15,9 +16,9 @@ class GeErdEntity(GeEntity):
         self,
         api: ApplianceApi,
         erd_code: ErdCodeType,
-        erd_override: str = None,
-        icon_override: str = None,
-        device_class_override: str = None,
+        erd_override: Optional[str] = None,
+        icon_override: Optional[str] = None,
+        device_class_override: Optional[str] = None,
     ):
         super().__init__(api)
         self._erd_code = api.appliance.translate_erd_code(erd_code)
@@ -40,11 +41,11 @@ class GeErdEntity(GeEntity):
     @property
     def erd_string(self) -> str:
         erd_code = self.erd_code
-        if isinstance(self.erd_code, ErdCode):
+        if isinstance(erd_code, ErdCode):
             return erd_code.name
-        return erd_code
+        return str(erd_code)
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         erd_string = self.erd_string
 
@@ -55,11 +56,11 @@ class GeErdEntity(GeEntity):
         erd_title = " ".join(erd_string.split("_")).title()
         return f"{self.serial_or_mac} {erd_title}"
 
-    @property
+    @cached_property
     def unique_id(self) -> Optional[str]:
         return f"{DOMAIN}_{self.serial_or_mac}_{self.erd_string.lower()}"
 
-    def _stringify(self, value: any, **kwargs) -> Optional[str]:
+    def _stringify(self, value: Any, **kwargs) -> Optional[str]:
         """Stringify a value"""
         # perform special processing before passing over to the default method
         if self.erd_code == ErdCode.CLOCK_TIME:
@@ -83,7 +84,7 @@ class GeErdEntity(GeEntity):
         try:
             value = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         except KeyError:
-            return ErdMeasurementUnits.Imperial
+            return ErdMeasurementUnits.IMPERIAL
         return value
 
     def _get_icon(self):

@@ -1,23 +1,45 @@
+from propcache.api import cached_property
 from typing import Optional
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorDeviceClass
+from gehomesdk import ErdCodeType, ErdCodeClass
 
-from gehomesdk import ErdCode, ErdCodeType, ErdCodeClass
 from ...devices import ApplianceApi
 from .ge_erd_entity import GeErdEntity
 
 
 class GeErdBinarySensor(GeErdEntity, BinarySensorEntity):
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: str = None, icon_on_override: str = None, icon_off_override: str = None, device_class_override: str = None):
+    def __init__(
+            self, 
+            api: ApplianceApi, 
+            erd_code: ErdCodeType, 
+            erd_override: Optional[str] = None, 
+            icon_on_override: Optional[str] = None, 
+            icon_off_override: Optional[str] = None, 
+            device_class_override: Optional[str] = None
+        ):
         super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_on_override, device_class_override=device_class_override)
         self._icon_on_override = icon_on_override
         self._icon_off_override = icon_off_override
 
     """GE Entity for binary sensors"""
-    @property
-    def is_on(self) -> bool:
+    @cached_property
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._boolify(self.appliance.get_erd_value(self.erd_code))
+    
+    @cached_property
+    def device_class(self) -> BinarySensorDeviceClass | None:
+        # Use GeEntity’s logic, but adapt to HA’s BinarySensorDeviceClass expectations
+        dc = super(GeErdEntity, self).device_class  # call GeEntity version
+
+        if isinstance(dc, str):
+            try:
+                return BinarySensorDeviceClass(dc)
+            except ValueError:
+                return None
+
+        return dc
 
     def _get_icon(self):
         if self._icon_on_override and self.is_on:

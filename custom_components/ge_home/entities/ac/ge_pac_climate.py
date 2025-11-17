@@ -1,8 +1,10 @@
 import logging
+from propcache.api import cached_property
 from typing import Any, List, Optional
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate.const import HVACMode
 from gehomesdk import ErdCode, ErdAcOperationMode, ErdAcAvailableModes, ErdSacTargetTemperatureRange
+
 from ...devices import ApplianceApi
 from ..common import GeClimate, OptionsConverter
 from .fan_mode_options import AcFanOnlyFanModeOptionsConverter
@@ -20,52 +22,61 @@ class PacHvacModeOptionsConverter(OptionsConverter):
             modes.append(HVACMode.HEAT)
         if self._available_modes and self._available_modes.has_dry:
             modes.append(HVACMode.DRY)
-        return modes
+            
+        return [i.value for i in modes]
+    
     def from_option_string(self, value: str) -> Any:
         try:
+            hvac = HVACMode(value.lower())            
             return {
                 HVACMode.COOL: ErdAcOperationMode.COOL,
                 HVACMode.HEAT: ErdAcOperationMode.HEAT,
                 HVACMode.FAN_ONLY: ErdAcOperationMode.FAN_ONLY,
                 HVACMode.DRY: ErdAcOperationMode.DRY
-            }.get(value)
-        except:
+            }.get(hvac)
+        except ValueError:
             _LOGGER.warning(f"Could not set HVAC mode to {value.upper()}")
             return ErdAcOperationMode.COOL
+        
     def to_option_string(self, value: Any) -> Optional[str]:
-        try:
-            return {
+        mapped = {
                 ErdAcOperationMode.COOL: HVACMode.COOL,
                 ErdAcOperationMode.HEAT: HVACMode.HEAT,
                 ErdAcOperationMode.DRY: HVACMode.DRY,
                 ErdAcOperationMode.FAN_ONLY: HVACMode.FAN_ONLY
             }.get(value)
-        except:
-            _LOGGER.warning(f"Could not determine operation mode mapping for {value}")
-            return HVACMode.COOL
+        
+        if(isinstance(mapped, HVACMode)):
+            return mapped
+                
+        _LOGGER.warning(f"Could not determine operation mode mapping for {value}")
+        return HVACMode.COOL
      
 class GePacClimate(GeClimate):
     """Class for Portable AC units"""
     def __init__(self, api: ApplianceApi):
-        #initialize the climate control
-        super().__init__(api, None, AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        #initialize the climate control with defaults
+        super().__init__(api, PacHvacModeOptionsConverter(ErdAcAvailableModes()), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
         #get a couple ERDs that shouldn't change if available
-        self._modes: ErdAcAvailableModes = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
-        self._temp_range: ErdSacTargetTemperatureRange = self.api.try_get_erd_value(ErdCode.SAC_TARGET_TEMPERATURE_RANGE)
-        #construct the converter based on the available modes
-        self._hvac_mode_converter = PacHvacModeOptionsConverter(self._modes)
+        self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
+        self._temp_range: ErdSacTargetTemperatureRange | None = self.api.try_get_erd_value(ErdCode.SAC_TARGET_TEMPERATURE_RANGE)
 
-    @property
+        if self._modes is not None:
+            #construct the converter based on the available modes
+            self._hvac_mode_converter = PacHvacModeOptionsConverter(self._modes)
+
+    @cached_property
     def min_temp(self) -> float:
         temp = 64
         if self._temp_range:
             temp = self._temp_range.min
         return self._convert_temp(temp)
 
-    @property
+    @cached_property
     def max_temp(self) -> float:
         temp = 86
         if self._temp_range:
             temp = self._temp_range.max        
         return self._convert_temp(temp)
+    
