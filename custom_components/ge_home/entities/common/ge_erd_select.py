@@ -21,10 +21,12 @@ class GeErdSelect(GeErdEntity, SelectEntity):
             erd_code: ErdCodeType, 
             converter: OptionsConverter, 
             erd_override: Optional[str] = None, 
-            icon_override: Optional[str] = None
+            icon_override: Optional[str] = None,
+            control_erd_code: Optional[ErdCodeType] = None
         ):
         super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_override)
         self._converter = converter
+        self._control_erd_code = control_erd_code
 
     @cached_property
     def current_option(self):
@@ -39,4 +41,11 @@ class GeErdSelect(GeErdEntity, SelectEntity):
         _LOGGER.debug(f"Setting select from {self.current_option} to {option}")
         """Change the selected option."""
         if option != self.current_option:
-            await self.appliance.async_set_erd_value(self.erd_code, self._converter.from_option_string(option))
+            await self.appliance.async_set_erd_value(self._writeable_erd_code, self._converter.from_option_string(option))
+
+    @property
+    def _writeable_erd_code(self) -> ErdCodeType:
+        if self._control_erd_code:
+            return self._control_erd_code
+        
+        return self.erd_code

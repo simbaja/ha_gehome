@@ -37,10 +37,19 @@ class HoodLightLevelOptionsConverter(OptionsConverter):
         return ErdHoodLightLevel.OFF.stringify()
 
 class GeHoodLightLevelSelect(GeErdSelect):
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, control_erd_code: Optional[ErdCodeType] = None):
+
+        # old-style
         self._availability: ErdHoodLightLevelAvailability | None = api.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
-        
+
+        # new-style
+        if self._availability is None:
+            ll: int | None = api.try_get_erd_value(ErdCode.HOOD_AVAILABLE_LIGHT_LEVELS)
+            if ll is not None:
+                self._availability = ErdHoodLightLevelAvailability.from_count(ll)
+
+        # default
         if self._availability is None:
             self._availability = ErdHoodLightLevelAvailability(off_available=True)
 
-        super().__init__(api, erd_code, HoodLightLevelOptionsConverter(self._availability))
+        super().__init__(api, erd_code, HoodLightLevelOptionsConverter(self._availability), control_erd_code=control_erd_code)
