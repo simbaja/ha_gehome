@@ -2,7 +2,6 @@
 
 import logging
 import voluptuous as vol
-from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,24 +37,25 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ge_home from a config entry."""
+
     coordinators = hass.data.setdefault(DOMAIN, {})  # type: dict[str, GeHomeUpdateCoordinator]
 
     #try to get existing coordinator
-    existing = cast(
-        GeHomeUpdateCoordinator | None,
-        coordinators.get(entry.entry_id),
-    )
+    existing: GeHomeUpdateCoordinator | None = coordinators.get(entry.entry_id)
+
+    # try to unload the existing coordinator
+    if existing:
+        try:
+            _LOGGER.debug("Found existing coordinator, resetting before setup.")
+            await existing.async_reset()
+        except Exception:
+            _LOGGER.warning("Could not reset existing coordinator.", exc_info=True)
+        finally:
+            coordinators.pop(entry.entry_id, None)
 
     coordinator = GeHomeUpdateCoordinator(hass, entry)
     coordinators[entry.entry_id] = coordinator
 
-    # try to unload the existing coordinator
-    try:
-        if existing:
-            await existing.async_reset()
-    except:
-        _LOGGER.warning("Could not reset existing coordinator.")
-    
     try:
         if not await coordinator.async_setup():
             return False
@@ -63,9 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady("Could not connect to SmartHQ")
     except HaAuthError:
         raise ConfigEntryAuthFailed("Could not authenticate to SmartHQ")
-        
+    except Exception as exc:
+        _LOGGER.exception("Unexpected error during coordinator setup")
+        raise ConfigEntryNotReady from exc
+            
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator._shutdown)
 
+    _LOGGER.debug("Coordinator setup complete")
     return True
 
 

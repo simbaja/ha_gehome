@@ -1,10 +1,13 @@
-"""Data update coordinator for GE Home Appliances"""
+"""Data update coordinator for GE Home (SmartHQ) Appliances"""
 
 import asyncio
-import async_timeout
+from contextlib import suppress
+import random
 import logging
+import time
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple, List
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
@@ -23,22 +26,14 @@ from gehomesdk import (
     ErdCodeType,
     GeAppliance,
     GeWebsocketClient,
-    ErdApplianceType
+    ErdApplianceType,
 )
+from gehomesdk.clients.states import GeClientState
 from gehomesdk import GeAuthFailedError, GeGeneralServerError, GeNotAuthenticatedError
 
-from .const import (
-    DOMAIN,
-    EVENT_ALL_APPLIANCES_READY,
-    UPDATE_INTERVAL,
-    MIN_RETRY_DELAY,
-    MAX_RETRY_DELAY,
-    RETRY_OFFLINE_COUNT,
-    CLIENT_START_ASYNC_TIMEOUT,
-    ROSTER_ASYNC_WAIT
-)
+from .const import *
 from .devices import ApplianceApi, get_appliance_api_type
-from .exceptions import HaAuthError, HaCannotConnect, HaInvalidOperation
+from .exceptions import HaAuthError, HaCannotConnect
 
 PLATFORMS = [
     "binary_sensor", 
@@ -54,7 +49,6 @@ PLATFORMS = [
 ]
 _LOGGER = logging.getLogger(__name__)
 
-
 class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     """Define a wrapper class to update GE Home data."""
 
@@ -62,24 +56,33 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Set up the GeHomeUpdateCoordinator class."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
 
+        self._client : GeWebsocketClient | None = None
         self._config_entry = config_entry
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._region = config_entry.data[CONF_REGION]
         self._appliance_apis: Dict[str, ApplianceApi] = {}
         self._signal_remove_callbacks: List[Callable] = []
-        self._updater_task: asyncio.Task | None = None
+        self._got_roster = False
+        self._init_done = False
+        self._all_initial_updates_received = asyncio.Event()
 
-        self._reset_initialization()
+        self._updater_task: asyncio.Task | None = None
+        self._reconnect_task: asyncio.Task | None = None
+        self._last_persistent_log: float = 0.0
+        self._retry_count: int = 0
+        self._last_ha_refresh: float = 0.0
+
+        self._reset_sync_state()
 
     #region Public Properties
 
     @property
     def appliances(self) -> Iterable[GeAppliance]:
-        if self.client is None:
+        if self._client is None:
             return []
 
-        return self.client.appliances.values()
+        return self._client.appliances.values()
 
     @property
     def appliance_apis(self) -> Dict[str, ApplianceApi]:
@@ -112,14 +115,14 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """
         Indicates whether the coordinator is connected
         """
-        return self.client is not None and self.client.connected
+        return self._client is not None and self._client.connected
     
     @property
     def available(self) -> bool:
         """
         Indicates whether the coordinator is available
         """
-        return self.client is not None and self.client.available
+        return self._client is not None and self._client.available
     
     #endregion
 
@@ -130,7 +133,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self):
         """Setup a new coordinator"""
-        _LOGGER.debug("Setting up coordinator")
+        _LOGGER.debug("Setting up the coordinator")
 
         await self.hass.config_entries.async_forward_entry_setups(
             self._config_entry, PLATFORMS
@@ -147,26 +150,223 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
-    async def async_reset(self):
+    async def async_reset(self) -> bool:
         """Resets the coordinator."""
-        _LOGGER.debug("resetting the coordinator")
+        _LOGGER.debug("Resetting the coordinator")
         entry = self._config_entry
+
+        # stop the client
+        await self._async_stop_client()
         
         # remove all the callbacks for this coordinator
         for c in self._signal_remove_callbacks:
             c()
         self._signal_remove_callbacks.clear()
 
+        # cancel the notification
+        try:
+            persistent_notification.async_dismiss(self.hass, CONNECTION_NOTIFICATION_ID)
+        except Exception:
+            pass
+
+        # unload
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self._config_entry, PLATFORMS
         )
         return unload_ok
 
     #endregion    
+                  
+    #region Internal Methods
+
+    #region Initialization/Reset/Shutdown
+
+    def _create_ge_client(
+        self, event_loop: Optional[asyncio.AbstractEventLoop]
+    ) -> GeWebsocketClient:
+        """
+        Create a new GeClient object with some helpful callbacks.
+
+        :param event_loop: Event loop
+        :return: GeWebsocketClient
+        """
+        client = GeWebsocketClient(
+            self._username,
+            self._password,
+            self._region,
+            event_loop=event_loop,
+            ssl_context=get_default_context()
+        )
+        client.add_event_handler(EVENT_APPLIANCE_INITIAL_UPDATE, self._on_device_initial_update)
+        client.add_event_handler(EVENT_APPLIANCE_UPDATE_RECEIVED, self._on_device_update)
+        client.add_event_handler(EVENT_GOT_APPLIANCE_LIST, self._on_appliance_list)
+        client.add_event_handler(EVENT_DISCONNECTED, self._on_disconnect)
+        client.add_event_handler(EVENT_CONNECTED, self._on_connect)
+        return client
+    
+    async def _async_start_client(self) -> None:
+        """
+        Tear down old client if present, reset state, and create & start a fresh client.
+        """
+
+        # Teardown old client if present
+        await self._async_stop_client()
+
+        # Create new client and start it
+        try:
+            self._client = self._create_ge_client(event_loop=self.hass.loop)
+            session = async_get_clientsession(self.hass)
+            await self._client.async_get_credentials(session)
+        except Exception as err:
+            _LOGGER.error(f"could not start the client: {err}")
+            self._client = None
+            raise
+
+        # Start the client run loop
+        self.hass.loop.create_task(self._client.async_run_client())
+        _LOGGER.debug("Scheduled the client for execution.")
+
+    async def _async_stop_client(self):
+        """ Teardown the client if it exists """
+        if self._client:
+            try:
+                self._client.clear_event_handlers()
+                await self._client.disconnect()
+            except Exception as err:
+                _LOGGER.warning("Error disconnecting client: %s", err)
+            finally:
+                self._client = None
+
+        # Reset asynchronous and synchronous states
+        await self._async_reset_state()
+        self._reset_sync_state()
+
+    def _reset_sync_state(self):
+        """ Reset synchronous state """
+
+        # clear the appliances
+        self._appliance_apis.clear()
+
+        # reset the initialization
+        self._all_initial_updates_received.clear()
+
+        # Some record keeping to let us know when we can start generating entities
+        self._got_roster = False
+        self._init_done = False
+        self._retry_count = 0
+
+    async def _async_reset_state(self):
+        """ Reset asynchronous state """
+
+        await self._stop_periodic_updates()
+        await self._stop_reconnect_worker()
+
+    @callback
+    def _shutdown(self, event) -> None:
+        """
+        Close the connection on shutdown.
+        Used as an argument to EventBus.async_listen_once.
+        """
+        _LOGGER.info("ge_home shutting down")
+
+        #stop the client and existing background tasks
+        self.hass.loop.create_task(self._async_stop_client())
+
+    #endregion
+
+    #region Reconnection Lifecycle
+
+    async def _ensure_client_running(self) -> None:
+        if self._client is None or self._client.state == GeClientState.DISCONNECTED:
+            _LOGGER.debug("Client missing or disconnected, starting new client")
+            await self._async_start_client()
+
+    async def _start_reconnect_worker(self) -> None:
+        if self._reconnect_task and not self._reconnect_task.done():
+            return
+        self._reconnect_task = self.hass.loop.create_task(self._reconnect_worker())
+
+    async def _stop_reconnect_worker(self) -> None:
+        self._retry_count = 0
+        self._last_persistent_log = 0.0
+        if self._reconnect_task:
+            self._reconnect_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._reconnect_task
+            self._reconnect_task = None
+        try:
+            persistent_notification.async_dismiss(self.hass, CONNECTION_NOTIFICATION_ID)
+        except Exception:
+            pass            
+
+    async def _reconnect_worker(self) -> None:
+        _LOGGER.debug("Reconnect worker started")
+        try:
+            while True:
+                if self._client and self._client.state != GeClientState.DISCONNECTED:
+                    _LOGGER.debug("Client no longer disconnected, exiting worker")
+                    return
+
+                self._retry_count += 1
+                sleep_time = self._get_retry_delay()
+
+                _LOGGER.info(f"Retrying in {sleep_time:.1f}s (attempt {self._retry_count})")
+                await asyncio.sleep(sleep_time)
+
+                if self._client and self._client.state != GeClientState.DISCONNECTED:
+                    _LOGGER.debug("Client became healthy before retry, exiting")
+                    return
+
+                try:
+                    await self._async_start_client()
+                except (GeNotAuthenticatedError, GeAuthFailedError):
+                    self._show_persistent_notification("Authentication failure: please re-authenticate the GE Home integration.")
+                    return
+                except Exception as err:
+                    _LOGGER.warning(f"Reconnect attempt failed: {err}")
+
+                if self._client and self._client.state != GeClientState.DISCONNECTED:
+                    return
+
+                if self._retry_count >= NOTIFY_AFTER_RETRIES:
+                    self._show_notification_once_per_interval(
+                        title="GE Home: connection issues",
+                        message=f"Unable to connect after {self._retry_count} attempts. Will continue retrying automatically.",
+                        interval=PERSISTENT_RETRY_LOG_INTERVAL,
+                    )
+                await self._throttled_refresh_ha_state()
+        except asyncio.CancelledError:
+            _LOGGER.debug("Reconnect worker cancelled, ignoring.")
+        finally:
+            if self._reconnect_task and self._reconnect_task.done():
+                self._reconnect_task = None
+
+    def _get_retry_delay(self) -> float:
+        delay = float(min(MIN_RETRY_DELAY * (2 ** self._retry_count), MAX_RETRY_DELAY))
+        jitter = delay * RECONNECT_JITTER * (random.random() * 2 - 1)
+        return delay + jitter
+
+    #endregion
+
+    #region Persistent Notifications
+
+    def _show_persistent_notification(self, message: str, title: str = "GE Home Connection"):
+        try:
+            persistent_notification.async_create(self.hass, message, title, notification_id=CONNECTION_NOTIFICATION_ID)
+        except Exception:
+            _LOGGER.exception("Failed to create persistent notification")
+
+    def _show_notification_once_per_interval(self, title: str, message: str, interval: int = 300):
+        now = time.time()
+        if now - self._last_persistent_log > interval:
+            self._last_persistent_log = now
+            self._show_persistent_notification(message, title)    
+
+    #endregion
 
     #region Client Event Handlers
 
-    async def on_device_update(self, data: Tuple[GeAppliance, Dict[ErdCodeType, Any]]):
+    async def _on_device_update(self, data: Tuple[GeAppliance, Dict[ErdCodeType, Any]]):
         """Let HA know there's new state."""
         self.last_update_success = True
         appliance, update_data = data
@@ -185,19 +385,22 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         
         self._update_entity_state(api.entities)
 
-    async def on_appliance_list(self, _):
+    async def _on_appliance_list(self, _):
         """When we get an appliance list, mark it and maybe trigger all ready."""
 
         _LOGGER.debug("Got roster update")
         self.last_update_success = True
         if not self._got_roster:
             self._got_roster = True
-            # TODO: Probably should have a better way of confirming we're good to go...
-            await asyncio.sleep(ROSTER_ASYNC_WAIT)
-            # After the initial roster update, wait a bit and hit go
-            await self._async_maybe_trigger_all_ready()
 
-    async def on_device_initial_update(self, appliance: GeAppliance):
+        try:
+            await asyncio.wait_for(self._all_initial_updates_received.wait(), timeout=INITIAL_UPDATE_TIMEOUT)
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout waiting for initial appliance updates")
+        finally:
+            await self._async_maybe_trigger_all_ready(True)
+
+    async def _on_device_initial_update(self, appliance: GeAppliance):
         """When an appliance first becomes ready, let the system know and schedule periodic updates."""
 
         self._dump_appliance(appliance)
@@ -211,173 +414,20 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self.last_update_success = True
         self._maybe_add_appliance_api(appliance)
         await self._async_maybe_trigger_all_ready()
-        await self._start_periodic_updates()   
+        await self._start_periodic_updates()
 
-    async def on_disconnect(self, _):
+    async def _on_disconnect(self, _):
         """Handle disconnection."""
-        _LOGGER.debug(f"Disconnected. Attempting to reconnect in {MIN_RETRY_DELAY} seconds")
+        _LOGGER.debug(f"Client has been disconnected, starting reconnection attempts.")
         self.last_update_success = False
-        self.hass.loop.call_later(MIN_RETRY_DELAY, self._reconnect, True)
+        await self._start_reconnect_worker()
 
-    async def on_connect(self, _):
+    async def _on_connect(self, _):
         """Set state upon connection."""
         self.last_update_success = True
-        self._retry_count = 0
+        await self._stop_reconnect_worker()
 
-    #endregion        
-            
-    #region Internal Methods
-
-    #region Initialization/Reset
-
-    def _create_ge_client(
-        self, event_loop: Optional[asyncio.AbstractEventLoop]
-    ) -> GeWebsocketClient:
-        """
-        Create a new GeClient object with some helpful callbacks.
-
-        :param event_loop: Event loop
-        :return: GeWebsocketClient
-        """
-        client = GeWebsocketClient(
-            self._username,
-            self._password,
-            self._region,
-            event_loop=event_loop,
-            ssl_context=get_default_context()
-        )
-        client.add_event_handler(EVENT_APPLIANCE_INITIAL_UPDATE, self.on_device_initial_update)
-        client.add_event_handler(EVENT_APPLIANCE_UPDATE_RECEIVED, self.on_device_update)
-        client.add_event_handler(EVENT_GOT_APPLIANCE_LIST, self.on_appliance_list)
-        client.add_event_handler(EVENT_DISCONNECTED, self.on_disconnect)
-        client.add_event_handler(EVENT_CONNECTED, self.on_connect)
-        return client  
-
-    async def _get_client(self) -> GeWebsocketClient:
-        """Get a new GE Websocket client."""
-        if self.client:
-            try:
-                self.client.clear_event_handlers()
-                await self.client.disconnect()
-            except Exception as err:
-                _LOGGER.warning(f"exception while disconnecting client {err}")
-            finally:
-                await self._reset_async_state()
-                self._reset_initialization()
-
-        self.client = self._create_ge_client(event_loop=self.hass.loop)
-        return self.client
-
-    async def _async_start_client(self):
-        """Start a new GeClient in the HASS event loop."""
-        try:
-            _LOGGER.debug("Creating and starting client")
-            await self._get_client()
-            await self._async_begin_session()
-        except:
-            _LOGGER.debug("could not start the client")
-            self.client = None
-            raise
-
-    async def _async_begin_session(self):
-        """Begins the ge_home session."""
-        _LOGGER.debug("Beginning session")
-        
-        if self.client is None:
-            raise HaInvalidOperation("Attempted to start a session without a valid client.")
-        if self.hass is None or self.hass.loop is None:
-            raise HaInvalidOperation("No running HASS loop to start client.")
-
-        session = async_get_clientsession(self.hass)
-        await self.client.async_get_credentials(session)
-
-        fut = self.hass.loop.create_task(self.client.async_run_client())
-        _LOGGER.debug("Client running")
-        return fut
-
-    def _reset_initialization(self):
-        """ Reset synchronous state """
-
-        #clear the client
-        self.client = None  # type: Optional[GeWebsocketClient]
-
-        # clear the appliances
-        self._appliance_apis.clear()
-
-        # Some record keeping to let us know when we can start generating entities
-        self._got_roster = False
-        self._init_done = False
-        self._retry_count = 0
-        self._reconnecting = False
-
-    async def _reset_async_state(self):
-        """ Reset asynchronous state """
-
-        # Stop the polling task
-        if self._updater_task:
-            task = self._updater_task
-            self._updater_task = None
-
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass            
-    
-    #endregion
-
-    #region Reconnection/Shutdown
-
-    def _get_retry_delay(self) -> int:
-        delay = MIN_RETRY_DELAY * 2 ** (self._retry_count - 1)
-        return min(delay, MAX_RETRY_DELAY)
-
-    @callback
-    def _reconnect(self, log=False) -> None:
-        """Prepare to reconnect ge_home session."""
-        if log:
-            _LOGGER.info("Will try to reconnect to ge_home service")
-        if self.hass is None or self.hass.loop is None:
-            raise HaInvalidOperation("No running HASS loop to reconnect client.")
-
-        self.hass.loop.create_task(self._async_reconnect())
-
-    async def _async_reconnect(self) -> None:
-        """Try to reconnect ge_home session."""
-        self._retry_count += 1
-        _LOGGER.info(
-            f"Attempting to reconnect to ge_home service (attempt {self._retry_count})"
-        )
-
-        try:
-            async with async_timeout.timeout(CLIENT_START_ASYNC_TIMEOUT):
-                await self._async_start_client()
-        except Exception as err:
-            _LOGGER.warning(f"Could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
-            self.hass.loop.call_later(self._get_retry_delay(), self._reconnect)
-            _LOGGER.debug("Forcing a state refresh while disconnected")
-            try:
-                await self._refresh_ha_state()
-            except Exception as err:
-                _LOGGER.debug(f"Error refreshing state: {err}")
-
-    @callback
-    def _shutdown(self, event) -> None:
-        """
-        Close the connection on shutdown.
-        Used as an argument to EventBus.async_listen_once.
-        """
-        _LOGGER.info("ge_home shutting down")
-
-        #stop background polling
-        self.hass.loop.create_task(self._reset_async_state())
-
-        #if we have a client, disconnect it
-        if self.client:
-            self.client.clear_event_handlers()
-            self.hass.loop.create_task(self.client.disconnect())
-
-    #endregion
+    #endregion  
 
     #region Appliance Management
 
@@ -392,7 +442,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         api_type = get_appliance_api_type(appliance.appliance_type or ErdApplianceType.UNKNOWN)
         return api_type(self, appliance)
 
-    def _maybe_add_appliance_api(self, appliance: GeAppliance):
+    def _maybe_add_appliance_api(self, appliance: GeAppliance) -> None:
         mac_addr = appliance.mac_addr
         if mac_addr not in self.appliance_apis:
             _LOGGER.debug(f"Adding appliance api for appliance {mac_addr} ({appliance.appliance_type})")
@@ -405,21 +455,23 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
 
-    async def _async_maybe_trigger_all_ready(self):
+    async def _async_maybe_trigger_all_ready(self, force: bool = False) -> None:
         """See if we're all ready to go, and if so, let the games begin."""
         if self._init_done:
+            # Been here, done this            
             _LOGGER.debug("Already initialized, cannot trigger ready.")
-            # Been here, done this
             return
         
-        if self.client is None:
+        if self._client is None:
             _LOGGER.warning("Client is already deallocated, cannot trigger ready.")
             return
                 
-        if self._got_roster and self.all_appliances_updated:
+        if force or (self._got_roster and self.all_appliances_updated):
             _LOGGER.debug("Ready to go, sending ready signal!")
             self._init_done = True
-            await self.client.async_event(EVENT_ALL_APPLIANCES_READY, None)
+            self._all_initial_updates_received.set()
+
+            await self._client.async_event(EVENT_ALL_APPLIANCES_READY, None)
             async_dispatcher_send(
                 self.hass, 
                 self.signal_ready, 
@@ -438,6 +490,13 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self._updater_task = self.hass.loop.create_task(self._request_periodic_updates())
         _LOGGER.debug("Scheduled background updater for execution.")
 
+    async def _stop_periodic_updates(self) -> None:
+        if self._updater_task:
+            self._updater_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._updater_task
+            self._updater_task = None        
+
     async def _request_periodic_updates(self):
         """Periodic update loop."""
 
@@ -445,12 +504,12 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             while self.connected:
-                await asyncio.sleep(UPDATE_INTERVAL)
+                await asyncio.sleep(STATE_UPDATE_INTERVAL)
 
-                if (self.client is None or not self.connected or not self.client.available):
+                if (self._client is None or not self.connected or not self._client.available):
                     _LOGGER.debug(
                         f"Connection issue, cannot get update ("
-                        f"client: { self.client is None },"
+                        f"client: { self._client is None },"
                         f"connected: { self.connected },"
                         f"available: { self.available }"
                     )
@@ -503,6 +562,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                     entity.async_write_ha_state()
                 except:
                     _LOGGER.warning(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=True)
+
+    async def _throttled_refresh_ha_state(self):
+        now = time.time()
+        if now - self._last_ha_refresh > HA_REFRESH_INTERVAL:
+            try:
+                await self._refresh_ha_state()
+            except Exception:
+                _LOGGER.debug("Error refreshing HA state during reconnect", exc_info=True)
+            finally:
+                self._last_ha_refresh = now
 
     #endregion
 
