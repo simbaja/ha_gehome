@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except HaAuthError:
         raise ConfigEntryAuthFailed("Could not authenticate to SmartHQ")
         
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator._shutdown)
 
     return True
 
