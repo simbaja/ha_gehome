@@ -110,10 +110,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         if self.client is None:
             return []
 
-        return (
-            appliance for appliance in self.client.appliances.values() 
-            if self._is_appliance_valid(appliance)
-        )
+        return self.client.appliances.values()
 
     @property
     def appliance_apis(self) -> Dict[str, ApplianceApi]:
@@ -169,6 +166,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             api.build_entities_list()
             self.appliance_apis[mac_addr] = api
         else:
+            _LOGGER.debug(f"Already have appliance {mac_addr} ({appliance.appliance_type}), switching reference.")
             # if we already have the API, switch out its appliance reference for this one
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
@@ -275,20 +273,20 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """Try to reconnect ge_home session."""
         self._retry_count += 1
         _LOGGER.info(
-            f"attempting to reconnect to ge_home service (attempt {self._retry_count})"
+            f"Attempting to reconnect to ge_home service (attempt {self._retry_count})"
         )
 
         try:
             async with async_timeout.timeout(ASYNC_TIMEOUT):
                 await self.async_start_client()
         except Exception as err:
-            _LOGGER.warning(f"could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
+            _LOGGER.warning(f"Could not reconnect: {err}, will retry in {self._get_retry_delay()} seconds")
             self.hass.loop.call_later(self._get_retry_delay(), self.reconnect)
-            _LOGGER.debug("forcing a state refresh while disconnected")
+            _LOGGER.debug("Forcing a state refresh while disconnected")
             try:
                 await self._refresh_ha_state()
             except Exception as err:
-                _LOGGER.debug(f"error refreshing state: {err}")
+                _LOGGER.debug(f"Error refreshing state: {err}")
 
     @callback
     def shutdown(self, event) -> None:
@@ -338,7 +336,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                     continue
             if entity.enabled:
                 try:
-                    _LOGGER.debug(f"Refreshing state for {entity} ({entity.unique_id}, {entity.entity_id}")
+                    _LOGGER.debug(f"Refreshing state for {entity} ({entity.unique_id}, {entity.entity_id}), state: {entity.state}")
                     entity.async_write_ha_state()
                 except:
                     _LOGGER.warning(f"Could not refresh state for {entity} ({entity.unique_id}, {entity.entity_id}", exc_info=True)
@@ -356,7 +354,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         if not self._got_roster:
             self._got_roster = True
             # TODO: Probably should have a better way of confirming we're good to go...
-            await asyncio.sleep(5)  
+            await asyncio.sleep(5)
             # After the initial roster update, wait a bit and hit go
             await self.async_maybe_trigger_all_ready()
 
@@ -374,7 +372,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self.last_update_success = True
         self._maybe_add_appliance_api(appliance)
         await self.async_maybe_trigger_all_ready()
-        _LOGGER.debug(f"Requesting updates for {appliance.mac_addr}")
+        _LOGGER.debug(f"Start requesting updates for {appliance.mac_addr}")
 
         while self.connected:
             if self.client is None:
@@ -383,7 +381,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
             await asyncio.sleep(UPDATE_INTERVAL)
             if self.connected and self.client.available:
+                _LOGGER.debug(f"Requesting update for {appliance.mac_addr}")
                 await appliance.async_request_update()
+            else:
+                _LOGGER.debug(f"Could not request update (connected: {self.connected}, available: {self.client.available})")
 
         _LOGGER.debug(f"No longer requesting updates for {appliance.mac_addr}")
 
@@ -401,6 +402,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     async def async_maybe_trigger_all_ready(self):
         """See if we're all ready to go, and if so, let the games begin."""
         if self._init_done:
+            _LOGGER.debug("Already initialized, cannot trigger ready.")
             # Been here, done this
             return
         
@@ -409,7 +411,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             return
                 
         if self._got_roster and self.all_appliances_updated:
-            _LOGGER.debug("Ready to go, sending ready signal")
+            _LOGGER.debug("Ready to go, sending ready signal!")
             self._init_done = True
             await self.client.async_event(EVENT_ALL_APPLIANCES_READY, None)
             async_dispatcher_send(
@@ -422,7 +424,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         return min(delay, MAX_RETRY_DELAY)
 
     def _is_appliance_valid(self, appliance: GeAppliance) -> bool:
-        return appliance.appliance_type is not None and appliance.available
+        return appliance.appliance_type is not None
 
     def _dump_appliance(self, appliance: GeAppliance) -> None:
         if not _LOGGER.isEnabledFor(logging.DEBUG):

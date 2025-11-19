@@ -5,7 +5,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "documentation": "https://github.com/simbaja/ha_gehome",
-  "requirements": ["gehomesdk==2025.11.1","magicattr==0.1.6"],
+  "requirements": ["gehomesdk==2025.11.2","magicattr==0.1.6"],
   "codeowners": ["@simbaja"],	
   "version": "2025.11.0"
 }
