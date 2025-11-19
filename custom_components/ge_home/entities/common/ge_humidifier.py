@@ -47,12 +47,20 @@ class GeHumidifier(GeEntity, HumidifierEntity, metaclass=abc.ABCMeta):
     def name(self) -> Optional[str]:
         return f"{self.serial_or_mac} {self._device_class.title()}"
 
-    @cached_property
-    def target_humidity(self) -> int | None:
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
+    @property
+    def target_humidity(self) -> int | None: # type: ignore
         return int(self.appliance.get_erd_value(self._target_humidity_erd_code))
 
-    @cached_property
-    def current_humidity(self) -> int | None:
+    @property
+    def current_humidity(self) -> int | None: # type: ignore
         return int(self.appliance.get_erd_value(self._current_humidity_erd_code))
 
     @cached_property
@@ -67,8 +75,8 @@ class GeHumidifier(GeEntity, HumidifierEntity, metaclass=abc.ABCMeta):
     def supported_features(self) -> HumidifierEntityFeature:
         return HumidifierEntityFeature(HumidifierEntityFeature.MODES)
 
-    @cached_property
-    def is_on(self) -> bool:
+    @property
+    def is_on(self) -> bool: # type: ignore
         return self.appliance.get_erd_value(self._power_status_erd_code) == ErdOnOff.ON
 
     @cached_property

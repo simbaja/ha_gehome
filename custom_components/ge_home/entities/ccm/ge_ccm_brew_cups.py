@@ -1,5 +1,3 @@
-from propcache.api import cached_property
-
 from homeassistant.components.number import NumberMode
 from gehomesdk import ErdCode
 
@@ -18,6 +16,6 @@ class GeCcmBrewCupsNumber(GeErdNumber, GeCcmCachedValue):
         GeCcmCachedValue.set_value(self, value)
         self.schedule_update_ha_state()
 
-    @cached_property
-    def native_value(self) -> int:
+    @property
+    def native_value(self) -> int: # type: ignore
         return int(self.get_value(device_value = super().native_value) or 0.0)

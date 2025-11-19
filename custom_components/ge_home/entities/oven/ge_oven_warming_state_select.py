@@ -1,5 +1,4 @@
 import logging
-from propcache.api import cached_property
 from typing import List, Any, Optional
 
 from gehomesdk import ErdCodeType, ErdOvenWarmingState
@@ -36,11 +35,11 @@ class GeOvenWarmingStateSelect(GeErdSelect):
 
         super().__init__(api, erd_code, OvenWarmingStateOptionsConverter(), erd_override=erd_override)
 
-    @cached_property
-    def assumed_state(self) -> bool:
+    @property
+    def assumed_state(self) -> bool: # type: ignore
         return not self._has_status
     
-    @cached_property
+    @property
     def current_option(self):
         if self.assumed_state:
             return self._assumed_state.name

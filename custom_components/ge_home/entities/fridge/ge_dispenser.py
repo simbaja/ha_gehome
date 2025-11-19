@@ -2,7 +2,7 @@
 
 import logging
 from propcache.api import cached_property
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -47,8 +47,8 @@ class GeDispenser(GeAbstractWaterHeater):
     def heater_type(self) -> str:
         return HEATER_TYPE_DISPENSER
 
-    @cached_property
-    def icon(self) -> Optional[str]:
+    @property
+    def icon(self) ->str | None:
         return "mdi:cup-water"   
 
     @property
@@ -96,20 +96,20 @@ class GeDispenser(GeAbstractWaterHeater):
     def supported_features(self):
         return GE_FRIDGE_SUPPORT
 
-    @cached_property
-    def current_operation(self) -> str:
+    @property
+    def current_operation(self) -> str: # type: ignore
         """Get the current operation mode."""
         if self.appliance.get_erd_value(ErdCode.SABBATH_MODE):
             return OP_MODE_SABBATH
         return OP_MODE_NORMAL
 
-    @cached_property
-    def current_temperature(self) -> int | None:
+    @property
+    def current_temperature(self) -> int | None: # type: ignore
         """Return the current temperature."""
         return self.hot_water_status.current_temp
 
-    @cached_property
-    def target_temperature(self) -> int | None:
+    @property
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the target temperature."""
         return self.appliance.get_erd_value(ErdCode.HOT_WATER_SET_TEMP)
 
@@ -123,8 +123,8 @@ class GeDispenser(GeAbstractWaterHeater):
         """Return the maximum temperature."""
         return TemperatureConverter.convert(self._max_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
-    @cached_property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]: # type: ignore
         data = {}
         
         data["target_temperature"] = self.target_temperature

@@ -31,8 +31,16 @@ class GeErdSwitch(GeErdEntity, SwitchEntity):
         self._converter = bool_converter
         self._control_erd_code = control_erd_code
 
-    @cached_property
-    def is_on(self) -> bool:
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
+    @property
+    def is_on(self) -> bool: # type: ignore
         """Return True if switch is on."""
         return self._converter.boolify(self.appliance.get_erd_value(self.erd_code))
     

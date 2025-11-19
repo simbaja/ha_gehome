@@ -1,7 +1,6 @@
 """GE Home Sensor Entities - Freezer"""
 import logging
-from propcache.api import cached_property
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from gehomesdk import (
     ErdCode,
@@ -9,7 +8,6 @@ from gehomesdk import (
     ErdDoorStatus
 )
 
-from ...devices import ApplianceApi
 from .ge_abstract_fridge import (
     ATTR_DOOR_STATUS, 
     HEATER_TYPE_FREEZER, 
@@ -26,8 +24,8 @@ class GeFreezer(GeAbstractFridge):
     def heater_type(self) -> str:
         return HEATER_TYPE_FREEZER
     
-    @cached_property
-    def icon(self) -> Optional[str]:
+    @property
+    def icon(self) -> str | None:
         return "mdi:fridge-top"   
     
     @property

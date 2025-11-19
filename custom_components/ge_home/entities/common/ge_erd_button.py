@@ -12,6 +12,14 @@ class GeErdButton(GeErdEntity, ButtonEntity):
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None):
         super().__init__(api, erd_code, erd_override=erd_override)
 
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+        
     @cached_property
     def device_class(self) -> ButtonDeviceClass | None:
         # Use GeEntity’s logic, but adapt to HA’s ButtonDeviceClass expectations

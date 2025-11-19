@@ -42,8 +42,8 @@ class GeErdPropertySensor(GeErdSensor):
         property_name = self._erd_property_cleansed.replace("_", " ").title()
         return f"{base_string} {property_name}"
 
-    @cached_property
-    def native_value(self):
+    @property
+    def native_value(self) -> str | float | int | None: # type: ignore
         try:
             value = magicattr.get(self.appliance.get_erd_value(self.erd_code), self.erd_property)
 

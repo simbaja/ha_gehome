@@ -64,6 +64,14 @@ class GeClimate(GeEntity, ClimateEntity):
         return f"{self.serial_or_mac} Climate"
 
     @property
+    def icon(self) ->str | None: # type: ignore
+        return self._get_icon()
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return self.api.available
+        
+    @property
     def power_status_erd_code(self):
         return self._power_status_erd_code
 
@@ -102,8 +110,8 @@ class GeClimate(GeEntity, ClimateEntity):
     def is_on(self) -> bool:
         return self.appliance.get_erd_value(self.power_status_erd_code) == ErdOnOff.ON
 
-    @cached_property
-    def target_temperature(self) -> Optional[float]:
+    @property
+    def target_temperature(self) -> float | None: # type: ignore
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         if measurement_system == ErdMeasurementUnits.METRIC:
             targ = float(self.appliance.get_erd_value(self.target_temperature_erd_code))
@@ -111,8 +119,8 @@ class GeClimate(GeEntity, ClimateEntity):
             return (9 * targ) / 5 + 32
         return float(self.appliance.get_erd_value(self.target_temperature_erd_code))
 
-    @cached_property
-    def current_temperature(self) -> Optional[float]:
+    @property
+    def current_temperature(self) -> float | None: # type: ignore
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         if measurement_system == ErdMeasurementUnits.METRIC:
             current = float(self.appliance.get_erd_value(self.current_temperature_erd_code))
@@ -128,8 +136,8 @@ class GeClimate(GeEntity, ClimateEntity):
     def max_temp(self) -> float:
         return self._convert_temp(86)
 
-    @cached_property
-    def hvac_mode(self) -> HVACMode | None:
+    @property
+    def hvac_mode(self) -> HVACMode | None: # type: ignore
         if not self.is_on:
             return HVACMode.OFF       
         try:
@@ -142,8 +150,8 @@ class GeClimate(GeEntity, ClimateEntity):
     def hvac_modes(self) -> List[HVACMode]:
         return [HVACMode.OFF] + [HVACMode(m) for m in self._hvac_mode_converter.options]
 
-    @cached_property
-    def fan_mode(self):
+    @property
+    def fan_mode(self) -> str | None: # type: ignore
         if self.hvac_mode == HVACMode.FAN_ONLY:
             return self._fan_only_fan_mode_converter.to_option_string(self.appliance.get_erd_value(self.fan_mode_erd_code))
         return self._fan_mode_converter.to_option_string(self.appliance.get_erd_value(self.fan_mode_erd_code))

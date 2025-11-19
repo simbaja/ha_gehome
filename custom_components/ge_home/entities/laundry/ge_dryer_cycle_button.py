@@ -1,10 +1,8 @@
 import logging
 from propcache.api import cached_property
-from typing import Any
 from datetime import timedelta
 
-from gehomesdk import ErdCode, ErdMachineState
-from homeassistant.components.button import ButtonEntity
+from gehomesdk import ErdCode
 from ..common import GeErdButton
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,12 +23,12 @@ class GeDryerCycleButton(GeErdButton):
         """Return the name of the button."""
         return f"{self.serial_or_mac} Start Cycle"
 
-    @cached_property
+    @property
     def icon(self):
         """Return the icon."""
         return "mdi:play-circle"
 
-    @cached_property
+    @property
     def available(self) -> bool:
         """The button is only available if remote start is enabled on the appliance."""
         try:

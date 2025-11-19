@@ -29,9 +29,17 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         self._uom_override = uom_override
         self._state_class_override = state_class_override
         self._data_type_override = data_type_override
-
-    @cached_property
-    def native_value(self):
+    
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+    
+    @property
+    def native_value(self) -> str | int | float | None: # type: ignore
         try:
             value = self.appliance.get_erd_value(self.erd_code)
 

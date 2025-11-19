@@ -23,10 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 class GeOven(GeAbstractWaterHeater):
     """GE Appliance Oven"""
 
-    @cached_property
-    def icon(self) -> Optional[str]:
-        return "mdi:stove"
-
     def __init__(self, api: ApplianceApi, oven_select: str = UPPER_OVEN, two_cavity: bool = False, temperature_erd_code: str = "RAW_TEMPERATURE"):
         if oven_select not in (UPPER_OVEN, LOWER_OVEN):
             raise ValueError(f"Invalid `oven_select` value ({oven_select})")
@@ -36,25 +32,29 @@ class GeOven(GeAbstractWaterHeater):
         self._temperature_erd_code = temperature_erd_code
         super().__init__(api)
 
-    @property
-    def supported_features(self):
-        if self.remote_enabled:
-            return GE_OVEN_SUPPORT
-        else:
-            return SUPPORT_NONE
-
     @cached_property
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self.serial_or_mac}_{self.oven_select.lower()}"
 
     @cached_property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         if self._two_cavity:
             oven_title = self.oven_select.replace("_", " ").title()
         else:
             oven_title = "Oven"
 
         return f"{self.serial_or_mac} {oven_title}"
+
+    @property
+    def icon(self) -> str | None:
+        return "mdi:stove"
+    
+    @property
+    def supported_features(self):
+        if self.remote_enabled:
+            return GE_OVEN_SUPPORT
+        else:
+            return SUPPORT_NONE
 
     @cached_property
     def temperature_unit(self):
@@ -77,8 +77,8 @@ class GeOven(GeAbstractWaterHeater):
         value = self.get_erd_value("REMOTE_ENABLED")
         return value == True
 
-    @cached_property
-    def current_temperature(self) -> Optional[int]:
+    @property
+    def current_temperature(self) -> int | None: # type: ignore
         #DISPLAY_TEMPERATURE appears to be out of line with what's
         #actually going on in the oven, RAW_TEMPERATURE seems to be
         #accurate. However, it appears some devices don't have
@@ -89,8 +89,8 @@ class GeOven(GeAbstractWaterHeater):
         #    return current_temp
         return self.get_erd_value(self._temperature_erd_code)
 
-    @cached_property
-    def current_operation(self) -> Optional[str]:
+    @property
+    def current_operation(self) -> str | None: # type: ignore
         cook_setting = self.current_cook_setting
         cook_mode = cook_setting.cook_mode
         # TODO: simplify this lookup nonsense somehow
@@ -129,8 +129,8 @@ class GeOven(GeAbstractWaterHeater):
         erd_code = self.get_erd_code("COOK_MODE")
         return self.appliance.get_erd_value(erd_code)
 
-    @cached_property
-    def target_temperature(self) -> Optional[int]:
+    @property
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         cook_mode = self.current_cook_setting
         if cook_mode.temperature:
@@ -195,8 +195,8 @@ class GeOven(GeAbstractWaterHeater):
         erd_value = self.appliance.get_erd_value(erd_code)
         return self._stringify(erd_value, temp_units=self.temperature_unit)
 
-    @cached_property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    @property
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]: # type: ignore
         probe_present = False
         if self.api.has_erd_code(self.get_erd_code("PROBE_PRESENT")):
             probe_present: bool = self.get_erd_value("PROBE_PRESENT")

@@ -28,8 +28,16 @@ class GeErdSelect(GeErdEntity, SelectEntity):
         self._converter = converter
         self._control_erd_code = control_erd_code
 
-    @cached_property
-    def current_option(self):
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
+    @property
+    def current_option(self) -> str | None: # type: ignore
         return self._converter.to_option_string(self.appliance.get_erd_value(self.erd_code))
 
     @cached_property

@@ -39,8 +39,8 @@ class GeDehumidifier(GeHumidifier):
             high
         )
 
-    @cached_property
-    def icon(self) -> Optional[str]:
+    @property
+    def icon(self) -> str | None:
         return "mdi:air-humidifier"        
 
     @cached_property
@@ -50,8 +50,8 @@ class GeDehumidifier(GeHumidifier):
         else:
             return HumidifierEntityFeature(0)
 
-    @cached_property
-    def mode(self) -> str | None:
+    @property
+    def mode(self) -> str | None: # type: ignore
         if not self._has_fan:
             raise NotImplementedError()
         

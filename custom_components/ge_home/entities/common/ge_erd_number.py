@@ -40,8 +40,16 @@ class GeErdNumber(GeErdEntity, NumberEntity):
         self._native_step = step_value
         self._mode = mode
 
-    @cached_property
-    def native_value(self) -> float | None:
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
+    @property
+    def native_value(self) -> float | None: # type: ignore
         try:
             value = self.appliance.get_erd_value(self.erd_code)
             return self._convert_value_from_device(value)

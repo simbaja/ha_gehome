@@ -1,5 +1,4 @@
 from typing import Optional
-from propcache.api import cached_property
 
 from gehomesdk import ErdCodeType, ErdDataType, ErdAcFanSetting
 
@@ -33,8 +32,8 @@ class GeDehumidifierFanSpeedSensor(GeErdSensor):
 
         self._converter = DehumidifierFanSettingOptionsConverter()
 
-    @cached_property
-    def native_value(self):
+    @property
+    def native_value(self) -> str | None:
         try:
             value: ErdAcFanSetting = self.appliance.get_erd_value(self.erd_code)
             return self._converter.to_option_string(value)

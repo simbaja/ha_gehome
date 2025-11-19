@@ -1,5 +1,4 @@
 import logging
-from propcache.api import cached_property
 from typing import List, Any, Optional
 
 from gehomesdk import ErdCode, ErdCcmBrewStrength
@@ -45,6 +44,6 @@ class GeCcmBrewStrengthSelect(GeErdSelect, GeCcmCachedValue):
         GeCcmCachedValue.set_value(self, option)
         self.schedule_update_ha_state()
 
-    @cached_property
-    def current_option(self):
+    @property
+    def current_option(self) -> str | None: # type: ignore
         return self.get_value(device_value = super().current_option)

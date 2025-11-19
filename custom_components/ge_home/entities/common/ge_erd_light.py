@@ -31,26 +31,31 @@ class GeErdLight(GeErdEntity, LightEntity):
         super().__init__(api, erd_code, erd_override)
         self._color_mode = color_mode
 
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
     @cached_property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return set([ColorMode.BRIGHTNESS])
     
-    @cached_property
-    def color_mode(self) -> ColorMode:
+    @property
+    def color_mode(self) -> ColorMode: # type: ignore
         """Return the color mode of the light."""
         return self._color_mode
 
-    @cached_property
-    def brightness(self):
+    @property
+    def brightness(self): # type: ignore
         """Return the brightness of the light."""
         return to_hass_level(self.appliance.get_erd_value(self.erd_code))        
 
-    async def _set_brightness(self, brightness, **kwargs):
-        await self.appliance.async_set_erd_value(self.erd_code, to_ge_level(brightness))
-
-    @cached_property
-    def is_on(self) -> bool:
+    @property
+    def is_on(self) -> bool: # type: ignore
         """Return True if light is on."""
         return self.appliance.get_erd_value(self.erd_code) > 0
 
@@ -65,3 +70,7 @@ class GeErdLight(GeErdEntity, LightEntity):
         """Turn the light off."""
         _LOGGER.debug(f"Turning off {self.unique_id}")
         await self._set_brightness(0, **kwargs)
+
+    async def _set_brightness(self, brightness, **kwargs):
+        await self.appliance.async_set_erd_value(self.erd_code, to_ge_level(brightness))
+

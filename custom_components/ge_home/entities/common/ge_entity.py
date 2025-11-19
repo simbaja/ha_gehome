@@ -31,7 +31,7 @@ class GeEntity:
     def serial_number(self):
         return self.api.serial_number
 
-    @cached_property
+    @property
     def available(self) -> bool:
         return self.api.available
 
@@ -51,8 +51,8 @@ class GeEntity:
     def name(self) -> Optional[str]:
         raise NotImplementedError
 
-    @cached_property
-    def icon(self) -> Optional[str]:
+    @property
+    def icon(self) ->str | None: # type: ignore
         return self._get_icon()
 
     @cached_property

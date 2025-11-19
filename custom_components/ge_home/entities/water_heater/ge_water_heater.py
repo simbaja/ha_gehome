@@ -1,7 +1,7 @@
 """GE Home Sensor Entities - Oven"""
 import logging
 from propcache.api import cached_property
-from typing import List, Optional
+from typing import List
 
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -27,8 +27,8 @@ class GeWaterHeater(GeAbstractWaterHeater):
     def heater_type(self) -> str:
         return "heater"
     
-    @cached_property
-    def icon(self) -> Optional[str]:
+    @property
+    def icon(self) -> str | None:
         return "mdi:water-boiler"
 
     @property
@@ -39,12 +39,12 @@ class GeWaterHeater(GeAbstractWaterHeater):
     def temperature_unit(self):
         return UnitOfTemperature.FAHRENHEIT
 
-    @cached_property
-    def current_temperature(self) -> Optional[int]:
+    @property
+    def current_temperature(self) -> int | None: # type: ignore
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TEMPERATURE)
 
-    @cached_property
-    def current_operation(self) -> Optional[str]:
+    @property
+    def current_operation(self) -> str | None: # type: ignore
         erd_mode = self.appliance.get_erd_value(ErdCode.WH_HEATER_MODE)
         return self._modes_converter.to_option_string(erd_mode)
 
@@ -52,8 +52,8 @@ class GeWaterHeater(GeAbstractWaterHeater):
     def operation_list(self) -> List[str]:
         return self._modes_converter.options
 
-    @cached_property
-    def target_temperature(self) -> Optional[int]:
+    @property
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TARGET_TEMPERATURE)
 

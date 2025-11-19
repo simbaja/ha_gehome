@@ -9,6 +9,8 @@ from .ge_erd_entity import GeErdEntity
 
 
 class GeErdBinarySensor(GeErdEntity, BinarySensorEntity):
+    """GE Entity for binary sensors"""
+
     def __init__(
             self, 
             api: ApplianceApi, 
@@ -22,9 +24,16 @@ class GeErdBinarySensor(GeErdEntity, BinarySensorEntity):
         self._icon_on_override = icon_on_override
         self._icon_off_override = icon_off_override
 
-    """GE Entity for binary sensors"""
-    @cached_property
-    def is_on(self) -> bool | None:
+    @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+
+    @property
+    def is_on(self) -> bool | None: # type: ignore
         """Return True if entity is on."""
         return self._boolify(self.appliance.get_erd_value(self.erd_code))
     

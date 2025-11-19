@@ -33,7 +33,7 @@ class GeAdvantium(GeAbstractWaterHeater):
         super().__init__(api)
         self._current_operation_mode = None
 
-    @cached_property
+    @property
     def icon(self) -> Optional[str]:
         return "mdi:microwave"        
 
@@ -65,12 +65,12 @@ class GeAdvantium(GeAbstractWaterHeater):
         value = self.appliance.get_erd_value(ErdCode.UPPER_OVEN_REMOTE_ENABLED)
         return value == True
 
-    @cached_property
-    def current_temperature(self) -> Optional[int]:
+    @property
+    def current_temperature(self) -> int | None: # type: ignore
         return self.appliance.get_erd_value(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)
 
-    @cached_property
-    def current_operation(self) -> Optional[str]:
+    @property
+    def current_operation(self) -> Optional[str]: # type: ignore
         if self.current_operation_mode is None:
             return None
         
@@ -133,8 +133,8 @@ class GeAdvantium(GeAbstractWaterHeater):
         except:
             return False
 
-    @cached_property
-    def target_temperature(self) -> Optional[int]:
+    @property
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         try:
             cook_mode = self.current_cook_setting
@@ -160,8 +160,8 @@ class GeAdvantium(GeAbstractWaterHeater):
         _, max_temp = self.appliance.get_erd_value(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
         return max_temp
 
-    @cached_property
-    def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None: # type: ignore
         data = {}
 
         cook_time_remaining = self.appliance.get_erd_value(ErdCode.ADVANTIUM_COOK_TIME_REMAINING)

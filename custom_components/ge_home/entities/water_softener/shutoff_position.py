@@ -1,5 +1,4 @@
 import logging
-from propcache.api import cached_property
 from typing import List, Any, Optional
 
 from gehomesdk import ErdCodeType, ErdWaterSoftenerShutoffValveState, ErdCode
@@ -32,7 +31,7 @@ class GeErdShutoffPositionSelect(GeErdSelect):
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
         super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve")
 
-    @cached_property
+    @property
     def current_option(self):
         """Return the current selected option"""
         
@@ -43,8 +42,8 @@ class GeErdShutoffPositionSelect(GeErdSelect):
 
         return self._converter.to_option_string(self.appliance.get_erd_value(self.erd_code))
 
-    @cached_property
-    def options(self) -> List[str]:
+    @property
+    def options(self) -> List[str]: # type: ignore
         """Return a list of options"""
 
         #if we're transitioning or don't know what the mode is, don't allow changes

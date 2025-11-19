@@ -55,16 +55,12 @@ class PacHvacModeOptionsConverter(OptionsConverter):
 class GePacClimate(GeClimate):
     """Class for Portable AC units"""
     def __init__(self, api: ApplianceApi):
-        #initialize the climate control with defaults
-        super().__init__(api, PacHvacModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
-
         #get a couple ERDs that shouldn't change if available
         self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
         self._temp_range: ErdSacTargetTemperatureRange | None = self.api.try_get_erd_value(ErdCode.SAC_TARGET_TEMPERATURE_RANGE)
 
-        if self._modes is not None:
-            #construct the converter based on the available modes
-            self._hvac_mode_converter = PacHvacModeOptionsConverter(self._modes)
+        #initialize the climate control with defaults
+        super().__init__(api, PacHvacModeOptionsConverter(self._modes), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
     @cached_property
     def min_temp(self) -> float:

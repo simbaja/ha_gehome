@@ -15,6 +15,14 @@ class GeAbstractWaterHeater(GeEntity, WaterHeaterEntity, metaclass=abc.ABCMeta):
     """Mock temperature/operation mode supporting device as a water heater"""
 
     @property
+    def icon(self) ->str | None: # type: ignore
+        return super().icon
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+    
+    @property
     def heater_type(self) -> str:
         raise NotImplementedError
 

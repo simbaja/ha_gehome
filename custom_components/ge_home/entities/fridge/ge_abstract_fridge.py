@@ -74,13 +74,13 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         """Get the current temperature settings tuple."""
         return self.appliance.get_erd_value(ErdCode.TEMPERATURE_SETTING)
 
-    @cached_property
-    def target_temperature(self) -> int | None:
+    @property
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         return getattr(self.target_temps, self.heater_type)
 
-    @cached_property
-    def current_temperature(self) -> int | None:
+    @property
+    def current_temperature(self) -> int | None:  # type: ignore
         """Return the current temperature."""
         try:
             current_temps = self.appliance.get_erd_value(ErdCode.CURRENT_TEMPERATURE)
@@ -134,8 +134,8 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
             return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
-    @cached_property
-    def current_operation(self) -> str:
+    @property
+    def current_operation(self) -> str: # type: ignore
         """Get the current operation mode."""
         if self.appliance.get_erd_value(ErdCode.SABBATH_MODE):
             return OP_MODE_SABBATH
@@ -197,8 +197,8 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         """Other state attributes for the entity"""
         return {}
 
-    @cached_property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]: # type: ignore
         door_attrs = self.door_state_attrs
         ice_maker_attrs = self.ice_maker_state_attrs
         other_state_attrs = self.other_state_attrs
