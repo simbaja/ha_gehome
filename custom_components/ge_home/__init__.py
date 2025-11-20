@@ -2,10 +2,11 @@
 
 import logging
 import voluptuous as vol
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_REGION, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_USERNAME, CONF_REGION, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import DOMAIN
 from .exceptions import HaAuthError, HaCannotConnect
@@ -14,31 +15,65 @@ from .update_coordinator import GeHomeUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-
 async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old config entry to the latest schema."""
 
-    if config_entry.version == 1:
+    old_version: int = config_entry.version
+    data: dict[str, Any] = dict(config_entry.data)
 
-        new = {**config_entry.data}
-        new[CONF_REGION] = "US"
+    # --- Migrate from version 1 to 2
+    if old_version == 1:
+        _LOGGER.debug(f"GE Home: Migrating entry {config_entry.entry_id} from v1 to v2")
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
+        # Apply default US region if missing
+        data[CONF_REGION] = "US"
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            version=2,
+        )
 
-    return True    
+        _LOGGER.info(f"GE Home: Migration of entry {config_entry.entry_id} to v2 successful")
+        old_version = 2
 
+    # --- Migrate any version 2 to 3
+    if old_version == 2:
+        _LOGGER.debug(f"GE Home: Migrating entry {config_entry.entry_id} from v{old_version} to v3")
+
+        # Normalize username
+        username: str = data[CONF_USERNAME].strip().lower()
+        data[CONF_USERNAME] = username
+
+        # Normalize region
+        region: str = data[CONF_REGION].strip().upper()
+        data[CONF_REGION] = region
+
+        # Determine unique_id
+        unique_id: str = (config_entry.unique_id or username).strip().lower()
+
+        # Update entry: data, version, and unique_id in one call
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            version=3,
+            unique_id=unique_id,
+        )
+
+        _LOGGER.info (
+            f"GE Home: Migration of entry {config_entry.entry_id} to v3 successful "
+            f"(unique_id='{unique_id}')"
+        )
+
+    return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ge_home from a config entry."""
 
-    coordinators = hass.data.setdefault(DOMAIN, {})  # type: dict[str, GeHomeUpdateCoordinator]
+    coordinators: dict[str, GeHomeUpdateCoordinator] = hass.data.setdefault(DOMAIN, {})
 
     #try to get existing coordinator
     existing: GeHomeUpdateCoordinator | None = coordinators.get(entry.entry_id)
@@ -64,10 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except HaAuthError:
         raise ConfigEntryAuthFailed("Could not authenticate to SmartHQ")
     except Exception as exc:
-        _LOGGER.exception("Unexpected error during coordinator setup")
+        _LOGGER.exception("Unexpected error during coordinator setup", exc_info=True)
         raise ConfigEntryNotReady from exc
             
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator._shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
 
     _LOGGER.debug("Coordinator setup complete")
     return True
@@ -83,6 +118,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return ok
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)

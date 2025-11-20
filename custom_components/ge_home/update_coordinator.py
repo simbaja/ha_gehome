@@ -175,6 +175,17 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         )
         return unload_ok
 
+    @callback
+    def shutdown(self, event) -> None:
+        """
+        Close the connection on shutdown.
+        Used as an argument to EventBus.async_listen_once.
+        """
+        _LOGGER.info("ge_home shutting down")
+
+        #stop the client and existing background tasks
+        self.hass.loop.create_task(self._async_stop_client())
+
     #endregion    
                   
     #region Internal Methods
@@ -260,17 +271,6 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         await self._stop_periodic_updates()
         await self._stop_reconnect_worker()
-
-    @callback
-    def _shutdown(self, event) -> None:
-        """
-        Close the connection on shutdown.
-        Used as an argument to EventBus.async_listen_once.
-        """
-        _LOGGER.info("ge_home shutting down")
-
-        #stop the client and existing background tasks
-        self.hass.loop.create_task(self._async_stop_client())
 
     #endregion
 
