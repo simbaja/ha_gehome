@@ -108,7 +108,8 @@ class ApplianceApi:
         """Device info dictionary."""
 
         return {
-            "identifiers": {(DOMAIN, self.serial_or_mac)},
+            "identifiers": {(DOMAIN, self.mac_addr)},
+            "serial_number": self.serial_number,
             "name": self.name,
             "manufacturer": "GE",
             "model": self.model_number,

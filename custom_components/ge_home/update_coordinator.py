@@ -11,6 +11,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -398,6 +399,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for initial appliance updates")
         finally:
+            # Remove stale devices/entities after everything is ready
+            await self._async_remove_stale_devices()
+
+            # Trigger all-ready signal            
             await self._async_maybe_trigger_all_ready(True)
 
     async def _on_device_initial_update(self, appliance: GeAppliance):
@@ -476,6 +481,42 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                 self.hass, 
                 self.signal_ready, 
                 list(self.appliance_apis.values()))
+            
+    async def _async_remove_stale_devices(self):
+        """Remove devices/entities from HA that no longer exist in the cloud."""
+        if self._client is None:
+            return
+
+        # Device and entity registries
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+
+        # MAC addresses of all currently valid appliances
+        current_macs = set(self._appliance_apis.keys())
+
+        # Loop through all devices for this config entry
+        for device_entry in list(device_registry.devices.values()):
+            # Skip devices not associated with this config entry
+            if self._config_entry.entry_id not in device_entry.config_entries:
+                continue
+
+            # Extract mac_addresses (assumes identifiers contain ("ge_home", mac))
+            device_mac = None
+            for ident in device_entry.identifiers:
+                if ident[0] == DOMAIN:  # DOMAIN = "ge_home"
+                    device_mac = ident[1]
+                    break
+
+            if device_mac and device_mac not in current_macs:
+                _LOGGER.info(f"Removing stale device {device_entry.name} ({device_mac}) from HA registry")
+
+                # Remove all entities linked to this device
+                for entity_entry in list(entity_registry.entities.values()):
+                    if entity_entry.device_id == device_entry.id:
+                        entity_registry.async_remove(entity_entry.entity_id)
+
+                # Remove the device itself
+                device_registry.async_remove_device(device_entry.id)            
 
     #endregion
 
