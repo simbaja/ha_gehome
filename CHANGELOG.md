@@ -1,6 +1,16 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.11.0
+
+- Breaking: changed name of some SAC/WAC entities to have a AC prefix 
+- Feature: Added heat mode for Window ACs
+- Feature: Added support for Advantium
+- Feature: Brand inference and stale device cleanup
+- Feature: Added support for new hoods that require state/control ERDs
+- Bugfix: Refactored code internally to improve reliability
+- Bugfix: Cleaned up initialization and config flow
+
 ## 2025.7.0
 
 - Change: Silenced string prep warning [#386] (@derekcentrico)

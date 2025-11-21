@@ -46,6 +46,10 @@ A/C Controls:
 
 #### Breaking Changes
 
+{% if version_installed.split('.') | map('int') < '2025.211.0'.split('.') | map('int') %}
+- changed name of some SAC/WAC entities to have a AC prefix 
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
 - Changed dishwasher pods to number
 - Removed outdated laundry status sensor
@@ -85,6 +89,13 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
+- Added heat mode for Window ACs
+- Added support for Advantium
+- Brand inference and stale device cleanup
+- Added support for new hoods that require state/control ERDs
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.7.0'.split('.') | map('int') %}
 - Enabled Washer/Dryer remote start [#369] (@derekcentrico)
@@ -163,74 +174,70 @@ A/C Controls:
 #### Bugfixes
 
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
-- Fixed helper deprecations
+- Refactored code internally to improve reliability
+- Cleaned up initialization and config flow
 {% endif %}
 
+{% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
+- Fixed helper deprecations
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.2.1'.split('.') | map('int') %}
 - Fix for #339
 {% endif %}
 
-
 {% if version_installed.split('.') | map('int') < '2025.2.0'.split('.') | map('int') %}
 - Updated SDK to fix broken types
 {% endif %}
 
-
 {% if version_installed.split('.') | map('int') < '0.6.14'.split('.') | map('int') %}
-- Bugfix: Error checking socket status [#304]
-- Bugfix: Error with setup [#301]
-- Bugfix: Logger deprecations
+- Error checking socket status [#304]
+- Error with setup [#301]
+- Logger deprecations
 {% endif %}
-
 
 {% if version_installed.split('.') | map('int') < '0.6.13'.split('.') | map('int') %}
-- Bugfix: Deprecations [#290] [#297] 
+- Deprecations [#290] [#297] 
 {% endif %}
-
 
 {% if version_installed.split('.') | map('int') < '0.6.12'.split('.') | map('int') %}
-- Bugfix: Deprecations [#271] 
+- Deprecations [#271] 
 {% endif %}
-
 
 {% if version_installed.split('.') | map('int') < '0.6.13'.split('.') | map('int') %}
-- Bugfix: Deprecations [#290] [#297] 
+- Deprecations [#290] [#297] 
 {% endif %}
-
 
 {% if version_installed.split('.') | map('int') < '0.6.12'.split('.') | map('int') %}
-- Bugfix: Deprecations [#271] 
+- Deprecations [#271] 
 {% endif %}
-
 
 {% if version_installed.split('.') | map('int') < '0.6.11'.split('.') | map('int') %}
-- Bugfix: Fixed convertable drawer issue (#243)
-- Bugfix: Updated app types to include electric cooktops (#252)
-- Bugfix: Updated clientsession to remove deprecation (#253)
-- Bugfix: Fixed error strings
-- Bugfix: Updated climate support for new flags introduced in 2024.2.0
+- Fixed convertable drawer issue (#243)
+- Updated app types to include electric cooktops (#252)
+- Updated clientsession to remove deprecation (#253)
+- Fixed error strings
+- Updated climate support for new flags introduced in 2024.2.0
 {% endif %}
 
-
 {% if version_installed.split('.') | map('int') < '0.6.10'.split('.') | map('int') %}
-- Bugfix: Removed additional deprecated constants (#229)
-- Bugfix: Fixed issue with climate entities (#228)
+- Removed additional deprecated constants (#229)
+- Fixed issue with climate entities (#228)
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.9'.split('.') | map('int') %}
-- Bugfix: Additional auth stability improvements (#215, #211)
-- Bugfix: Removed deprecated constants (#218)
+- Additional auth stability improvements (#215, #211)
+- Removed deprecated constants (#218)
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.8'.split('.') | map('int') %}
-- Bugfix: Fixed issue with oven lights (#174)
-- Bugfix: Fixed issues with dual dishwasher (#161)
-- Bugfix: Fixed disconnection issue (#169)
+- Fixed issue with oven lights (#174)
+- Fixed issues with dual dishwasher (#161)
+- Fixed disconnection issue (#169)
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.7'.split('.') | map('int') %}
-- Bugfix: fixed issues with dishwasher (#155)
+- fixed issues with dishwasher (#155)
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '0.6.6'.split('.') | map('int') %}
