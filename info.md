@@ -176,6 +176,8 @@ A/C Controls:
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
 - Refactored code internally to improve reliability
 - Cleaned up initialization and config flow
+- Fixed temperature unit for ovens [#248, #328, #344]
+- Water heater mode setting [#107]
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
