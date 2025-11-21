@@ -58,9 +58,10 @@ class GeOven(GeAbstractWaterHeater):
 
     @cached_property
     def temperature_unit(self):
-        measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
-        if measurement_system == ErdMeasurementUnits.METRIC:
-            return UnitOfTemperature.CELSIUS
+        # measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
+        # if measurement_system == ErdMeasurementUnits.METRIC:
+        #     return UnitOfTemperature.CELSIUS
+        # APIs always return Fahrenheit, hardcode
         return UnitOfTemperature.FAHRENHEIT
 
     @property
