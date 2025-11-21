@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from propcache.api import cached_property
 from typing import Dict, List, Optional
 
 from homeassistant.core import HomeAssistant
@@ -10,9 +11,12 @@ from gehomesdk import (
     GeAppliance,
     ErdCode, 
     ErdCodeType, 
-    ErdApplianceType
+    ErdApplianceType,
+    ERD_BRAND_NAME_MAP,
+    ErdBrand
 )
 
+from .const import BRAND_FIRST_LETTER_MAP, BRAND_SPECIAL_PREFIXES
 from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,15 +64,15 @@ class ApplianceApi:
         #working.
         return self.appliance.available and self.coordinator.online # type: ignore
 
-    @property
+    @cached_property
     def serial_number(self) -> str:
         return self.appliance.get_erd_value(ErdCode.SERIAL_NUMBER)
 
-    @property
+    @cached_property
     def mac_addr(self) -> str:
         return self.appliance.mac_addr
 
-    @property
+    @cached_property
     def serial_or_mac(self) -> str:
         def is_zero(val: str) -> bool:
             try:
@@ -83,7 +87,17 @@ class ApplianceApi:
             return self.serial_number
         return self.mac_addr
 
-    @property
+    @cached_property
+    def brand(self) -> str:
+        b: ErdBrand | None = self.try_get_erd_value(ErdCode.BRAND)
+
+        if b in (None, ErdBrand.UNKNOWN, ErdBrand.NOT_DEFINED):
+            inferred = self._infer_brand_from_model(self.model_number)
+            b = inferred or ErdBrand.GE
+
+        return ERD_BRAND_NAME_MAP.get(b, 'GE')
+    
+    @cached_property
     def model_number(self) -> str:
         return self.appliance.get_erd_value(ErdCode.MODEL_NUMBER)
 
@@ -94,14 +108,14 @@ class ApplianceApi:
 
         return 'Appliance=' + str(appVer or 'Unknown') + '/Wifi=' + str(wifiVer or 'Unknown')
 
-    @property
+    @cached_property
     def name(self) -> str:
         appliance_type = self.appliance.appliance_type
         if appliance_type is None or appliance_type == ErdApplianceType.UNKNOWN:
             appliance_type = "Appliance"
         else:
             appliance_type = appliance_type.name.replace("_", " ").title()
-        return f"GE {appliance_type} {self.serial_or_mac}"
+        return f"{self.brand} {appliance_type} {self.serial_or_mac}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -111,7 +125,7 @@ class ApplianceApi:
             "identifiers": {(DOMAIN, self.mac_addr)},
             "serial_number": self.serial_number,
             "name": self.name,
-            "manufacturer": "GE",
+            "manufacturer": self.brand,
             "model": self.model_number,
             "sw_version": self.sw_version
         }
@@ -157,3 +171,37 @@ class ApplianceApi:
             return True
         except:
             return False
+
+    def _infer_brand_from_model(self, model: str) -> Optional[ErdBrand]:
+        """
+        Infer the appliance brand from model number using first-letter mapping
+        and special prefix handling.
+        """
+        if not model:
+            _LOGGER.debug("Model number is empty, cannot infer brand.")
+            return None
+
+        m = model.strip().upper()
+
+        # Try special prefixes
+        for prefix, idx in BRAND_SPECIAL_PREFIXES.items():
+            if m.startswith(prefix):
+                if len(m) > idx:
+                    brand_letter = m[idx]
+                    brand = BRAND_FIRST_LETTER_MAP.get(brand_letter)
+                    if brand:
+                        _LOGGER.debug(f"Model '{m}': inferred brand '{brand.name}' from prefix '{prefix}' at position {idx + 1}")
+                        return brand
+                _LOGGER.debug(f"Model '{m}': prefix '{prefix}' found but brand letter at position {idx + 1} not recognized")
+                return None
+
+        # Try general
+        first_letter = m[0]
+        brand = BRAND_FIRST_LETTER_MAP.get(first_letter)
+        if brand:
+            _LOGGER.debug(f"Model '{m}': inferred brand '{brand.name}' from first letter '{first_letter}'")
+            return brand
+
+        # Log and return
+        _LOGGER.debug(f"Model '{m}': could not infer brand (first letter '{first_letter}' not in mapping)")
+        return None

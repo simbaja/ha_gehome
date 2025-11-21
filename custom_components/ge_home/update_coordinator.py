@@ -28,8 +28,8 @@ from gehomesdk import (
     GeAppliance,
     GeWebsocketClient,
     ErdApplianceType,
+    GeClientState
 )
-from gehomesdk.clients.states import GeClientState
 from gehomesdk import GeAuthFailedError, GeGeneralServerError, GeNotAuthenticatedError
 
 from .const import *
