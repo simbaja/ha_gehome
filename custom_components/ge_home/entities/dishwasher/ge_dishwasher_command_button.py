@@ -24,3 +24,10 @@ class GeDishwasherCommandButton(GeErdButton):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.appliance.async_set_erd_value(self.erd_code, self._command)
+
+    def _get_icon(self) -> Optional[str]:
+        return {
+            ErdRemoteCommand.START_RESUME: "mdi:play",
+            ErdRemoteCommand.CANCEL: "mdi:stop",
+            ErdRemoteCommand.PAUSE: "mdi:pause"
+        }.get(self._command)
