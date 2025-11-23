@@ -57,7 +57,7 @@ class HoodApi(ApplianceApi):
         if available_fan_speeds is not None and available_fan_speeds > 0 and actual_fan_speed is not None:
             hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_ACTUAL_FAN_SPEED, ErdCode.HOOD_REQUESTED_FAN_SPEED))
         if available_light_levels is not None and available_light_levels > 0 and actual_light_level is not None:
-            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_ACTUAL_LIGHT_LEVEL, ErdCode.HOOD_REQUESTED_LIGHT_LEVEL))
+            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_ACTUAL_LIGHT_LEVEL, ErdCode.HOOD_REQUESTED_LIGHT_LEVEL))
 
         #timer
         if timer_availability is not None:
