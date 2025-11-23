@@ -2,10 +2,10 @@ import logging
 from typing import List
 
 from homeassistant.helpers.entity import Entity
-from gehomesdk.erd import ErdCode, ErdApplianceType
+from gehomesdk import ErdCode, ErdApplianceType, ErdRemoteCommand
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdNumber
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdNumber, GeDishwasherCommandButton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,11 +18,9 @@ class DishwasherApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         dishwasher_entities = [
-            #GeDishwasherControlLockedSwitch(self, ErdCode.USER_INTERFACE_LOCKED),
             GeErdSensor(self, ErdCode.DISHWASHER_CYCLE_NAME),
             GeErdSensor(self, ErdCode.DISHWASHER_CYCLE_STATE, icon_override="mdi:state-machine"),
             GeErdSensor(self, ErdCode.DISHWASHER_OPERATING_MODE),
-#            GeErdSensor(self, ErdCode.DISHWASHER_PODS_REMAINING_VALUE, uom_override="pods"),
             GeErdNumber(self, ErdCode.DISHWASHER_PODS_REMAINING_VALUE, uom_override="pods", min_value=0, max_value=255),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "add_rinse_aid", icon_override="mdi:shimmer"),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "clean_filter", icon_override="mdi:dishwasher-alert"),
@@ -30,7 +28,6 @@ class DishwasherApi(ApplianceApi):
             GeErdSensor(self, ErdCode.DISHWASHER_TIME_REMAINING),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_DOOR_STATUS),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_IS_CLEAN),
-            GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE),
 
             #User Setttings
             GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "mute", icon_override="mdi:volume-mute"),
@@ -49,7 +46,21 @@ class DishwasherApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.DISHWASHER_CYCLE_COUNTS, "started", icon_override="mdi:counter"),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_CYCLE_COUNTS, "completed", icon_override="mdi:counter"),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_CYCLE_COUNTS, "reset", icon_override="mdi:counter")
+
+            #Commands
         ]
+
+        # check for remote command availability and add if present
+        if self.has_erd_code(ErdCode.DISHWASHER_REMOTE_START_ENABLE):
+            dishwasher_entities.extend(
+                [
+                    GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL)
+                ]
+            )
+
         entities = base_entities + dishwasher_entities
         return entities
         
