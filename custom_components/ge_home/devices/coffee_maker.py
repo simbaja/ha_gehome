@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
     GeAppliance,
@@ -40,18 +41,18 @@ class CcmApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         ccm_entities = [
-            GeErdBinarySensor(self, ErdCode.CCM_IS_BREWING),                      
-            GeErdBinarySensor(self, ErdCode.CCM_IS_DESCALING),
+            GeErdBinarySensor(self, ErdCode.CCM_IS_BREWING, entity_category=EntityCategory.DIAGNOSTIC),                      
+            GeErdBinarySensor(self, ErdCode.CCM_IS_DESCALING, entity_category=EntityCategory.DIAGNOSTIC),
             GeCcmBrewSettingsButton(self),
-            GeErdButton(self, ErdCode.CCM_CANCEL_DESCALING),
-            GeErdButton(self, ErdCode.CCM_START_DESCALING),
+            GeErdButton(self, ErdCode.CCM_CANCEL_DESCALING, entity_category=EntityCategory.CONFIG),
+            GeErdButton(self, ErdCode.CCM_START_DESCALING, entity_category=EntityCategory.CONFIG),
             GeErdButton(self, ErdCode.CCM_CANCEL_BREWING),
             self._brew_strengh_entity,
             self._brew_temperature_entity,
             self._brew_cups_entity,
-            GeErdSensor(self, ErdCode.CCM_CURRENT_WATER_TEMPERATURE),
-            GeErdBinarySensor(self, ErdCode.CCM_OUT_OF_WATER, device_class_override="problem"),
-            GeCcmPotNotPresentBinarySensor(self, ErdCode.CCM_POT_PRESENT, device_class_override="problem")
+            GeErdSensor(self, ErdCode.CCM_CURRENT_WATER_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdBinarySensor(self, ErdCode.CCM_OUT_OF_WATER, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
+            GeCcmPotNotPresentBinarySensor(self, ErdCode.CCM_POT_PRESENT, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC)
         ]
 
         entities = base_entities + ccm_entities

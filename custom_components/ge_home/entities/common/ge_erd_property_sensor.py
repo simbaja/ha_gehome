@@ -2,6 +2,7 @@ from propcache.api import cached_property
 from typing import Optional
 import magicattr
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdDataType
 
 from ...devices import ApplianceApi
@@ -20,14 +21,19 @@ class GeErdPropertySensor(GeErdSensor):
         device_class_override: Optional[str] = None, 
         state_class_override: Optional[str] = None, 
         uom_override: Optional[str] = None, 
-        data_type_override: Optional[ErdDataType] = None
+        data_type_override: Optional[ErdDataType] = None,
+        entity_category: Optional[EntityCategory] = None
     ):
         super().__init__(
-            api, erd_code, erd_override=erd_override, 
-            icon_override=icon_override, device_class_override=device_class_override, 
+            api, 
+            erd_code, 
+            erd_override=erd_override, 
+            icon_override=icon_override, 
+            device_class_override=device_class_override, 
             state_class_override=state_class_override,
             uom_override=uom_override,
-            data_type_override=data_type_override
+            data_type_override=data_type_override,
+            entity_category=entity_category
         )
         self.erd_property = erd_property
         self._erd_property_cleansed = erd_property.replace(".","_").replace("[","_").replace("]","_")

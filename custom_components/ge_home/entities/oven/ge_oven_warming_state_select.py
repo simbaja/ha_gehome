@@ -1,6 +1,7 @@
 import logging
 from typing import List, Any, Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdOvenWarmingState
 from ...devices import ApplianceApi
 from ..common import GeErdSelect, OptionsConverter
@@ -33,7 +34,7 @@ class GeOvenWarmingStateSelect(GeErdSelect):
         self._has_status = value is not None and value != ErdOvenWarmingState.NOT_AVAILABLE
         self._assumed_state = ErdOvenWarmingState.OFF
 
-        super().__init__(api, erd_code, OvenWarmingStateOptionsConverter(), erd_override=erd_override)
+        super().__init__(api, erd_code, OvenWarmingStateOptionsConverter(), erd_override=erd_override, entity_category=EntityCategory.CONFIG)
 
     @property
     def assumed_state(self) -> bool: # type: ignore

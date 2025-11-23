@@ -3,7 +3,7 @@ from propcache.api import cached_property
 from typing import Optional
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, EntityCategory
 from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType
 
 from .ge_erd_entity import GeErdEntity
@@ -23,9 +23,10 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         device_class_override: Optional[str] = None,
         state_class_override: Optional[str] = None,
         uom_override: Optional[str] = None,
-        data_type_override: Optional[ErdDataType] = None
+        data_type_override: Optional[ErdDataType] = None,
+        entity_category: Optional[EntityCategory] = None
     ):
-        super().__init__(api, erd_code, erd_override, icon_override, device_class_override)
+        super().__init__(api, erd_code, erd_override, icon_override, device_class_override, entity_category)
         self._uom_override = uom_override
         self._state_class_override = state_class_override
         self._data_type_override = data_type_override

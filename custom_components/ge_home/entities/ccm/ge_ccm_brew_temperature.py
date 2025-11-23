@@ -1,3 +1,4 @@
+from homeassistant.const import EntityCategory
 from homeassistant.components.number import NumberMode
 from gehomesdk import ErdCode
 
@@ -16,7 +17,7 @@ class GeCcmBrewTemperatureNumber(GeErdNumber, GeCcmCachedValue):
             min_temp = DEFAULT_MIN_TEMP
             max_temp = DEFAULT_MAX_TEMP
  
-        GeErdNumber.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_TEMPERATURE, min_value=min_temp, max_value=max_temp, mode=NumberMode.SLIDER)
+        GeErdNumber.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_TEMPERATURE, min_value=min_temp, max_value=max_temp, mode=NumberMode.SLIDER, entity_category=EntityCategory.DIAGNOSTIC)
         GeCcmCachedValue.__init__(self)
 
     async def async_set_native_value(self, value):

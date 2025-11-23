@@ -1,3 +1,4 @@
+from homeassistant.const import EntityCategory
 from homeassistant.components.number import NumberMode
 from gehomesdk import ErdCode
 
@@ -7,7 +8,7 @@ from .ge_ccm_cached_value import GeCcmCachedValue
 
 class GeCcmBrewCupsNumber(GeErdNumber, GeCcmCachedValue):
     def __init__(self, api: ApplianceApi):
-        GeErdNumber.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_CUPS, min_value=1, max_value=10, mode=NumberMode.BOX)
+        GeErdNumber.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_CUPS, min_value=1, max_value=10, mode=NumberMode.BOX, entity_category=EntityCategory.DIAGNOSTIC)
         GeCcmCachedValue.__init__(self)
 
         self._set_value = None

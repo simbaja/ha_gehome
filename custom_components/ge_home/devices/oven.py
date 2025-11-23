@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -65,47 +66,47 @@ class OvenApi(ApplianceApi):
 
         if oven_config.has_lower_oven:
             oven_entities.extend([
-                GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_MODE),
-                GeErdSensor(self, ErdCode.LOWER_OVEN_CURRENT_STATE),
+                GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_MODE, entity_category=EntityCategory.DIAGNOSTIC),
+                GeErdSensor(self, ErdCode.LOWER_OVEN_CURRENT_STATE, entity_category=EntityCategory.DIAGNOSTIC),
                 GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_TIME_REMAINING),
                 GeErdTimerSensor(self, ErdCode.LOWER_OVEN_KITCHEN_TIMER),
-                GeErdSensor(self, ErdCode.LOWER_OVEN_USER_TEMP_OFFSET),
-                GeErdSensor(self, ErdCode.LOWER_OVEN_DISPLAY_TEMPERATURE),
-                GeErdBinarySensor(self, ErdCode.LOWER_OVEN_REMOTE_ENABLED),
+                GeErdSensor(self, ErdCode.LOWER_OVEN_USER_TEMP_OFFSET, entity_category=EntityCategory.DIAGNOSTIC),
+                GeErdSensor(self, ErdCode.LOWER_OVEN_DISPLAY_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+                GeErdBinarySensor(self, ErdCode.LOWER_OVEN_REMOTE_ENABLED, entity_category=EntityCategory.DIAGNOSTIC),
 
                 GeOven(self, LOWER_OVEN, True, self._temperature_code(has_lower_raw_temperature))
             ])
             if has_lower_raw_temperature:
-                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_RAW_TEMPERATURE))
+                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_RAW_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC))
             if lower_light_availability is None or lower_light_availability.is_available or lower_light is not None:
                 oven_entities.append(GeOvenLightLevelSelect(self, ErdCode.LOWER_OVEN_LIGHT))
             if lower_warm_drawer is not None:
                 oven_entities.append(GeOvenWarmingStateSelect(self, ErdCode.LOWER_OVEN_WARMING_DRAWER_STATE))
             if has_lower_probe_temperature:
-                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP))
+                oven_entities.append(GeErdSensor(self, ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP, entity_category=EntityCategory.DIAGNOSTIC))
 
         oven_entities.extend([
-            GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_MODE, self._single_name(ErdCode.UPPER_OVEN_COOK_MODE, not oven_config.has_lower_oven)),
-            GeErdSensor(self, ErdCode.UPPER_OVEN_CURRENT_STATE, self._single_name(ErdCode.UPPER_OVEN_CURRENT_STATE, not oven_config.has_lower_oven)),
+            GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_MODE, self._single_name(ErdCode.UPPER_OVEN_COOK_MODE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.UPPER_OVEN_CURRENT_STATE, self._single_name(ErdCode.UPPER_OVEN_CURRENT_STATE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, self._single_name(ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, not oven_config.has_lower_oven)),
             GeErdTimerSensor(self, ErdCode.UPPER_OVEN_KITCHEN_TIMER, self._single_name(ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven)),
-            GeErdSensor(self, ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, self._single_name(ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, not oven_config.has_lower_oven)),
-            GeErdSensor(self, ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, not oven_config.has_lower_oven)),
-            GeErdBinarySensor(self, ErdCode.UPPER_OVEN_REMOTE_ENABLED, self._single_name(ErdCode.UPPER_OVEN_REMOTE_ENABLED, not oven_config.has_lower_oven)),
+            GeErdSensor(self, ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, self._single_name(ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdBinarySensor(self, ErdCode.UPPER_OVEN_REMOTE_ENABLED, self._single_name(ErdCode.UPPER_OVEN_REMOTE_ENABLED, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
             
             GeOven(self, UPPER_OVEN, False, self._temperature_code(has_upper_raw_temperature))
         ])
         if has_upper_raw_temperature:
-            oven_entities.append(GeErdSensor(self, ErdCode.UPPER_OVEN_RAW_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_RAW_TEMPERATURE, not oven_config.has_lower_oven)))
+            oven_entities.append(GeErdSensor(self, ErdCode.UPPER_OVEN_RAW_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_RAW_TEMPERATURE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC))
         if upper_light_availability is None or upper_light_availability.is_available or upper_light is not None:
             oven_entities.append(GeOvenLightLevelSelect(self, ErdCode.UPPER_OVEN_LIGHT, self._single_name(ErdCode.UPPER_OVEN_LIGHT, not oven_config.has_lower_oven)))
         if upper_warm_drawer is not None:
             oven_entities.append(GeOvenWarmingStateSelect(self, ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE, self._single_name(ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE, not oven_config.has_lower_oven)))
         if has_upper_probe_temperature:
-            oven_entities.append(GeErdSensor(self, ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, self._single_name(ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, not oven_config.has_lower_oven)))
+            oven_entities.append(GeErdSensor(self, ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, self._single_name(ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC))
 
         if oven_config.has_warming_drawer and warm_drawer is not None:
-            oven_entities.append(GeErdSensor(self, ErdCode.WARMING_DRAWER_STATE))
+            oven_entities.append(GeErdSensor(self, ErdCode.WARMING_DRAWER_STATE, entity_category=EntityCategory.DIAGNOSTIC))
 
         if cooktop_config == ErdCooktopConfig.PRESENT:
             # attempt to get the cooktop status using legacy status
@@ -125,7 +126,7 @@ class OvenApi(ApplianceApi):
                     if v.exists:
                         prop = self._camel_to_snake(k)
                         cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".on"))
-                        cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".synchronized"))                    
+                        cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".synchronized", entity_category=EntityCategory.DIAGNOSTIC))                    
                         if not v.on_off_only:
                             cooktop_entities.append(GeErdPropertySensor(self, cooktop_status_erd, prop+".power_pct", icon_override="mdi:fire", device_class_override=SensorDeviceClass.POWER_FACTOR, data_type_override=ErdDataType.INT))
 

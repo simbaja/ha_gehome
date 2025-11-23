@@ -1,6 +1,7 @@
 import logging
 from typing import List, Any, Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdWaterFilterPosition, ErdCode, ErdWaterFilterMode
 from ...devices import ApplianceApi
 from ..common import GeErdSelect, OptionsConverter
@@ -27,7 +28,7 @@ class FilterPositionOptionsConverter(OptionsConverter):
 
 class GeErdFilterPositionSelect(GeErdSelect):
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve")
+        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve", entity_category=EntityCategory.DIAGNOSTIC)
 
     @property
     def current_option(self) -> str | None:

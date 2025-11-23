@@ -3,6 +3,7 @@ import logging
 from propcache.api import cached_property
 from typing import Dict, List, Optional
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -142,7 +143,7 @@ class ApplianceApi:
         """Create base entities (i.e. common between all appliances)."""
         from ..entities import GeErdSensor, GeErdSwitch
         entities = [
-            GeErdSensor(self, ErdCode.CLOCK_TIME),
+            GeErdSensor(self, ErdCode.CLOCK_TIME, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.SABBATH_MODE),
         ]
         return entities        

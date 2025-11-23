@@ -9,6 +9,7 @@ from homeassistant.components.light import (
 from homeassistant.components.light.const import (
     ColorMode
 )
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType
 
 from ...devices import ApplianceApi
@@ -27,8 +28,8 @@ def to_hass_level(level):
 class GeErdLight(GeErdEntity, LightEntity):
     """Lights for ERD codes."""
 
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None, color_mode = ColorMode.BRIGHTNESS):
-        super().__init__(api, erd_code, erd_override)
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None, color_mode: ColorMode = ColorMode.BRIGHTNESS, entity_category: Optional[EntityCategory] = None):
+        super().__init__(api, erd_code, erd_override, entity_category=entity_category)
         self._color_mode = color_mode
 
     @property

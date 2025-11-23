@@ -2,6 +2,7 @@ from propcache.api import cached_property
 from typing import Optional
 
 import magicattr
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType
 
 from ...devices import ApplianceApi
@@ -16,9 +17,10 @@ class GeErdPropertyBinarySensor(GeErdBinarySensor):
             erd_property: str, erd_override: Optional[str] = None, 
             icon_on_override: Optional[str] = None, 
             icon_off_override: Optional[str] = None, 
-            device_class_override: Optional[str] = None
+            device_class_override: Optional[str] = None,
+            entity_category: Optional[EntityCategory] = None
         ):
-        super().__init__(api, erd_code, erd_override, icon_on_override, icon_off_override, device_class_override)
+        super().__init__(api, erd_code, erd_override, icon_on_override, icon_off_override, device_class_override, entity_category)
         self.erd_property = erd_property
         self._erd_property_cleansed = erd_property.replace(".","_").replace("[","_").replace("]","_")
 

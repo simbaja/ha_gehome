@@ -2,6 +2,7 @@ from datetime import timedelta
 from propcache.api import cached_property
 from typing import Optional, Any
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCode, ErdCodeType, ErdCodeClass, ErdMeasurementUnits
 
 from ...const import DOMAIN
@@ -19,6 +20,7 @@ class GeErdEntity(GeEntity):
         erd_override: Optional[str] = None,
         icon_override: Optional[str] = None,
         device_class_override: Optional[str] = None,
+        entity_category: Optional[EntityCategory] = None
     ):
         super().__init__(api)
         self._erd_code = api.appliance.translate_erd_code(erd_code)
@@ -26,6 +28,7 @@ class GeErdEntity(GeEntity):
         self._erd_override = erd_override
         self._icon_override = icon_override
         self._device_class_override = device_class_override
+        self._attr_entity_category = entity_category
 
         if not self._erd_code_class:
             self._erd_code_class = ErdCodeClass.GENERAL

@@ -3,6 +3,7 @@ import logging
 from propcache.api import cached_property
 from typing import Any, List, Optional
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.select import SelectEntity
 from gehomesdk import ErdCodeType
 
@@ -22,9 +23,10 @@ class GeErdSelect(GeErdEntity, SelectEntity):
             converter: OptionsConverter, 
             erd_override: Optional[str] = None, 
             icon_override: Optional[str] = None,
-            control_erd_code: Optional[ErdCodeType] = None
+            control_erd_code: Optional[ErdCodeType] = None,
+            entity_category: Optional[EntityCategory] = None
         ):
-        super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_override)
+        super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_override, entity_category=entity_category)
         self._converter = converter
         self._control_erd_code = control_erd_code
 

@@ -1,11 +1,12 @@
 import logging
 from typing import List
-from gehomesdk.erd.erd_data_type import ErdDataType
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
-    ErdCode, 
+    ErdCode,
+    ErdDataType,
     ErdApplianceType, 
     ErdCooktopConfig, 
     CooktopStatus
@@ -52,7 +53,7 @@ class CooktopApi(ApplianceApi):
                     if v.exists:
                         prop = self._camel_to_snake(k)
                         cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".on"))
-                        cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".synchronized"))                    
+                        cooktop_entities.append(GeErdPropertyBinarySensor(self, cooktop_status_erd, prop+".synchronized", entity_category=EntityCategory.DIAGNOSTIC))                    
                         if not v.on_off_only:
                             cooktop_entities.append(GeErdPropertySensor(self, cooktop_status_erd, prop+".power_pct", icon_override="mdi:fire", device_class_override=SensorDeviceClass.POWER_FACTOR, data_type_override=ErdDataType.INT))
 

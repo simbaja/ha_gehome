@@ -7,7 +7,7 @@ from homeassistant.components.number import (
     NumberMode,
     NumberDeviceClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, EntityCategory
 from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType
 
 from .ge_erd_entity import GeErdEntity
@@ -30,9 +30,10 @@ class GeErdNumber(GeErdEntity, NumberEntity):
         min_value: float = 1,
         max_value: float = 100,
         step_value: float = 1,
-        mode: NumberMode = NumberMode.AUTO
+        mode: NumberMode = NumberMode.AUTO,
+        entity_category: Optional[EntityCategory] = None
     ):
-        super().__init__(api, erd_code, erd_override, icon_override, device_class_override)
+        super().__init__(api, erd_code, erd_override, icon_override, device_class_override, entity_category)
         self._uom_override = uom_override
         self._data_type_override = data_type_override
         self._native_min_value = min_value

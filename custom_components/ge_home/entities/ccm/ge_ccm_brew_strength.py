@@ -1,6 +1,7 @@
 import logging
 from typing import List, Any, Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCode, ErdCcmBrewStrength
 from ...devices import ApplianceApi
 from ..common import GeErdSelect, OptionsConverter
@@ -33,7 +34,7 @@ class GeCcmBrewStrengthOptionsConverter(OptionsConverter):
 
 class GeCcmBrewStrengthSelect(GeErdSelect, GeCcmCachedValue):
     def __init__(self, api: ApplianceApi):
-        GeErdSelect.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_STRENGTH, converter = GeCcmBrewStrengthOptionsConverter())
+        GeErdSelect.__init__(self, api = api, erd_code = ErdCode.CCM_BREW_STRENGTH, converter = GeCcmBrewStrengthOptionsConverter(), entity_category=EntityCategory.CONFIG)
         GeCcmCachedValue.__init__(self)
 
     @property

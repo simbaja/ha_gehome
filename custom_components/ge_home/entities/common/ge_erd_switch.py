@@ -2,6 +2,7 @@ import logging
 from propcache.api import cached_property
 from typing import Optional
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
 from gehomesdk import ErdCodeType
 
@@ -23,9 +24,10 @@ class GeErdSwitch(GeErdEntity, SwitchEntity):
             icon_on_override: Optional[str] = None, 
             icon_off_override: Optional[str] = None, 
             device_class_override: Optional[str] = None,
-            control_erd_code: Optional[ErdCodeType] = None
+            control_erd_code: Optional[ErdCodeType] = None,
+            entity_category: Optional[EntityCategory] = None
         ):
-        super().__init__(api, erd_code, erd_override=erd_override, icon_override=icon_on_override, device_class_override=device_class_override)
+        super().__init__(api, erd_code, erd_override, icon_on_override, device_class_override, entity_category)
         self._icon_on_override = icon_on_override
         self._icon_off_override = icon_off_override
         self._converter = bool_converter

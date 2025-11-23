@@ -1,5 +1,6 @@
 from typing import Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdDataType, ErdAcFanSetting
 
 from ...devices import ApplianceApi
@@ -27,7 +28,8 @@ class GeDehumidifierFanSpeedSensor(GeErdSensor):
             device_class_override,
             state_class_override,
             uom_override,
-            data_type_override
+            data_type_override,
+            entity_category=EntityCategory.DIAGNOSTIC
         )
 
         self._converter = DehumidifierFanSettingOptionsConverter()

@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
@@ -24,8 +25,8 @@ class WasherDryerApi(WasherApi, DryerApi):
             GeErdBinarySensor(self, ErdCode.LAUNDRY_END_OF_CYCLE),
             GeErdSensor(self, ErdCode.LAUNDRY_TIME_REMAINING),
             GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING),
-            GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR),
-            GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS),
+            GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
         ]
 
         washer_entities = self.get_washer_entities()

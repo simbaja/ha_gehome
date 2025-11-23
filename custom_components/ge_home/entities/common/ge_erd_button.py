@@ -1,6 +1,7 @@
 from propcache.api import cached_property
 from typing import Optional
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.button import ButtonEntity, ButtonDeviceClass
 
 from gehomesdk import ErdCodeType
@@ -11,8 +12,8 @@ from .ge_erd_entity import GeErdEntity
 class GeErdButton(GeErdEntity, ButtonEntity):
     """GE Entity for buttons"""
         
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None):
-        super().__init__(api, erd_code, erd_override=erd_override)
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None, entity_category: Optional[EntityCategory] = None):
+        super().__init__(api, erd_code, erd_override=erd_override, entity_category=entity_category)
 
     @property
     def icon(self) ->str | None: # type: ignore
