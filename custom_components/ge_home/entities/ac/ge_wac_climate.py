@@ -52,11 +52,8 @@ class WacHvacModeOptionsConverter(OptionsConverter):
 class GeWacClimate(GeClimate):
     """Class for Window AC units"""
     def __init__(self, api: ApplianceApi):
-        super().__init__(api, WacHvacModeOptionsConverter(), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
+        #get the available modes
+        self._modes: ErdAcAvailableModes | None = api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
 
-        #get a couple ERDs that shouldn't change if available
-        self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
+        super().__init__(api, WacHvacModeOptionsConverter(self._modes), AcFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
 
-        #construct the converter based on the available modes
-        if self._modes is not None:
-            self._hvac_mode_converter = WacHvacModeOptionsConverter(self._modes)

@@ -56,8 +56,8 @@ class GePacClimate(GeClimate):
     """Class for Portable AC units"""
     def __init__(self, api: ApplianceApi):
         #get a couple ERDs that shouldn't change if available
-        self._modes: ErdAcAvailableModes | None = self.api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
-        self._temp_range: ErdSacTargetTemperatureRange | None = self.api.try_get_erd_value(ErdCode.SAC_TARGET_TEMPERATURE_RANGE)
+        self._modes: ErdAcAvailableModes | None = api.try_get_erd_value(ErdCode.AC_AVAILABLE_MODES)
+        self._temp_range: ErdSacTargetTemperatureRange | None = api.try_get_erd_value(ErdCode.SAC_TARGET_TEMPERATURE_RANGE)
 
         #initialize the climate control with defaults
         super().__init__(api, PacHvacModeOptionsConverter(self._modes), AcFanOnlyFanModeOptionsConverter(), AcFanOnlyFanModeOptionsConverter())
