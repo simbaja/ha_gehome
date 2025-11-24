@@ -70,10 +70,10 @@ class DualDishwasherApi(ApplianceApi):
         if self.has_erd_code(ErdCode.DISHWASHER_REMOTE_START_ENABLE):
             lower_entities.extend(
                 [
-                    GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE, erd_override="lower_remote_start_enable", entity_category=EntityCategory.DIAGNOSTIC),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="lower_remote_start"),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="lower_remote_start"),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="lower_remote_start")
+                    GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE, erd_override="lower_remote_command_enable", entity_category=EntityCategory.DIAGNOSTIC),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="lower_remote_command"),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="lower_remote_command"),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="lower_remote_command")
                 ]
             )
 
@@ -81,10 +81,10 @@ class DualDishwasherApi(ApplianceApi):
         if self.has_erd_code(ErdCode.DISHWASHER_UPPER_REMOTE_START_ENABLE):
             upper_entities.extend(
                 [
-                    GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE, erd_override="upper_remote_start_enable", entity_category=EntityCategory.DIAGNOSTIC),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="upper_remote_start"),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="upper_remote_start"),
-                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="upper_remote_start")
+                    GeErdBinarySensor(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_ENABLE, erd_override="upper_remote_command_enable", entity_category=EntityCategory.DIAGNOSTIC),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="upper_remote_command"),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="upper_remote_command"),
+                    GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="upper_remote_command")
                 ]
             )
 
