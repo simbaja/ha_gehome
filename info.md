@@ -46,7 +46,7 @@ A/C Controls:
 
 #### Breaking Changes
 
-{% if version_installed.split('.') | map('int') < '2025.211.0'.split('.') | map('int') %}
+{% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
 - changed name of some SAC/WAC entities to have a AC prefix 
 {% endif %}
 
@@ -76,6 +76,11 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
+- Refactored code internally to improve reliability
+- Cleaned up initialization and config flow
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2025.7.0'.split('.') | map('int') %}
 - Silenced string prep warning [#386] (@derekcentrico)
 {% endif %}
@@ -95,6 +100,8 @@ A/C Controls:
 - Added support for Advantium
 - Brand inference and stale device cleanup
 - Added support for new hoods that require state/control ERDs
+- Added entity categorization
+- Added dishwasher remote commands
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.7.0'.split('.') | map('int') %}
@@ -174,8 +181,6 @@ A/C Controls:
 #### Bugfixes
 
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
-- Refactored code internally to improve reliability
-- Cleaned up initialization and config flow
 - Fixed temperature unit for ovens [#248, #328, #344]
 - Water heater mode setting [#107]
 {% endif %}

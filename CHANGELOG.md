@@ -8,8 +8,10 @@
 - Feature: Added support for Advantium
 - Feature: Brand inference and stale device cleanup
 - Feature: Added support for new hoods that require state/control ERDs
-- Bugfix: Refactored code internally to improve reliability
-- Bugfix: Cleaned up initialization and config flow
+- Feature: Added entity categorization
+- Feature: Added dishwasher remote commands
+- Change: Refactored code internally to improve reliability
+- Change: Cleaned up initialization and config flow
 - Bugfix: Fixed temperature unit for ovens [#248, #328, #344]
 - Bugfix: Water heater mode setting [#107]
 
