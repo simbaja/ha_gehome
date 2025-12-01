@@ -1,6 +1,7 @@
 import logging
 from typing import List, Any, Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdWaterSoftenerShutoffValveState, ErdCode
 from ...devices import ApplianceApi
 from ..common import GeErdSelect, OptionsConverter
@@ -29,7 +30,7 @@ class FilterPositionOptionsConverter(OptionsConverter):
 
 class GeErdShutoffPositionSelect(GeErdSelect):
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve")
+        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve", entity_category=EntityCategory.CONFIG)
 
     @property
     def current_option(self):
@@ -43,13 +44,13 @@ class GeErdShutoffPositionSelect(GeErdSelect):
         return self._converter.to_option_string(self.appliance.get_erd_value(self.erd_code))
 
     @property
-    def options(self) -> List[str]:
+    def options(self) -> List[str]: # type: ignore
         """Return a list of options"""
 
         #if we're transitioning or don't know what the mode is, don't allow changes
         mode: ErdWaterSoftenerShutoffValveState = self.appliance.get_erd_value(ErdCode.WH_SOFTENER_SHUTOFF_VALVE_STATE)
         if mode in [ErdWaterSoftenerShutoffValveState.TRANSITION, ErdWaterSoftenerShutoffValveState.UNKNOWN]:
-            return mode.name.title()
+            return [mode.name.title()]
 
         return self._converter.options        
 

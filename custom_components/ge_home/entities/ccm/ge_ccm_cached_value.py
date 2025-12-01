@@ -16,5 +16,5 @@ class GeCcmCachedValue():
 
         return device_value
 
-    def set_value(self, set_value):
-        self._set_value = set_value
+    def set_value(self, value):
+        self._set_value = value

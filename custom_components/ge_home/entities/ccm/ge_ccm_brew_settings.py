@@ -9,5 +9,8 @@ class GeCcmBrewSettingsButton(GeErdButton):
     async def async_press(self) -> None:
         """Handle the button press."""
 
+        from ...devices import CcmApi
+
         # Forward the call up to the Coffee Maker device to handle
-        await self.api.start_brewing()
+        if isinstance(self.api, CcmApi):
+            await self.api.start_brewing()

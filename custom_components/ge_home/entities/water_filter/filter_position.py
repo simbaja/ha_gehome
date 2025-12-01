@@ -1,6 +1,7 @@
 import logging
 from typing import List, Any, Optional
 
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdWaterFilterPosition, ErdCode, ErdWaterFilterMode
 from ...devices import ApplianceApi
 from ..common import GeErdSelect, OptionsConverter
@@ -27,10 +28,10 @@ class FilterPositionOptionsConverter(OptionsConverter):
 
 class GeErdFilterPositionSelect(GeErdSelect):
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve")
+        super().__init__(api, erd_code, FilterPositionOptionsConverter(), icon_override="mdi:valve", entity_category=EntityCategory.DIAGNOSTIC)
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return the current selected option"""
         
         #if we're transitioning or don't know what the mode is, don't allow changes
@@ -41,13 +42,13 @@ class GeErdFilterPositionSelect(GeErdSelect):
         return self._converter.to_option_string(self.appliance.get_erd_value(self.erd_code))
 
     @property
-    def options(self) -> List[str]:
+    def options(self) -> List[str]: # type: ignore
         """Return a list of options"""
 
         #if we're transitioning or don't know what the mode is, don't allow changes
         mode: ErdWaterFilterMode = self.appliance.get_erd_value(ErdCode.WH_FILTER_MODE)
         if mode in [ErdWaterFilterMode.TRANSITION, ErdWaterFilterMode.UNKNOWN]:
-            return mode.name.title()
+            return [mode.name.title()]
 
         return self._converter.options        
 

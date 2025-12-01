@@ -1,8 +1,8 @@
 """GE Home Climate Entities"""
 import logging
+from collections.abc import Collection
 from typing import Callable
 
-from homeassistant.components.climate import ClimateEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     registry = er.async_get(hass)
 
     @callback
-    def async_devices_discovered(apis: list[ApplianceApi]):
+    def async_devices_discovered(apis: Collection[ApplianceApi]):
         _LOGGER.debug(f'Found {len(apis):d} appliance APIs')
 
         entities = [
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             if isinstance(entity, GeClimate)
             if not registry.async_is_registered(entity.entity_id)
         ]
-        _LOGGER.debug(f'Found {len(entities):d} unregistered climate entities')
+        _LOGGER.debug(f'Found {len(entities):d} unregistered climate entities to register')
         async_add_entities(entities)
 
     #if we're already initialized at this point, call device

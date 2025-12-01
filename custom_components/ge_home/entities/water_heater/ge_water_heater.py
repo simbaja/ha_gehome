@@ -1,15 +1,15 @@
 """GE Home Sensor Entities - Oven"""
 import logging
-from typing import List, Optional
+from propcache.api import cached_property
+from typing import List
 
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from gehomesdk import (
     ErdCode,
     ErdWaterHeaterMode
 )
 
-from homeassistant.components.water_heater import WaterHeaterEntityFeature
-
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .heater_modes import WhHeaterModeConverter
@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 class GeWaterHeater(GeAbstractWaterHeater):
     """GE Whole Home Water Heater"""
 
-    icon = "mdi:water-boiler"
-
     def __init__(self, api: ApplianceApi):
         super().__init__(api)
         self._modes_converter = WhHeaterModeConverter()
@@ -28,30 +26,34 @@ class GeWaterHeater(GeAbstractWaterHeater):
     @property
     def heater_type(self) -> str:
         return "heater"
+    
+    @property
+    def icon(self) -> str | None:
+        return "mdi:water-boiler"
 
     @property
     def supported_features(self):
         return (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
-    @property
+    @cached_property
     def temperature_unit(self):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
-    def current_temperature(self) -> Optional[int]:
+    def current_temperature(self) -> int | None: # type: ignore
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TEMPERATURE)
 
     @property
-    def current_operation(self) -> Optional[str]:
+    def current_operation(self) -> str | None: # type: ignore
         erd_mode = self.appliance.get_erd_value(ErdCode.WH_HEATER_MODE)
         return self._modes_converter.to_option_string(erd_mode)
 
-    @property
+    @cached_property
     def operation_list(self) -> List[str]:
         return self._modes_converter.options
 
     @property
-    def target_temperature(self) -> Optional[int]:
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TARGET_TEMPERATURE)
 
@@ -83,4 +85,3 @@ class GeWaterHeater(GeAbstractWaterHeater):
             return
 
         await self.appliance.async_set_erd_value(ErdCode.WH_HEATER_TARGET_TEMPERATURE, target_temp)
-

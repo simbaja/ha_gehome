@@ -1,8 +1,9 @@
 import logging
 from typing import List
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
-from gehomesdk.erd import ErdCode, ErdApplianceType
+from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
 from ..entities import GeSacClimate, GeErdSensor, GeErdSwitch, ErdOnOffBoolConverter
@@ -19,17 +20,17 @@ class SacApi(ApplianceApi):
 
         sac_entities = [
             GeSacClimate(self),
-            GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE),
-            GeErdSensor(self, ErdCode.AC_AMBIENT_TEMPERATURE),
-            GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan"),
-            GeErdSensor(self, ErdCode.AC_OPERATION_MODE),
+            GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_AMBIENT_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.AC_POWER_STATUS, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
         ]
 
         if self.has_erd_code(ErdCode.SAC_SLEEP_MODE):
-            sac_entities.append(GeErdSwitch(self, ErdCode.SAC_SLEEP_MODE, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:sleep", icon_off_override="mdi:sleep-off"))
+            sac_entities.append(GeErdSwitch(self, ErdCode.SAC_SLEEP_MODE, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:sleep", icon_off_override="mdi:sleep-off", entity_category=EntityCategory.CONFIG))
         if self.has_erd_code(ErdCode.SAC_AUTO_SWING_MODE):
-            sac_entities.append(GeErdSwitch(self, ErdCode.SAC_AUTO_SWING_MODE, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:arrow-decision-auto", icon_off_override="mdi:arrow-decision-auto-outline"))
+            sac_entities.append(GeErdSwitch(self, ErdCode.SAC_AUTO_SWING_MODE, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:arrow-decision-auto", icon_off_override="mdi:arrow-decision-auto-outline", entity_category=EntityCategory.CONFIG))
 
 
         entities = base_entities + sac_entities

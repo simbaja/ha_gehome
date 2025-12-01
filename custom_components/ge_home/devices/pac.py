@@ -1,8 +1,9 @@
 import logging
 from typing import List
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
-from gehomesdk.erd import ErdCode, ErdApplianceType
+from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
 from ..entities import GePacClimate, GeErdSensor, GeErdSwitch, ErdOnOffBoolConverter
@@ -19,10 +20,10 @@ class PacApi(ApplianceApi):
 
         pac_entities = [
             GePacClimate(self),
-            GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE),
-            GeErdSensor(self, ErdCode.AC_AMBIENT_TEMPERATURE),
-            GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan"),
-            GeErdSensor(self, ErdCode.AC_OPERATION_MODE),
+            GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_AMBIENT_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.AC_POWER_STATUS, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
         ]
 

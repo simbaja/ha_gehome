@@ -22,8 +22,7 @@ class AcFanModeOptionsConverter(OptionsConverter):
             return self._default
 
     def to_option_string(self, value: Any) -> Optional[str]:
-        try:
-            return {
+        mapped = {
                 ErdAcFanSetting.AUTO: ErdAcFanSetting.AUTO,
                 ErdAcFanSetting.LOW: ErdAcFanSetting.LOW,
                 ErdAcFanSetting.LOW_AUTO: ErdAcFanSetting.AUTO,
@@ -31,9 +30,12 @@ class AcFanModeOptionsConverter(OptionsConverter):
                 ErdAcFanSetting.MED_AUTO: ErdAcFanSetting.AUTO,
                 ErdAcFanSetting.HIGH: ErdAcFanSetting.HIGH,
                 ErdAcFanSetting.HIGH_AUTO: ErdAcFanSetting.HIGH
-            }.get(value).stringify()
-        except:
-            pass
+            }.get(value)
+
+        if(isinstance(mapped, ErdAcFanSetting)):
+           return mapped.stringify()
+
+        _LOGGER.warning(f"Could not determine fan mode mapping for {value}")
         return self._default.stringify()
 
 class AcFanOnlyFanModeOptionsConverter(AcFanModeOptionsConverter):

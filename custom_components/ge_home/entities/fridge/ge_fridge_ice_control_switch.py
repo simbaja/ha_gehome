@@ -1,4 +1,5 @@
 import logging
+from homeassistant.const import EntityCategory
 from gehomesdk import ErdCode, IceMakerControlStatus, ErdOnOff
 
 from ...devices import ApplianceApi
@@ -8,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class GeFridgeIceControlSwitch(GeErdSwitch):    
     def __init__(self, api: ApplianceApi, control_type: str):
-        super().__init__(api, ErdCode.ICE_MAKER_CONTROL, BoolConverter())
+        super().__init__(api, ErdCode.ICE_MAKER_CONTROL, BoolConverter(), entity_category=EntityCategory.CONFIG)
         self._control_type = control_type
     
     @property

@@ -1,9 +1,10 @@
 """GE Home Dehumidifier"""
 import logging
+from propcache.api import cached_property
+from typing import Optional
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.humidifier.const import HumidifierEntityFeature
-
 from gehomesdk import ErdCode, DehumidifierTargetRange
 
 from ...devices import ApplianceApi
@@ -16,12 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 class GeDehumidifier(GeHumidifier):
     """GE Dehumidifier"""
 
-    icon = "mdi:air-humidifier"
-
     def __init__(self, api: ApplianceApi):        
         
         #try to get the range
-        range: DehumidifierTargetRange = api.try_get_erd_value(ErdCode.DHUM_TARGET_HUMIDITY_RANGE)        
+        range: DehumidifierTargetRange | None = api.try_get_erd_value(ErdCode.DHUM_TARGET_HUMIDITY_RANGE)
         low = DEFAULT_MIN_HUMIDITY if range is None else range.min_humidity
         high = DEFAULT_MAX_HUMIDITY if range is None else range.max_humidity
 
@@ -41,6 +40,10 @@ class GeDehumidifier(GeHumidifier):
         )
 
     @property
+    def icon(self) -> str | None:
+        return "mdi:air-humidifier"        
+
+    @cached_property
     def supported_features(self) -> HumidifierEntityFeature:
         if self._has_fan:
             return HumidifierEntityFeature(HumidifierEntityFeature.MODES)
@@ -48,7 +51,7 @@ class GeDehumidifier(GeHumidifier):
             return HumidifierEntityFeature(0)
 
     @property
-    def mode(self) -> str | None:
+    def mode(self) -> str | None: # type: ignore
         if not self._has_fan:
             raise NotImplementedError()
         
@@ -56,7 +59,7 @@ class GeDehumidifier(GeHumidifier):
             self.appliance.get_erd_value(ErdCode.AC_FAN_SETTING)
         )
 
-    @property
+    @cached_property
     def available_modes(self) -> list[str] | None:
         if not self._has_fan:
             raise NotImplementedError()

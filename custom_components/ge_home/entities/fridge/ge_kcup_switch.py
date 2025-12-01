@@ -1,7 +1,7 @@
 import logging
-from typing import Optional
+from propcache.api import cached_property
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
 from gehomesdk import ErdCode
 
 from ...devices import ApplianceApi
@@ -20,23 +20,31 @@ class GeKCupSwitch(GeEntity, SwitchEntity):
         # Pass the api instance to the base class
         super().__init__(api)
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         # Create a unique ID for this entity
         return f"{self.api.serial_or_mac}_kcup_hot_water"
 
-    @property
-    def name(self) -> Optional[str]:
+    @cached_property
+    def name(self) -> str | None:
         # Set the friendly name to match other switches using the device's unique ID
         return f"{self.api.serial_or_mac} K-Cup Hot Water"
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None: # type: ignore
         # Set the icon based on the switch's state
         return "mdi:coffee-maker" if self.is_on else "mdi:coffee-maker-off-outline"
+    
+    @property
+    def available(self) -> bool: # type: ignore
+        return super().available
+        
+    @cached_property
+    def device_class(self) -> SwitchDeviceClass | None:       
+        return None
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool: # type: ignore
         """Return true if the hot water is set to a non-zero temperature."""
         try:
             # The switch is "on" if the target temperature is not the "off" value

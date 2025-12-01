@@ -41,6 +41,19 @@ class HoodFanSpeedOptionsConverter(OptionsConverter):
         return ErdHoodFanSpeed.OFF.stringify()
 
 class GeHoodFanSpeedSelect(GeErdSelect):
-    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType):
-        self._availability: ErdHoodFanSpeedAvailability = api.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
-        super().__init__(api, erd_code, HoodFanSpeedOptionsConverter(self._availability))
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, control_erd_code: Optional[ErdCodeType] = None):
+
+        # old-style
+        self._availability: ErdHoodFanSpeedAvailability | None = api.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
+
+        # new-style
+        if self._availability is None:
+            fs: int | None = api.try_get_erd_value(ErdCode.HOOD_AVAILABLE_FAN_SPEEDS)
+            if fs is not None:
+                self._availability = ErdHoodFanSpeedAvailability.from_count(fs)
+
+        # default
+        if self._availability is None:
+            self._availability = ErdHoodFanSpeedAvailability(off_available=True)
+
+        super().__init__(api, erd_code, HoodFanSpeedOptionsConverter(self._availability), control_erd_code=control_erd_code)

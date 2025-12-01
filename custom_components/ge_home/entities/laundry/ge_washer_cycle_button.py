@@ -1,9 +1,8 @@
 import logging
-from typing import Any
+from propcache.api import cached_property
 from datetime import timedelta
 
-from gehomesdk import ErdCode, ErdMachineState
-from homeassistant.components.button import ButtonEntity
+from gehomesdk import ErdCode
 from ..common import GeErdButton
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,12 +13,12 @@ class GeWasherCycleButton(GeErdButton):
     def __init__(self, api):
         super().__init__(api, ErdCode.LAUNDRY_MACHINE_STATE)
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return a unique ID for the button."""
         return f"{self.serial_or_mac}_start_cycle_button"
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Return the name of the button."""
         return f"{self.serial_or_mac} Start Cycle"

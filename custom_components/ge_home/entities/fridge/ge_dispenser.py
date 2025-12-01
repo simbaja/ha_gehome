@@ -1,7 +1,8 @@
 """GE Home Sensor Entities - Dispenser"""
 
 import logging
-from typing import List, Optional, Dict, Any
+from propcache.api import cached_property
+from typing import List, Dict, Any
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -15,6 +16,7 @@ from gehomesdk import (
     HotWaterStatus
 )
 
+from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .const import (
     HEATER_TYPE_DISPENSER, 
@@ -28,14 +30,26 @@ _LOGGER = logging.getLogger(__name__)
 class GeDispenser(GeAbstractWaterHeater):
     """Entity for in-fridge dispensers"""
     
-    # These values are from FridgeHotWaterFragment.smali in the android app (in imperial units)
-    # However, the k-cup temperature max appears to be 190.  Since there doesn't seem to be any
-    # Difference between normal heating and k-cup heating based on what I see in the app, 
-    # we will just set the max temp to 190 instead of the 185
-    _min_temp = 90
-    _max_temp = 190 #185
-    icon = "mdi:cup-water"
-    heater_type = HEATER_TYPE_DISPENSER
+    def __init__(
+        self,
+        api: ApplianceApi
+    ):
+        super().__init__(api)
+
+        # These values are from FridgeHotWaterFragment.smali in the android app (in imperial units)
+        # However, the k-cup temperature max appears to be 190.  Since there doesn't seem to be any
+        # Difference between normal heating and k-cup heating based on what I see in the app, 
+        # we will just set the max temp to 190 instead of the 185
+        self._min_temp = 90
+        self._max_temp = 190 #185
+
+    @property
+    def heater_type(self) -> str:
+        return HEATER_TYPE_DISPENSER
+
+    @property
+    def icon(self) ->str | None:
+        return "mdi:cup-water"   
 
     @property
     def hot_water_status(self) -> HotWaterStatus:
@@ -48,7 +62,7 @@ class GeDispenser(GeAbstractWaterHeater):
         status = self.hot_water_status
         return status.pod_status != ErdPodStatus.NA and status.brew_module != ErdPresent.NA
 
-    @property
+    @cached_property
     def operation_list(self) -> List[str]:
         """Supported Operations List"""
         ops_list = [OP_MODE_NORMAL, OP_MODE_SABBATH]
@@ -83,19 +97,19 @@ class GeDispenser(GeAbstractWaterHeater):
         return GE_FRIDGE_SUPPORT
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str: # type: ignore
         """Get the current operation mode."""
         if self.appliance.get_erd_value(ErdCode.SABBATH_MODE):
             return OP_MODE_SABBATH
         return OP_MODE_NORMAL
 
     @property
-    def current_temperature(self) -> Optional[int]:
+    def current_temperature(self) -> int | None: # type: ignore
         """Return the current temperature."""
         return self.hot_water_status.current_temp
 
     @property
-    def target_temperature(self) -> Optional[int]:
+    def target_temperature(self) -> int | None: # type: ignore
         """Return the target temperature."""
         return self.appliance.get_erd_value(ErdCode.HOT_WATER_SET_TEMP)
 
@@ -110,7 +124,7 @@ class GeDispenser(GeAbstractWaterHeater):
         return TemperatureConverter.convert(self._max_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]: # type: ignore
         data = {}
         
         data["target_temperature"] = self.target_temperature

@@ -1,5 +1,6 @@
 """GE Home Select Entities"""
 import logging
+from collections.abc import Collection
 from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +25,7 @@ async def async_setup_entry(
     registry = er.async_get(hass)    
 
     @callback
-    def async_devices_discovered(apis: list[ApplianceApi]):
+    def async_devices_discovered(apis: Collection[ApplianceApi]):
         _LOGGER.debug(f"Found {len(apis):d} appliance APIs")
         entities = [
             entity
@@ -34,7 +35,7 @@ async def async_setup_entry(
             and entity.erd_code in api.appliance._property_cache
             if not registry.async_is_registered(entity.entity_id)
         ]
-        _LOGGER.debug(f"Found {len(entities):d} unregistered lights")
+        _LOGGER.debug(f"Found {len(entities):d} unregistered lights to register")
         async_add_entities(entities)
 
     #if we're already initialized at this point, call device

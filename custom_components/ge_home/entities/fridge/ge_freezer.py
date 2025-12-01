@@ -1,9 +1,10 @@
 """GE Home Sensor Entities - Freezer"""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from gehomesdk import (
     ErdCode,
+    ErdCodeType,
     ErdDoorStatus
 )
 
@@ -19,13 +20,24 @@ _LOGGER = logging.getLogger(__name__)
 class GeFreezer(GeAbstractFridge):
     """A freezer is basically a fridge."""
 
-    heater_type = HEATER_TYPE_FREEZER
-    turbo_erd_code = ErdCode.TURBO_FREEZE_STATUS
-    turbo_mode = OP_MODE_TURBO_FREEZE
-    icon = "mdi:fridge-top"
+    @property
+    def heater_type(self) -> str:
+        return HEATER_TYPE_FREEZER
+    
+    @property
+    def icon(self) -> str | None:
+        return "mdi:fridge-top"   
+    
+    @property
+    def turbo_erd_code(self) -> ErdCodeType:
+        return ErdCode.TURBO_FREEZE_STATUS
 
     @property
-    def door_state_attrs(self) -> Optional[Dict[str, Any]]:
+    def turbo_mode(self) -> str:
+        return OP_MODE_TURBO_FREEZE  
+
+    @property
+    def door_state_attrs(self) -> Dict[str, Any]:
         try:
             door_status = self.door_status.freezer
             if door_status and door_status != ErdDoorStatus.NA:

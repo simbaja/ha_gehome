@@ -1,9 +1,10 @@
 import logging
 from typing import List, Any, Optional
 
-from gehomesdk import ErdConvertableDrawerMode
 from homeassistant.const import UnitOfTemperature
-from homeassistant.util.unit_system import UnitSystem, UnitOfTemperature
+from homeassistant.util.unit_system import UnitSystem
+from gehomesdk import ErdConvertableDrawerMode
+
 from ..common import OptionsConverter
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +28,13 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
 
     @property
     def options(self) -> List[str]:
-        return [self.to_option_string(i) for i in ErdConvertableDrawerMode if i not in self._excluded_options]
+        return [
+            s
+            for i in ErdConvertableDrawerMode
+            if i not in self._excluded_options
+            for s in [self.to_option_string(i)]
+            if s is not None
+        ]
 
     def from_option_string(self, value: str) -> Any:
         try:
@@ -36,6 +43,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
         except:
             _LOGGER.warning(f"Could not set drawer mode to {value.upper()}")
             return ErdConvertableDrawerMode.NA
+        
     def to_option_string(self, value: ErdConvertableDrawerMode) -> Optional[str]:
         try:
             if value is not None:

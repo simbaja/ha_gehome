@@ -12,7 +12,7 @@ class BoolConverter:
 
 class ErdOnOffBoolConverter(BoolConverter):
     def boolify(self, value: ErdOnOff) -> bool:
-        return value.boolify()
+        return value.boolify() or False
     def true_value(self) -> Any:
         return ErdOnOff.ON
     def false_value(self) -> Any:

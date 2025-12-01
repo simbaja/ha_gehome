@@ -1,5 +1,6 @@
 """GE Home Switch Entities"""
 import logging
+from collections.abc import Collection
 from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,13 +17,13 @@ from .update_coordinator import GeHomeUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable):
-    """GE Home switches."""
+    """GE Home Switches."""
     _LOGGER.debug('Adding GE Home switches')
     coordinator: GeHomeUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     registry = er.async_get(hass)
 
     @callback
-    def async_devices_discovered(apis: list[ApplianceApi]):
+    def async_devices_discovered(apis: Collection[ApplianceApi]):
         """Add new switch entities from the device API."""
         _LOGGER.debug(f'Found {len(apis):d} appliance APIs')
         
@@ -43,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
                         # For other switche types add them directly
                         new_entities.append(entity)
 
-        _LOGGER.debug(f'Found {len(new_entities):d} unregistered switches')
+        _LOGGER.debug(f'Found {len(new_entities):d} unregistered switches to register')
         async_add_entities(new_entities)
 
     # If we're already initialized at this point, call device
