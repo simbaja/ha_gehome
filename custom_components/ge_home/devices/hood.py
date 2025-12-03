@@ -61,7 +61,7 @@ class HoodApi(ApplianceApi):
 
         #timer
         if timer_availability is not None:
-            hood_entities.append(GeErdTimerSensor(self, ErdCode.HOOD_TIMER))
+            hood_entities.append(GeErdTimerSensor(self, ErdCode.HOOD_TIMER, suggested_uom="h"))
 
         entities = base_entities + hood_entities
         return entities
