@@ -23,8 +23,8 @@ class WasherDryerApi(WasherApi, DryerApi):
             GeErdSensor(self, ErdCode.LAUNDRY_CYCLE),
             GeErdSensor(self, ErdCode.LAUNDRY_SUB_CYCLE),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_END_OF_CYCLE),
-            GeErdSensor(self, ErdCode.LAUNDRY_TIME_REMAINING),
-            GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING),
+            GeErdSensor(self, ErdCode.LAUNDRY_TIME_REMAINING, suggested_uom="min"),
+            GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING, suggested_uom="h"),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
         ]
