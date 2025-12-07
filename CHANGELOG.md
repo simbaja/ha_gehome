@@ -1,6 +1,11 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2025.12.0
+
+- Bugfix: Climate heat mode setting [#433, #435]
+- Feature: Changed time-related entities to be durations instead of text [#312]
+
 ## 2025.11.0
 
 - Breaking: changed name of some SAC/WAC entities to have a AC prefix 

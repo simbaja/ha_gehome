@@ -34,9 +34,9 @@ class WaterHeaterApi(ApplianceApi):
         wh_entities = [
             GeErdSensor(self, ErdCode.WH_HEATER_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.WH_HEATER_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WH_HEATER_MODE_HOURS_REMAINING, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.WH_HEATER_MODE_HOURS_REMAINING, entity_category=EntityCategory.DIAGNOSTIC, suggested_uom="h"),
+            GeErdSensor(self, ErdCode.WH_HEATER_ELECTRIC_MODE_MAX_TIME, entity_category=EntityCategory.DIAGNOSTIC, suggested_uom="h"),
+            GeErdSensor(self, ErdCode.WH_HEATER_VACATION_MODE_MAX_TIME, entity_category=EntityCategory.DIAGNOSTIC, suggested_uom="h"),
             GeWaterHeater(self)
         ]
 

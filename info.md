@@ -95,6 +95,10 @@ A/C Controls:
 
 #### Features
 
+{% if version_installed.split('.') | map('int') < '2025.12.0'.split('.') | map('int') %}
+- Changed time-related entities to be durations instead of text [#312]
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
 - Added heat mode for Window ACs
 - Added support for Advantium
@@ -179,6 +183,10 @@ A/C Controls:
 {% endif %}
 
 #### Bugfixes
+
+{% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
+- Climate heat mode setting [#433, #435]
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.5.0'.split('.') | map('int') %}
 - Fixed temperature unit for ovens [#248, #328, #344]

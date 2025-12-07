@@ -55,6 +55,8 @@ class GeClimate(GeEntity, ClimateEntity):
         self._fan_mode_erd_code = api.appliance.translate_erd_code(fan_mode_erd_code)
         self._target_heating_temperature_erd_code = api.appliance.translate_erd_code(target_heating_temperature_erd_code)
 
+        self._has_heat_erd_code = api.try_get_erd_value(self._target_heating_temperature_erd_code) is not None
+
     @cached_property
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self.serial_or_mac}_climate"
@@ -77,7 +79,7 @@ class GeClimate(GeEntity, ClimateEntity):
 
     @property
     def target_temperature_erd_code(self):
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode == HVACMode.HEAT and self._has_heat_erd_code:
             return self._target_heating_temperature_erd_code
         return self._target_temperature_erd_code
 

@@ -26,7 +26,7 @@ class DishwasherApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "add_rinse_aid", icon_override="mdi:shimmer", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "clean_filter", icon_override="mdi:dishwasher-alert", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_REMINDERS, "sanitized", icon_override="mdi:silverware-clean", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.DISHWASHER_TIME_REMAINING),
+            GeErdSensor(self, ErdCode.DISHWASHER_TIME_REMAINING, suggested_uom="h"),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_DOOR_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_IS_CLEAN),
 

@@ -31,8 +31,8 @@ class AdvantiumApi(ApplianceApi):
             GeErdBinarySensor(self, ErdCode.UPPER_OVEN_REMOTE_ENABLED, self._single_name(ErdCode.UPPER_OVEN_REMOTE_ENABLED), entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.MICROWAVE_REMOTE_ENABLE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE), entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.ADVANTIUM_KITCHEN_TIME_REMAINING),
-            GeErdSensor(self, ErdCode.ADVANTIUM_COOK_TIME_REMAINING),
+            GeErdSensor(self, ErdCode.ADVANTIUM_KITCHEN_TIME_REMAINING, suggested_uom="h"),
+            GeErdSensor(self, ErdCode.ADVANTIUM_COOK_TIME_REMAINING, suggested_uom="h"),
             GeAdvantium(self),
 
             #Cook Status

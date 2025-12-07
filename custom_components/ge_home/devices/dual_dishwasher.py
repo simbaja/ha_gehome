@@ -20,7 +20,7 @@ class DualDishwasherApi(ApplianceApi):
 
         lower_entities = [
             GeErdSensor(self, ErdCode.DISHWASHER_CYCLE_STATE, erd_override="lower_cycle_state", icon_override="mdi:state-machine"),
-            GeErdSensor(self, ErdCode.DISHWASHER_TIME_REMAINING, erd_override="lower_time_remaining"),
+            GeErdSensor(self, ErdCode.DISHWASHER_TIME_REMAINING, erd_override="lower_time_remaining", suggested_uom="h"),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_DOOR_STATUS, erd_override="lower_door_status", entity_category=EntityCategory.DIAGNOSTIC),
 
             #Reminders
@@ -44,7 +44,7 @@ class DualDishwasherApi(ApplianceApi):
 
         upper_entities = [
             GeErdSensor(self, ErdCode.DISHWASHER_UPPER_CYCLE_STATE, erd_override="upper_cycle_state", icon_override="mdi:state-machine"),
-            GeErdSensor(self, ErdCode.DISHWASHER_UPPER_TIME_REMAINING, erd_override="upper_time_remaining"),
+            GeErdSensor(self, ErdCode.DISHWASHER_UPPER_TIME_REMAINING, erd_override="upper_time_remaining", suggested_uom="h"),
             GeErdBinarySensor(self, ErdCode.DISHWASHER_UPPER_DOOR_STATUS, erd_override="upper_door_status", entity_category=EntityCategory.DIAGNOSTIC),
 
             #Reminders

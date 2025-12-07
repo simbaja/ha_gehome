@@ -68,8 +68,8 @@ class OvenApi(ApplianceApi):
             oven_entities.extend([
                 GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_MODE, entity_category=EntityCategory.DIAGNOSTIC),
                 GeErdSensor(self, ErdCode.LOWER_OVEN_CURRENT_STATE, entity_category=EntityCategory.DIAGNOSTIC),
-                GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_TIME_REMAINING),
-                GeErdTimerSensor(self, ErdCode.LOWER_OVEN_KITCHEN_TIMER),
+                GeErdSensor(self, ErdCode.LOWER_OVEN_COOK_TIME_REMAINING, suggested_uom="h"),
+                GeErdTimerSensor(self, ErdCode.LOWER_OVEN_KITCHEN_TIMER, suggested_uom="h"),
                 GeErdSensor(self, ErdCode.LOWER_OVEN_USER_TEMP_OFFSET, entity_category=EntityCategory.DIAGNOSTIC),
                 GeErdSensor(self, ErdCode.LOWER_OVEN_DISPLAY_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
                 GeErdBinarySensor(self, ErdCode.LOWER_OVEN_REMOTE_ENABLED, entity_category=EntityCategory.DIAGNOSTIC),
@@ -88,8 +88,8 @@ class OvenApi(ApplianceApi):
         oven_entities.extend([
             GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_MODE, self._single_name(ErdCode.UPPER_OVEN_COOK_MODE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.UPPER_OVEN_CURRENT_STATE, self._single_name(ErdCode.UPPER_OVEN_CURRENT_STATE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, self._single_name(ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, not oven_config.has_lower_oven)),
-            GeErdTimerSensor(self, ErdCode.UPPER_OVEN_KITCHEN_TIMER, self._single_name(ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven)),
+            GeErdSensor(self, ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, self._single_name(ErdCode.UPPER_OVEN_COOK_TIME_REMAINING, not oven_config.has_lower_oven), suggested_uom="h"),
+            GeErdTimerSensor(self, ErdCode.UPPER_OVEN_KITCHEN_TIMER, self._single_name(ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven), suggested_uom="h"),
             GeErdSensor(self, ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, self._single_name(ErdCode.UPPER_OVEN_USER_TEMP_OFFSET, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, self._single_name(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.UPPER_OVEN_REMOTE_ENABLED, self._single_name(ErdCode.UPPER_OVEN_REMOTE_ENABLED, not oven_config.has_lower_oven), entity_category=EntityCategory.DIAGNOSTIC),
