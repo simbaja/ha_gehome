@@ -20,7 +20,7 @@ class WhHeaterModeConverter(OptionsConverter):
     @property
     def is_haier(self) -> bool:
         """Check if this is a Haier brand water heater."""
-        return self._brand in [ErdBrand.HAIER, ErdBrand.HAIER_FPA]
+        return self._brand in [ErdBrand.HEIER, ErdBrand.HEIER_FPA]
     
     def _get_mode_name(self, mode: ErdWaterHeaterMode) -> Optional[str]:
         """Get the display name for a mode, considering brand."""
