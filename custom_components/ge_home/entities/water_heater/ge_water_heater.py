@@ -21,7 +21,7 @@ class GeWaterHeater(GeAbstractWaterHeater):
 
     def __init__(self, api: ApplianceApi):
         super().__init__(api)
-        self._modes_converter = WhHeaterModeConverter()
+        self._modes_converter = WhHeaterModeConverter(api)
 
     @property
     def heater_type(self) -> str:
