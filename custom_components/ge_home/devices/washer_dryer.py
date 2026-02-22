@@ -8,6 +8,7 @@ from gehomesdk import ErdCode, ErdApplianceType
 from .washer import WasherApi
 from .dryer import DryerApi
 from ..entities import GeErdSensor, GeErdBinarySensor
+from ..entities.laundry.ge_washer_cycle_button import GeWasherCycleButton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class WasherDryerApi(WasherApi, DryerApi):
             GeErdSensor(self, ErdCode.LAUNDRY_DELAY_TIME_REMAINING, suggested_uom="h"),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_DOOR, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_REMOTE_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
+            GeWasherCycleButton(self),
         ]
 
         washer_entities = self.get_washer_entities()
