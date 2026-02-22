@@ -16,7 +16,7 @@ class WacHvacModeOptionsConverter(OptionsConverter):
 
     @property
     def options(self) -> List[str]:
-        modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.FAN_ONLY]
+        modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY]
         if self._available_modes and self._available_modes.has_heat:
             modes.append(HVACMode.HEAT)
         return [i.value for i in modes]
@@ -28,6 +28,7 @@ class WacHvacModeOptionsConverter(OptionsConverter):
                 HVACMode.AUTO: ErdAcOperationMode.ENERGY_SAVER,
                 HVACMode.COOL: ErdAcOperationMode.COOL,
                 HVACMode.HEAT: ErdAcOperationMode.HEAT,
+                HVACMode.DRY: ErdAcOperationMode.DRY,
                 HVACMode.FAN_ONLY: ErdAcOperationMode.FAN_ONLY
             }.get(hvac)
         except ValueError:
@@ -40,6 +41,7 @@ class WacHvacModeOptionsConverter(OptionsConverter):
                 ErdAcOperationMode.AUTO: HVACMode.AUTO,
                 ErdAcOperationMode.COOL: HVACMode.COOL,
                 ErdAcOperationMode.HEAT: HVACMode.HEAT,
+                ErdAcOperationMode.DRY: HVACMode.DRY,
                 ErdAcOperationMode.FAN_ONLY: HVACMode.FAN_ONLY
             }.get(value)
 
