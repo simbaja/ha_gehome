@@ -6,14 +6,14 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdRemoteCommand
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeDishwasherCommandButton
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdPropertyBinarySensor, GeDishwasherCommandButton
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class DualDishwasherApi(ApplianceApi):
     """API class for dual dishwasher objects"""
-    APPLIANCE_TYPE = ErdApplianceType.DISH_WASHER
+    APPLIANCE_TYPE = ErdApplianceType.DUAL_DISH_WASHER
 
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
@@ -66,22 +66,22 @@ class DualDishwasherApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "delay_hours", erd_override="upper_setting", icon_override="mdi:clock-fast", entity_category=EntityCategory.DIAGNOSTIC)
         ]
 
-        # check for remote command availability and add if present (lower)
-        if self.has_erd_code(ErdCode.DISHWASHER_REMOTE_START_ENABLE):
+        # Remote commands are always supported, enabled by a physical button per tub, disabled when the tub is opened (lower)
+        if True:
             lower_entities.extend(
                 [
-                    GeErdBinarySensor(self, ErdCode.DISHWASHER_REMOTE_START_ENABLE, erd_override="lower_remote_command_enable", entity_category=EntityCategory.DIAGNOSTIC),
+                    GeErdPropertyBinarySensor(self, ErdCode.DISHWASHER_USER_SETTING, "wifi_enabled", erd_override="lower_remote_command_enable", icon_off_override="mdi:wifi-off", icon_on_override="mdi:wifi"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="lower_remote_command"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="lower_remote_command"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="lower_remote_command")
                 ]
             )
 
-        # check for remote command availability and add if present (upper)
-        if self.has_erd_code(ErdCode.DISHWASHER_UPPER_REMOTE_START_ENABLE):
+        # Remote commands are always supported, enabled by a physical button per tub, disabled when the tub is opened (upper)
+        if True:
             upper_entities.extend(
                 [
-                    GeErdBinarySensor(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_ENABLE, erd_override="upper_remote_command_enable", entity_category=EntityCategory.DIAGNOSTIC),
+                    GeErdPropertyBinarySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "wifi_enabled", erd_override="upper_remote_command_enable", icon_off_override="mdi:wifi-off", icon_on_override="mdi:wifi"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.START_RESUME, erd_override="upper_remote_command"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE, erd_override="upper_remote_command"),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_UPPER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL, erd_override="upper_remote_command")
