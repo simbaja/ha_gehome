@@ -163,6 +163,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         for c in self._signal_remove_callbacks:
             c()
         self._signal_remove_callbacks.clear()
+        
+        # clear the appliances (moved from _reset_sync_state to ensure proper cleanup on unload)
+        self._appliance_apis.clear()
 
         # cancel the notification
         try:
@@ -257,7 +260,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         """ Reset synchronous state """
 
         # clear the appliances
-        self._appliance_apis.clear()
+        # self._appliance_apis.clear() # MOVED to async_reset to allow for persistence across reconnections
 
         # reset the initialization
         self._all_initial_updates_received.clear()
@@ -459,6 +462,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             # if we already have the API, switch out its appliance reference for this one
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
+            api.build_entities_list()
 
     async def _async_maybe_trigger_all_ready(self, force: bool = False) -> None:
         """See if we're all ready to go, and if so, let the games begin."""
@@ -492,7 +496,20 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         entity_registry = er.async_get(self.hass)
 
         # MAC addresses of all currently valid appliances
-        current_macs = set(self._appliance_apis.keys())
+        # we need to look at the cloud list, not our internal list, as we may have stale entries in our internal list
+        if self._client and self._client.appliances:
+            valid_macs = set(self._client.appliances.keys())
+        else:
+            valid_macs = set()
+
+        # Remove stale appliance APIs from our internal list
+        for mac in list(self._appliance_apis.keys()):
+            if mac not in valid_macs:
+                _LOGGER.info(f"Removing stale appliance API {mac}")
+                self._appliance_apis.pop(mac)
+
+        # Update current macs for HA registry cleanup
+        current_macs = valid_macs
 
         # Loop through all devices for this config entry
         for device_entry in list(device_registry.devices.values()):
