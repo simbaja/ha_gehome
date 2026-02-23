@@ -21,7 +21,7 @@ class WasherApi(ApplianceApi):
         base_entities = super().get_all_entities()
 
         common_entities = [
-            GeErdSensor(self, ErdCode.LAUNDRY_MACHINE_STATE),
+            GeErdSensor(self, ErdCode.LAUNDRY_MACHINE_STATE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.LAUNDRY_CYCLE, icon_override="mdi:state-machine"),
             GeErdSensor(self, ErdCode.LAUNDRY_SUB_CYCLE, icon_override="mdi:state-machine"),
             GeErdBinarySensor(self, ErdCode.LAUNDRY_END_OF_CYCLE),
