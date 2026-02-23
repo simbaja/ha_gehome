@@ -30,8 +30,4 @@ class GeCooktopStatusBinarySensor(GeErdBinarySensor):
             if exists and is_on:
                 return True
 
-        boolify_op = getattr(status, "boolify", None)
-        if callable(boolify_op):
-            return boolify_op()
-
-        return False
+        return status.boolify()
