@@ -76,6 +76,11 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
+- Changed mode names for Haier water heaters [#442]
+- Made LAUNDRY_MACHINE_STATE diagnostic on all appliances [#447]
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
 - Refactored code internally to improve reliability
 - Cleaned up initialization and config flow
@@ -94,6 +99,12 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
+- Added DRY mode to HVAC options and mappings [#441]
+- Added GeWasherCycleButton to WasherDryerApi [#462]
+- Added DishDrawer User Setting wifi_enabled (read only) [#463]
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.12.0'.split('.') | map('int') %}
 - Changed time-related entities to be durations instead of text [#312]
@@ -183,6 +194,11 @@ A/C Controls:
 {% endif %}
 
 #### Bugfixes
+
+{% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
+- Cooktop Sensor fixes [#440, #454]
+- Persist ApplianceApis on reconnect to prevent duplicate entities [#464]
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2025.11.0'.split('.') | map('int') %}
 - Climate heat mode setting [#433, #435]

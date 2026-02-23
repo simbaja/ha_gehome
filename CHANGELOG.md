@@ -1,6 +1,16 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2026.2.0
+
+- Feature: Added DRY mode to HVAC options and mappings [#441]
+- Feature: Added GeWasherCycleButton to WasherDryerApi [#462]
+- Feature: Added DishDrawer User Setting wifi_enabled (read only) [#463]
+- Change: Changed mode names for Haier water heaters [#442]
+- Change: Made LAUNDRY_MACHINE_STATE diagnostic on all appliances [#447]
+- Bugfix: Cooktop Sensor fixes [#440, #454]
+- Bugfix: Persist ApplianceApis on reconnect to prevent duplicate entities [#464]
+
 ## 2025.12.0
 
 - Bugfix: Climate heat mode setting [#433, #435]
@@ -8,7 +18,7 @@
 
 ## 2025.11.0
 
-- Breaking: changed name of some SAC/WAC entities to have a AC prefix 
+- Breaking: changed name of some SAC/WAC entities to have a AC prefix
 - Feature: Added heat mode for Window ACs
 - Feature: Added support for Advantium
 - Feature: Brand inference and stale device cleanup
@@ -58,7 +68,7 @@
 
 ## 0.6.13
 
-- Bugfix: Deprecations [#290] [#297] 
+- Bugfix: Deprecations [#290] [#297]
 
 ## 0.6.12
 
@@ -92,7 +102,6 @@
 - Bugfix: Fixed issue with oven lights [#174]
 - Bugfix: Fixed issues with dual dishwasher [#161]
 - Bugfix: Fixed disconnection issue [#169]
-
 
 ## 0.6.7
 
@@ -152,6 +161,7 @@
 - Fixed issue with ovens when raw temperature not available (@chadohalloran)
 - Fixed issue where Split A/C temperature sensors report UOM incorrectly (@RobertusIT)
 - Added convertable drawer mode, proximity light, and interior lights to fridge (@groto27, @elwing00)
+
 ## 0.4.3
 
 - Enabled support for appliances without serial numbers
