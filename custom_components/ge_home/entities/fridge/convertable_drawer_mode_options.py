@@ -2,7 +2,7 @@ import logging
 from typing import List, Any, Optional
 
 from homeassistant.const import UnitOfTemperature
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_conversion import TemperatureConverter
 from gehomesdk import ErdConvertableDrawerMode
 
 from ..common import OptionsConverter
@@ -17,7 +17,7 @@ _TEMP_MAP = {
 }
 
 class ConvertableDrawerModeOptionsConverter(OptionsConverter):
-    def __init__(self, units: UnitSystem):
+    def __init__(self, units: Any):
         super().__init__()
         self._excluded_options = [
             ErdConvertableDrawerMode.UNKNOWN0, 
@@ -51,7 +51,7 @@ class ConvertableDrawerModeOptionsConverter(OptionsConverter):
                 t = _TEMP_MAP.get(value, None)
 
                 if t and self._units.temperature_unit == UnitOfTemperature.CELSIUS:
-                    t = self._units.temperature(float(t), UnitOfTemperature.FAHRENHEIT)
+                    t = TemperatureConverter.convert(float(t), UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
                     t = round(t,1)
                 
                 if t:

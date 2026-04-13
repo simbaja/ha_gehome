@@ -5,7 +5,6 @@ from typing import Dict, Optional
 
 import aiohttp
 import asyncio
-import async_timeout
 
 from gehomesdk import (
     GeAuthFailedError, 
@@ -70,7 +69,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     region = _normalize_region(data.get(CONF_REGION))
 
     try:
-        async with async_timeout.timeout(VALIDATE_DATA_TIMEOUT):
+        async with asyncio.timeout(VALIDATE_DATA_TIMEOUT):
             await async_get_oauth2_token(session, username, password, region)
     except (asyncio.TimeoutError, aiohttp.ClientError) as err:
         _LOGGER.warning(f"Connection failure for user {username} in region {region}: {err}")
