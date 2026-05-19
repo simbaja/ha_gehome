@@ -381,6 +381,8 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(f"on_device_update: skipping invalid appliance {appliance.mac_addr}")
             return
 
+        self._ensure_appliance_available(appliance)
+
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
@@ -420,6 +422,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Got initial update for {appliance.mac_addr}")
 
         self.last_update_success = True
+        self._ensure_appliance_available(appliance)
         self._maybe_add_appliance_api(appliance)
         await self._async_maybe_trigger_all_ready()
         await self._start_periodic_updates()
@@ -441,6 +444,17 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
     def _is_appliance_valid(self, appliance: GeAppliance) -> bool:
         return appliance.appliance_type is not None
+
+    def _ensure_appliance_available(self, appliance: GeAppliance) -> None:
+        """Treat successful SmartHQ state traffic as proof the appliance is online."""
+        if appliance.available:
+            return
+
+        _LOGGER.info(
+            "Marking appliance %s available after receiving a successful state update",
+            appliance.mac_addr,
+        )
+        appliance.set_available()
 
     def _get_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
         if appliance is None:
