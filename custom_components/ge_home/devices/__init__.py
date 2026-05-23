@@ -6,6 +6,7 @@ from gehomesdk.erd import ErdApplianceType
 from .base import ApplianceApi
 from .oven import OvenApi
 from .cooktop import CooktopApi
+from .gas_cooktop import GasCooktopApi
 from .fridge import FridgeApi
 from .dishwasher import DishwasherApi
 from .washer import WasherApi
@@ -38,6 +39,7 @@ def get_appliance_api_type(appliance_type: ErdApplianceType) -> Type:
         ErdApplianceType.OVEN: OvenApi,
         ErdApplianceType.COOKTOP: CooktopApi,
         ErdApplianceType.ELECTRIC_COOKTOP: CooktopApi,
+        ErdApplianceType.GAS_COOKTOP: GasCooktopApi,
         ErdApplianceType.FRIDGE: FridgeApi,
         ErdApplianceType.BEVERAGE_CENTER: FridgeApi,
         ErdApplianceType.DISH_WASHER: DishwasherApi,
