@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from homeassistant.const import EntityCategory
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -15,13 +16,16 @@ from ..entities import (
     GeCooktopStatusBinarySensor,
     GeErdPropertyBinarySensor,
     GeErdPropertySensor,
+    GeErdBinarySensor,
+    GeErdButton,
+    GeErdSensor,
 )
 from .base import ApplianceApi
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def build_cooktop_entities(api) -> List[Entity]:
+def build_cooktop_entities(api: ApplianceApi) -> List[Entity]:
     """Create cooktop entities if this appliance reports a cooktop."""
 
     cooktop_config = ErdCooktopConfig.NONE
@@ -77,6 +81,37 @@ def build_cooktop_entities(api) -> List[Entity]:
                         data_type_override=ErdDataType.INT,
                     )
                 )
+
+    # Add cooktop lock status
+    if api.has_erd_code(ErdCode.COOKTOP_GAS_VALVE_LOCK_STATUS):
+        cooktop_entities.append(
+            GeErdBinarySensor(
+                api,
+                ErdCode.COOKTOP_GAS_VALVE_LOCK_STATUS,
+                device_class_override=BinarySensorDeviceClass.LOCK,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        )
+
+    # Add cooktop lock control
+    if api.has_erd_code(ErdCode.COOKTOP_GAS_VALVE_LOCK_CONTROL):
+        cooktop_entities.append(
+            GeErdButton(
+                api,
+                ErdCode.COOKTOP_GAS_VALVE_LOCK_CONTROL,
+                entity_category=EntityCategory.CONFIG,
+            )
+        )
+
+    # Add cooktop elapsed cook time
+    if api.has_erd_code(ErdCode.COOKTOP_ELAPSED_COOK_TIME):
+        cooktop_entities.append(
+            GeErdSensor(
+                api,
+                ErdCode.COOKTOP_ELAPSED_COOK_TIME,
+                suggested_uom="h",
+            )
+        )
 
     return cooktop_entities
 
