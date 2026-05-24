@@ -19,7 +19,8 @@ from ..entities import (
     GeErdBinarySensor,
     GeErdButton,
     GeErdSensor,
-    GeErdTimerSensor
+    GeErdTimerSensor,
+    GeErdTimerNumber
 )
 from .base import ApplianceApi
 
@@ -137,6 +138,14 @@ class CooktopApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_KITCHEN_TIMER,
                     erd_override="cooktop_kitchen_timer",
                     suggested_uom="h",
+                )
+            )
+            cooktop_entities.append(
+                GeErdTimerNumber(
+                    self,
+                    ErdCode.UPPER_OVEN_KITCHEN_TIMER,
+                    erd_override="cooktop_kitchen_timer",
+                    max_value=599
                 )
             )
 

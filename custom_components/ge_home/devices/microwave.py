@@ -17,7 +17,8 @@ from ..entities import (
     GeErdPropertySensor,
     GeErdPropertyBinarySensor,
     GeErdBinarySensor,
-    GeErdTimerSensor
+    GeErdTimerSensor,
+    GeErdTimerNumber
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +43,8 @@ class MicrowaveApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "power_level", icon_override="mdi:gauge", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "temperature", icon_override="mdi:thermometer", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdTimerSensor(self, ErdCode.MICROWAVE_COOK_TIMER, suggested_uom="min"),
-            GeErdTimerSensor(self, ErdCode.MICROWAVE_KITCHEN_TIMER, suggested_uom="h")
+            GeErdTimerSensor(self, ErdCode.MICROWAVE_KITCHEN_TIMER, suggested_uom="h"),
+            GeErdTimerNumber(self, ErdCode.MICROWAVE_KITCHEN_TIMER, max_value=255),
         ]
 
         if fan_availability and fan_availability.is_available:

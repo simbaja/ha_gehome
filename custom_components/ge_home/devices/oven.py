@@ -17,6 +17,7 @@ from .cooktop import build_cooktop_entities
 from ..entities import (
     GeErdSensor,
     GeErdTimerSensor,
+    GeErdTimerNumber,
     GeErdBinarySensor,
     GeOven,
     GeOvenLightLevelSelect,
@@ -98,6 +99,7 @@ class OvenApi(ApplianceApi):
                     GeErdTimerSensor(
                         self, ErdCode.LOWER_OVEN_KITCHEN_TIMER, suggested_uom="h"
                     ),
+                    GeErdTimerNumber(self, ErdCode.LOWER_OVEN_KITCHEN_TIMER),
                     GeErdSensor(
                         self,
                         ErdCode.LOWER_OVEN_USER_TEMP_OFFSET,
@@ -186,6 +188,14 @@ class OvenApi(ApplianceApi):
                         ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven
                     ),
                     suggested_uom="h",
+                ),
+                GeErdTimerNumber(
+                    self,
+                    ErdCode.UPPER_OVEN_KITCHEN_TIMER,
+                    self._single_name(
+                        ErdCode.UPPER_OVEN_KITCHEN_TIMER, 
+                        not oven_config.has_lower_oven
+                    ),
                 ),
                 GeErdSensor(
                     self,
