@@ -6,9 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdButton
-from ..entities.laundry.ge_dryer_cycle_button import GeDryerCycleButton
-
+from ..entities import GeErdSensor, GeErdBinarySensor, GeDryerCycleButton
 
 _LOGGER = logging.getLogger(__name__)
 
