@@ -136,7 +136,7 @@ class GeOven(GeAbstractWaterHeater):
         cook_mode = self.current_cook_setting
         if cook_mode.temperature:
             return cook_mode.temperature
-        return 0.0
+        return 0
 
     @property
     def min_temp(self) -> int:
