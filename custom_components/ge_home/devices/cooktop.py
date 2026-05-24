@@ -19,6 +19,7 @@ from ..entities import (
     GeErdBinarySensor,
     GeErdButton,
     GeErdSensor,
+    GeErdTimerSensor
 )
 from .base import ApplianceApi
 
@@ -128,4 +129,15 @@ class CooktopApi(ApplianceApi):
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
         cooktop_entities = build_cooktop_entities(self)
+
+        if self.has_erd_code(ErdCode.UPPER_OVEN_KITCHEN_TIMER):
+            cooktop_entities.append(
+                GeErdTimerSensor(
+                    self,
+                    ErdCode.UPPER_OVEN_KITCHEN_TIMER,
+                    erd_override="cooktop_kitchen_timer",
+                    suggested_uom="h",
+                )
+            )
+
         return base_entities + cooktop_entities
