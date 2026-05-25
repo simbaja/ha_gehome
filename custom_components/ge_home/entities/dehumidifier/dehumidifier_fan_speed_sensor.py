@@ -1,5 +1,6 @@
 from typing import Optional
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdDataType, ErdAcFanSetting
 
@@ -14,8 +15,8 @@ class GeDehumidifierFanSpeedSensor(GeErdSensor):
         erd_code: ErdCodeType, 
         erd_override: Optional[str] = None, 
         icon_override: Optional[str] = None, 
-        device_class_override: Optional[str] = None,
-        state_class_override: Optional[str] = None,
+        device_class_override: Optional[SensorDeviceClass] = None,
+        state_class_override: Optional[SensorStateClass] = None,
         uom_override: Optional[str] = None,
         data_type_override: Optional[ErdDataType] = None
     ):

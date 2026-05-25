@@ -21,8 +21,8 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         erd_code: ErdCodeType, 
         erd_override: Optional[str] = None, 
         icon_override: Optional[str] = None, 
-        device_class_override: Optional[str] = None,
-        state_class_override: Optional[str] = None,
+        device_class_override: Optional[SensorDeviceClass] = None,
+        state_class_override: Optional[SensorStateClass] = None,
         uom_override: Optional[str] = None,
         data_type_override: Optional[ErdDataType] = None,
         entity_category: Optional[EntityCategory] = None,
@@ -76,7 +76,7 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         return self._suggested_precision
 
     @cached_property
-    def state_class(self) -> Optional[str]:
+    def state_class(self) -> Optional[SensorStateClass]:
         return self._get_state_class()
     
     @cached_property
@@ -186,7 +186,7 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         
         return None
 
-    def _get_state_class(self) -> Optional[str]:
+    def _get_state_class(self) -> Optional[SensorStateClass]:
         if self._state_class_override:
             return self._state_class_override
 
