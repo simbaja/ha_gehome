@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -38,7 +39,7 @@ class MicrowaveApi(ApplianceApi):
         mwave_entities = [
             GeErdBinarySensor(self, ErdCode.MICROWAVE_REMOTE_ENABLE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "status", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertyBinarySensor(self, ErdCode.MICROWAVE_STATE, "door_status", device_class_override="door", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdPropertyBinarySensor(self, ErdCode.MICROWAVE_STATE, "door_status", device_class_override=BinarySensorDeviceClass.DOOR, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "cook_mode", icon_override="mdi:food-turkey", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "power_level", icon_override="mdi:gauge", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "temperature", icon_override="mdi:thermometer", entity_category=EntityCategory.DIAGNOSTIC),

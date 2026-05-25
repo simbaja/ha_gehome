@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk.erd import ErdCode, ErdApplianceType
@@ -26,7 +27,7 @@ class BiacApi(ApplianceApi):
             GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.AC_POWER_STATUS, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
-            GeErdBinarySensor(self, ErdCode.AC_FILTER_STATUS, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdBinarySensor(self, ErdCode.AC_FILTER_STATUS, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_STATE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_POWER, uom_override="kW", entity_category=EntityCategory.DIAGNOSTIC),
         ]

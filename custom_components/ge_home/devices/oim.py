@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -30,8 +31,8 @@ class OimApi(ApplianceApi):
 
         oim_entities = [
             GeErdSensor(self, ErdCode.OIM_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdBinarySensor(self, ErdCode.OIM_FILTER_STATUS, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),            
-            GeErdBinarySensor(self, ErdCode.OIM_NEEDS_DESCALING, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),            
+            GeErdBinarySensor(self, ErdCode.OIM_FILTER_STATUS, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),            
+            GeErdBinarySensor(self, ErdCode.OIM_NEEDS_DESCALING, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),            
             GeErdSelect(self, ErdCode.OIM_LIGHT_LEVEL, OimLightLevelOptionsConverter(), entity_category=EntityCategory.CONFIG),
             GeErdSwitch(self, ErdCode.OIM_POWER, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
         ]

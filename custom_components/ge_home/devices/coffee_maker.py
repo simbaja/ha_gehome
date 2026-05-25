@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -51,8 +52,8 @@ class CcmApi(ApplianceApi):
             self._brew_temperature_entity,
             self._brew_cups_entity,
             GeErdSensor(self, ErdCode.CCM_CURRENT_WATER_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdBinarySensor(self, ErdCode.CCM_OUT_OF_WATER, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
-            GeCcmPotNotPresentBinarySensor(self, ErdCode.CCM_POT_PRESENT, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC)
+            GeErdBinarySensor(self, ErdCode.CCM_OUT_OF_WATER, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),
+            GeCcmPotNotPresentBinarySensor(self, ErdCode.CCM_POT_PRESENT, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC)
         ]
 
         entities = base_entities + ccm_entities
