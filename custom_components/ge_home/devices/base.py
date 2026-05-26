@@ -82,10 +82,17 @@ class ApplianceApi:
             except:
                 return False
     
-        if (self.serial_number and not 
-            self.serial_number.isspace() and not 
-            is_zero(self.serial_number)):
+        if (self.serial_number and not
+            self.serial_number.isspace() and not
+            is_zero(self.serial_number) and
+            self.serial_number.isprintable()):
             return self.serial_number
+        if self.serial_number and not self.serial_number.isprintable():
+            _LOGGER.warning(
+                "Serial number for %s contains non-printable characters "
+                "(possible certificate data on ERD 0x0002); falling back to MAC address.",
+                self.mac_addr,
+            )
         return self.mac_addr
 
     @cached_property
