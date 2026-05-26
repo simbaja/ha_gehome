@@ -6,6 +6,8 @@
 - Feature: Added cooktop-specific entities (sensors and controls)
 - Feature: Added kitchen timer to cooktop as number entities (in minutes)
 - Feature: Added gas cooktop to known device mapping
+- Feature: Added quiet/turbo mode for AC-capable appliances [#397]
+- Feature: Added potential support for dishwasher delay start on some models [#434]
 - Change: Refactored common cooktop logic to apply to both cooktop and oven devices
 - Change: Tightened typing for binary sensor and sensor device/state classes
 - Bugfix: Fixed dehumidifier sensors incorrectly typed (should be binary sensors)

@@ -109,6 +109,8 @@ A/C Controls:
 - Added cooktop-specific entities (sensors and controls)
 - Added kitchen timer to cooktop as number entities (in minutes)
 - Added gas cooktop to known device mapping
+- Added quiet/turbo mode for AC-capable appliances [#397]
+- Added potential support for dishwasher delay start on some models [#434]
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
