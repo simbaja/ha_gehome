@@ -79,6 +79,8 @@ A/C Controls:
 {% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
 - Refactored common cooktop logic to apply to both cooktop and oven devices
 - Tightened typing for binary sensor and sensor device/state classes
+- Improved login error messages now specifically indicate when MFA or Terms of Service acceptance is required
+- Removed AC-specific demand response sensors from WAC/BIAC (now provided by the cross-appliance resource sensors)
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
@@ -111,6 +113,7 @@ A/C Controls:
 - Added gas cooktop to known device mapping
 - Added quiet/turbo mode for AC-capable appliances [#397]
 - Added potential support for dishwasher delay start on some models [#434]
+- Added cross-appliance resource usage sensors to all supported appliances (instantaneous power, cumulative energy, hot/cold water, gas usage) where the appliance reports them [#335,#492]
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
