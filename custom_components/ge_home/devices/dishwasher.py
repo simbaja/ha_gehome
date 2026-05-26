@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdRemoteCommand
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdNumber, GeDishwasherCommandButton
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdNumber, GeErdTimerNumber, GeDishwasherCommandButton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +58,12 @@ class DishwasherApi(ApplianceApi):
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.PAUSE),
                     GeDishwasherCommandButton(self, ErdCode.DISHWASHER_REMOTE_START_COMMAND, ErdRemoteCommand.CANCEL)
                 ]
+            )
+
+        # add delay start if supported
+        if self.has_erd_code(ErdCode.DISHWASHER_DELAY_START_MINUTES):
+            dishwasher_entities.append(
+                GeErdTimerNumber(self, ErdCode.DISHWASHER_DELAY_START_MINUTES, min_value=0, max_value=1440)
             )
 
         entities = base_entities + dishwasher_entities

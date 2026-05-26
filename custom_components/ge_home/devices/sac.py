@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeSacClimate, GeErdSensor, GeErdSwitch, ErdOnOffBoolConverter
+from ..entities import GeSacClimate, GeErdSensor, GeErdSwitch, GeErdSelect, ErdOnOffBoolConverter, TurboQuietModeOptionsConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +32,22 @@ class SacApi(ApplianceApi):
         if self.has_erd_code(ErdCode.SAC_AUTO_SWING_MODE):
             sac_entities.append(GeErdSwitch(self, ErdCode.SAC_AUTO_SWING_MODE, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:arrow-decision-auto", icon_off_override="mdi:arrow-decision-auto-outline", entity_category=EntityCategory.CONFIG))
 
+
+        if self.has_erd_code(ErdCode.AC_TURBO_QUIET_MODE):
+            available_modes = self.try_get_erd_value(ErdCode.AC_AVAILABLE_TURBO_QUIET_MODES)
+            sac_entities.append(
+                GeErdSelect(
+                    self,
+                    ErdCode.AC_TURBO_QUIET_STATUS,
+                    TurboQuietModeOptionsConverter(
+                        has_turbo=available_modes.has_turbo if available_modes else True,
+                        has_quiet=available_modes.has_quiet if available_modes else True,
+                    ),
+                    control_erd_code=ErdCode.AC_TURBO_QUIET_MODE,
+                    icon_override="mdi:fan-speed-2",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
 
         entities = base_entities + sac_entities
         return entities
