@@ -8,9 +8,11 @@ import asyncio
 import async_timeout
 
 from gehomesdk import (
-    GeAuthFailedError, 
-    GeNotAuthenticatedError, 
-    GeGeneralServerError, 
+    GeAuthFailedError,
+    GeAuthMfaRequiredError,
+    GeAuthTermsRequiredError,
+    GeNotAuthenticatedError,
+    GeGeneralServerError,
     async_get_oauth2_token,
     LOGIN_REGIONS
 )
@@ -21,7 +23,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, VALIDATE_DATA_TIMEOUT, CONFIG_FLOW_VERSION
-from .exceptions import HaAuthError, HaCannotConnect
+from .exceptions import HaAuthError, HaCannotConnect, HaMfaRequired, HaTermsRequired
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +77,12 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     except (asyncio.TimeoutError, aiohttp.ClientError) as err:
         _LOGGER.warning(f"Connection failure for user {username} in region {region}: {err}")
         raise HaCannotConnect("Connection failure")
+    except GeAuthMfaRequiredError:
+        _LOGGER.warning(f"MFA required for user {username} in region {region}")
+        raise HaMfaRequired("MFA required")
+    except GeAuthTermsRequiredError:
+        _LOGGER.warning(f"Terms acceptance required for user {username} in region {region}")
+        raise HaTermsRequired("Terms acceptance required")
     except (GeAuthFailedError, GeNotAuthenticatedError):
         _LOGGER.warning(f"Authentication failure for user {username} in region {region}")
         raise HaAuthError("Authentication failure")
@@ -98,6 +106,10 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
             return info, {}
+        except HaMfaRequired:
+            return None, {"base": "mfa_required"}
+        except HaTermsRequired:
+            return None, {"base": "terms_required"}
         except HaCannotConnect:
             return None, {"base": "cannot_connect"}
         except HaAuthError:

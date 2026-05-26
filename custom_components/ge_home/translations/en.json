@@ -20,6 +20,8 @@
     "error": {
       "cannot_connect": "Can't connect to SmartHQ",
       "invalid_auth": "Invalid authentication provided, please check credentials",
+      "mfa_required": "Multi-factor authentication is required; please complete MFA in the SmartHQ app and try again",
+      "terms_required": "Terms of service acceptance is required; please accept the terms in the SmartHQ app and try again",
       "unknown": "Unknown error occurred"
     },    
     "abort": {

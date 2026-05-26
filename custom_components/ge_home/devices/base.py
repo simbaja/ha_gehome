@@ -148,12 +148,52 @@ class ApplianceApi:
 
     def get_base_entities(self) -> List[Entity]:
         """Create base entities (i.e. common between all appliances)."""
-        from ..entities import GeErdSensor, GeErdSwitch
+        from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+        from ..entities import GeErdSensor, GeErdSwitch, GeErdPropertySensor
         entities = [
             GeErdSensor(self, ErdCode.CLOCK_TIME, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.SABBATH_MODE),
         ]
-        return entities        
+
+        # Resource monitoring sensors - available on supported appliances
+        # build_entities_list filters these against known_properties automatically
+        entities += [
+            GeErdSensor(self, ErdCode.RESOURCE_DEMAND_RESPONSE_STATE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_ENERGY,
+                uom_override="Wh",
+                device_class_override=SensorDeviceClass.ENERGY,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_COLD_WATER_LITERS,
+                uom_override="L",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_HOT_WATER_LITERS,
+                uom_override="L",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_GAS_CUBIC_FEET,
+                uom_override="ft³",
+                device_class_override=SensorDeviceClass.GAS,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+        ]
+
+        entities.append(
+            GeErdPropertySensor(
+                self,
+                ErdCode.RESOURCE_DSM_POWER_USAGE,
+                "instantaneous_power_w",
+                uom_override="W",
+                device_class_override=SensorDeviceClass.POWER,
+                state_class_override=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        )
+
+        return entities
 
     def build_entities_list(self) -> None:
         """Build the entities list, adding anything new."""

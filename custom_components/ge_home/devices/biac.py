@@ -28,8 +28,6 @@ class BiacApi(ApplianceApi):
             GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.AC_POWER_STATUS, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
             GeErdBinarySensor(self, ErdCode.AC_FILTER_STATUS, device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_STATE, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_POWER, uom_override="kW", entity_category=EntityCategory.DIAGNOSTIC),
         ]
 
         if self.has_erd_code(ErdCode.AC_TURBO_QUIET_MODE):
