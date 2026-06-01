@@ -6,6 +6,7 @@
 - Feature: Added DRY mode to HVAC options and mappings [#441]
 - Feature: Added GeWasherCycleButton to WasherDryerApi [#462]
 - Feature: Added DishDrawer User Setting wifi_enabled (read only) [#463]
+- Feature: Added native fan and light entities for range hoods
 - Change: Changed mode names for Haier water heaters [#442]
 - Change: Made LAUNDRY_MACHINE_STATE diagnostic on all appliances [#447]
 - Bugfix: Cooktop Sensor fixes [#440, #454]
