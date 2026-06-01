@@ -14,6 +14,8 @@ from gehomesdk import (
 
 from .base import ApplianceApi
 from ..entities import (
+    GeHoodFan,
+    GeHoodLight,
     GeHoodLightLevelSelect, 
     GeHoodFanSpeedSelect, 
     GeErdTimerSensor, 
@@ -49,15 +51,27 @@ class HoodApi(ApplianceApi):
 
         #old-style
         if fan_availability is not None and fan_availability.is_available:
-            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_FAN_SPEED))
+            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_FAN_SPEED, enabled_default=False))
         if light_availability is not None and light_availability.is_available:
-            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_LIGHT_LEVEL))
+            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_LIGHT_LEVEL, enabled_default=False))
         
         #new-style
         if available_fan_speeds is not None and available_fan_speeds > 0 and actual_fan_speed is not None:
-            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_ACTUAL_FAN_SPEED, ErdCode.HOOD_REQUESTED_FAN_SPEED))
+            hood_entities.append(GeHoodFanSpeedSelect(self, ErdCode.HOOD_ACTUAL_FAN_SPEED, ErdCode.HOOD_REQUESTED_FAN_SPEED, enabled_default=False))
         if available_light_levels is not None and available_light_levels > 0 and actual_light_level is not None:
-            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_ACTUAL_LIGHT_LEVEL, ErdCode.HOOD_REQUESTED_LIGHT_LEVEL))
+            hood_entities.append(GeHoodLightLevelSelect(self, ErdCode.HOOD_ACTUAL_LIGHT_LEVEL, ErdCode.HOOD_REQUESTED_LIGHT_LEVEL, enabled_default=False))
+
+        #native fan entity for Home Assistant / HomeKit
+        if available_fan_speeds is not None and available_fan_speeds > 0 and actual_fan_speed is not None:
+            hood_entities.append(GeHoodFan(self, ErdCode.HOOD_ACTUAL_FAN_SPEED, ErdCode.HOOD_REQUESTED_FAN_SPEED))
+        elif fan_availability is not None and fan_availability.is_available:
+            hood_entities.append(GeHoodFan(self, ErdCode.HOOD_FAN_SPEED))
+
+        #native light entity for Home Assistant / HomeKit
+        if available_light_levels is not None and available_light_levels > 0 and actual_light_level is not None:
+            hood_entities.append(GeHoodLight(self, ErdCode.HOOD_ACTUAL_LIGHT_LEVEL, ErdCode.HOOD_REQUESTED_LIGHT_LEVEL))
+        elif light_availability is not None and light_availability.is_available:
+            hood_entities.append(GeHoodLight(self, ErdCode.HOOD_LIGHT_LEVEL))
 
         #timer
         if timer_availability is not None:

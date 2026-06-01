@@ -1,4 +1,4 @@
-"""GE Home Select Entities"""
+"""GE Home Fan Entities"""
 import logging
 from collections.abc import Collection
 from typing import Callable
@@ -8,34 +8,32 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers import entity_registry as er
 
+from .entities import GeHoodFan
 from .const import DOMAIN
-from .entities import GeErdLight, GeHoodLight
 from .devices import ApplianceApi
 from .update_coordinator import GeHomeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
-):
-    """GE Home lights."""
-    _LOGGER.debug("Adding GE Home lights")
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable):
+    """GE Home fans"""
+    _LOGGER.debug('Adding GE "Fans"')
     coordinator: GeHomeUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    registry = er.async_get(hass)    
+    registry = er.async_get(hass)
 
     @callback
     def async_devices_discovered(apis: Collection[ApplianceApi]):
-        _LOGGER.debug(f"Found {len(apis):d} appliance APIs")
+        _LOGGER.debug(f'Found {len(apis):d} appliance APIs')
         entities = [
             entity
             for api in apis
             for entity in api.entities
-            if isinstance(entity, (GeErdLight, GeHoodLight))
+            if isinstance(entity, GeHoodFan)
             and entity.erd_code in api.appliance._property_cache
             if not registry.async_is_registered(entity.entity_id)
         ]
-        _LOGGER.debug(f"Found {len(entities):d} unregistered lights to register")
+        _LOGGER.debug(f'Found {len(entities):d} unregistered fans to register')
         async_add_entities(entities)
 
     #if we're already initialized at this point, call device
@@ -43,7 +41,7 @@ async def async_setup_entry(
     #ready signal
     if coordinator.initialized:
         async_devices_discovered(coordinator.appliance_apis.values())
-    else:    
+    else:
         # add the ready signal and register the remove callback
         coordinator.add_signal_remove_callback(
             async_dispatcher_connect(hass, coordinator.signal_ready, async_devices_discovered))
