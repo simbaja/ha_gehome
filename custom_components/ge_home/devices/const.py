@@ -16,7 +16,8 @@ BRAND_FIRST_LETTER_MAP: dict[str, ErdBrand] = {
     "U": ErdBrand.UNKNOWN,  # also might be universal
 }
 
-BRAND_SPECIAL_PREFIXES: dict[str, int] = {
+BRAND_SPECIAL_PREFIXES: dict[str, int | ErdBrand] = {
+    "UVC": ErdBrand.GE,  # GE vent hoods
     "OPAL01": 6,  # Opal ice maker: brand letter at 7th position
     "XP": 1,      # XP Opal variant: brand letter at 2nd position
 }
