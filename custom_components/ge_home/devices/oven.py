@@ -25,6 +25,7 @@ from ..entities import (
     GeErdPropertySensor,
     GeErdPropertyBinarySensor,
     GeOven,
+    GeOvenErdTemperatureSensor,
     GeOvenLightLevelSelect,
     GeOvenWarmingStateSelect,
     UPPER_OVEN,
@@ -112,12 +113,12 @@ class OvenApi(ApplianceApi):
                     GeErdTimerSensor(
                         self, ErdCode.LOWER_OVEN_KITCHEN_TIMER, suggested_uom="h"
                     ),
-                    GeErdSensor(
+                    GeOvenErdTemperatureSensor(
                         self,
                         ErdCode.LOWER_OVEN_USER_TEMP_OFFSET,
                         entity_category=EntityCategory.DIAGNOSTIC,
                     ),
-                    GeErdSensor(
+                    GeOvenErdTemperatureSensor(
                         self,
                         ErdCode.LOWER_OVEN_DISPLAY_TEMPERATURE,
                         entity_category=EntityCategory.DIAGNOSTIC,
@@ -137,7 +138,7 @@ class OvenApi(ApplianceApi):
             )
             if has_lower_raw_temperature:
                 oven_entities.append(
-                    GeErdSensor(
+                    GeOvenErdTemperatureSensor(
                         self,
                         ErdCode.LOWER_OVEN_RAW_TEMPERATURE,
                         entity_category=EntityCategory.DIAGNOSTIC,
@@ -159,7 +160,7 @@ class OvenApi(ApplianceApi):
                 )
             if has_lower_probe_temperature:
                 oven_entities.append(
-                    GeErdSensor(
+                    GeOvenErdTemperatureSensor(
                         self,
                         ErdCode.LOWER_OVEN_PROBE_DISPLAY_TEMP,
                         entity_category=EntityCategory.DIAGNOSTIC,
@@ -201,7 +202,7 @@ class OvenApi(ApplianceApi):
                     ),
                     suggested_uom="h",
                 ),
-                GeErdSensor(
+                GeOvenErdTemperatureSensor(
                     self,
                     ErdCode.UPPER_OVEN_USER_TEMP_OFFSET,
                     self._single_name(
@@ -210,7 +211,7 @@ class OvenApi(ApplianceApi):
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
-                GeErdSensor(
+                GeOvenErdTemperatureSensor(
                     self,
                     ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE,
                     self._single_name(
@@ -238,7 +239,7 @@ class OvenApi(ApplianceApi):
         )
         if has_upper_raw_temperature:
             oven_entities.append(
-                GeErdSensor(
+                GeOvenErdTemperatureSensor(
                     self,
                     ErdCode.UPPER_OVEN_RAW_TEMPERATURE,
                     self._single_name(
@@ -275,7 +276,7 @@ class OvenApi(ApplianceApi):
             )
         if has_upper_probe_temperature:
             oven_entities.append(
-                GeErdSensor(
+                GeOvenErdTemperatureSensor(
                     self,
                     ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP,
                     self._single_name(
