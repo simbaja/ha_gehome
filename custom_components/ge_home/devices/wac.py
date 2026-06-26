@@ -18,6 +18,17 @@ class WacApi(ApplianceApi):
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
 
+        demand_response_state_erd = getattr(
+            ErdCode,
+            "WAC_DEMAND_RESPONSE_STATE",
+            getattr(ErdCode, "RESOURCE_DEMAND_RESPONSE_STATE", None),
+        )
+        demand_response_power_erd = getattr(
+            ErdCode,
+            "WAC_DEMAND_RESPONSE_POWER",
+            getattr(ErdCode, "RESOURCE_DEMAND_RESPONSE_POWER", None),
+        )
+
         wac_entities = [
             GeWacClimate(self),
             GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
@@ -26,9 +37,17 @@ class WacApi(ApplianceApi):
             GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSwitch(self, ErdCode.AC_POWER_STATUS, bool_converter=ErdOnOffBoolConverter(), icon_on_override="mdi:power-on", icon_off_override="mdi:power-off"),
             GeErdBinarySensor(self, ErdCode.AC_FILTER_STATUS, device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_STATE, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdSensor(self, ErdCode.WAC_DEMAND_RESPONSE_POWER, uom_override="kW", entity_category=EntityCategory.DIAGNOSTIC),
         ]
+
+        if demand_response_state_erd is not None:
+            wac_entities.append(
+                GeErdSensor(self, demand_response_state_erd, entity_category=EntityCategory.DIAGNOSTIC)
+            )
+        if demand_response_power_erd is not None:
+            wac_entities.append(
+                GeErdSensor(self, demand_response_power_erd, uom_override="kW", entity_category=EntityCategory.DIAGNOSTIC)
+            )
+
         entities = base_entities + wac_entities
         return entities
         
