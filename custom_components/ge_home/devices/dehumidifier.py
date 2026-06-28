@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
@@ -11,8 +12,7 @@ from gehomesdk import (
 from .base import ApplianceApi
 from ..entities import (
     GeErdSensor, 
-    GeErdSelect,
-    GeErdPropertySensor,
+    GeErdPropertyBinarySensor,
     GeErdSwitch, 
     ErdOnOffBoolConverter,
     GeDehumidifierFanSpeedSensor,
@@ -34,8 +34,8 @@ class DehumidifierApi(ApplianceApi):
             GeDehumidifierFanSpeedSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan"),
             GeErdSensor(self, ErdCode.DHUM_CURRENT_HUMIDITY, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.DHUM_TARGET_HUMIDITY, entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertySensor(self, ErdCode.DHUM_MAINTENANCE, "empty_bucket", device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertySensor(self, ErdCode.DHUM_MAINTENANCE, "clean_filter", device_class_override="problem", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdPropertyBinarySensor(self, ErdCode.DHUM_MAINTENANCE, "empty_bucket", device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdPropertyBinarySensor(self, ErdCode.DHUM_MAINTENANCE, "clean_filter", device_class_override=BinarySensorDeviceClass.PROBLEM, entity_category=EntityCategory.DIAGNOSTIC),
             GeDehumidifier(self)
         ]
 

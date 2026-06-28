@@ -1,6 +1,26 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2026.5.0
+
+- Feature: Added cooktop-specific entities (sensors and controls)
+- Feature: Added kitchen timer to cooktop as number entities (in minutes)
+- Feature: Added gas cooktop to known device mapping
+- Feature: Added quiet/turbo mode for AC-capable appliances [#397]
+- Feature: Added potential support for dishwasher delay start on some models [#434]
+- Feature: Added cross-appliance resource usage sensors to all supported appliances (instantaneous power, cumulative energy, hot/cold water usage, gas usage) where reported by the appliance [#335,#492]
+- Change: Improved login error messages now specifically indicate when MFA or Terms of Service acceptance is required
+- Change: Refactored common cooktop logic to apply to both cooktop and oven devices
+- Change: Tightened typing for binary sensor and sensor device/state classes
+- Change: Removed AC-specific demand response sensors from WAC/BIAC (superseded by cross-appliance resource sensors)
+- Bugfix: Fixed dehumidifier sensors incorrectly typed (should be binary sensors)
+- Bugfix: Fixed typing issue in oven target_temperature
+- Bugfix: Avoid returning None for oven target_temperature [#457]
+- Bugfix: Allow eco mode access for non-heating split ACs [#474]
+- Bugfix: Fix oven off mode to use HA's STATE_OFF constant [#485]
+- Bugfix: Restore appliance availability on state update [#495]
+- Bugfix: Ignore non-printable serial numbers and fall back to MAC as unique device identifier [#502]
+
 ## 2026.2.0
 
 - Feature: Added DRY mode to HVAC options and mappings [#441]

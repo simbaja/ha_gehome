@@ -17,19 +17,22 @@ class SacHvacModeOptionsConverter(OptionsConverter):
 
     @property
     def options(self) -> List[str]:
-        modes = [HVACMode.COOL, HVACMode.FAN_ONLY]
+        modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.FAN_ONLY]
         if self._available_modes and self._available_modes.has_heat:
             modes.append(HVACMode.HEAT)
-            modes.append(HVACMode.AUTO)
         if self._available_modes and self._available_modes.has_dry:
             modes.append(HVACMode.DRY)
         return [i.value for i in modes]
     
     def from_option_string(self, value: str) -> Any:
         try:
-            hvac = HVACMode(value.lower())    
+            hvac = HVACMode(value.lower())
+            if self._available_modes and self._available_modes.has_heat:
+                auto_mode = ErdAcOperationMode.AUTO
+            else:
+                auto_mode = ErdAcOperationMode.ENERGY_SAVER
             return {
-                HVACMode.AUTO: ErdAcOperationMode.AUTO,
+                HVACMode.AUTO: auto_mode,
                 HVACMode.COOL: ErdAcOperationMode.COOL,
                 HVACMode.HEAT: ErdAcOperationMode.HEAT,
                 HVACMode.FAN_ONLY: ErdAcOperationMode.FAN_ONLY,

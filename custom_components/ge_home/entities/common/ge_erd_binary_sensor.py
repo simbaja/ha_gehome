@@ -19,7 +19,7 @@ class GeErdBinarySensor(GeErdEntity, BinarySensorEntity):
             erd_override: Optional[str] = None, 
             icon_on_override: Optional[str] = None, 
             icon_off_override: Optional[str] = None, 
-            device_class_override: Optional[str] = None,
+            device_class_override: Optional[BinarySensorDeviceClass] = None,
             entity_category: Optional[EntityCategory] = None
         ):
         super().__init__(api, erd_code, erd_override, icon_on_override, device_class_override, entity_category)

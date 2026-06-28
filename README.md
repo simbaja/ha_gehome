@@ -68,6 +68,7 @@ Once the HACS Integration of GE Home is completed:
 2. Click **Add Integration** blue button on the bottom-right of the page
 3. Locate the **GE Home (SmartHQ)** "Brand" (Integration)
 4. Open a new browser tab and navigate to <https://accounts.brillion.geappliances.com> where you can verify your username/password (helpful) but more importantly Accept the TermsOfUseAgreement (required!)
+   - If terms acceptance or multi-factor authentication (MFA) is required, a specific error message will guide you to complete those steps in the SmartHQ app before retrying.
 5. Click on the integration, and you will be prompted to enter a Username, Password and Location (US or EU)
 6. Enter the email address you used to register/connect your device as the Username
 7. Same with the password
