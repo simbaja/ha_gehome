@@ -96,14 +96,31 @@ class ApplianceApi:
         return self.mac_addr
 
     @cached_property
-    def brand(self) -> str:
+    def brand_id(self) -> ErdBrand:
+        """Resolve the appliance brand, inferring from the model number when
+        the BRAND ERD is absent or unknown."""
         b: ErdBrand | None = self.try_get_erd_value(ErdCode.BRAND)
 
         if b in (None, ErdBrand.UNKNOWN, ErdBrand.NOT_DEFINED):
             inferred = self._infer_brand_from_model(self.model_number)
             b = inferred or ErdBrand.GE
 
-        return ERD_BRAND_NAME_MAP.get(b, 'GE')
+        return b
+
+    @cached_property
+    def brand(self) -> str:
+        return ERD_BRAND_NAME_MAP.get(self.brand_id, 'GE')
+
+    @property
+    def is_fisher_paykel(self) -> bool:
+        """Whether this appliance is Fisher & Paykel branded.
+
+        F&P appliances differ from GE here: metric-market F&P models report
+        their raw ERD temperatures in Celsius, whereas GE appliances always
+        report Fahrenheit (and may report a METRIC unit while still sending
+        Fahrenheit).  Used to decide whether the device's TEMPERATURE_UNIT can
+        be trusted for temperature reporting."""
+        return self.brand_id in (ErdBrand.FISHER_PAYKEL, ErdBrand.HEIER_FPA)
     
     @cached_property
     def model_number(self) -> str:
