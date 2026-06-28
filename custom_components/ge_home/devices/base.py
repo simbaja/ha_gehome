@@ -249,8 +249,13 @@ class ApplianceApi:
         m = model.strip().upper()
 
         # Try special prefixes
-        for prefix, idx in BRAND_SPECIAL_PREFIXES.items():
+        for prefix, brand_or_idx in BRAND_SPECIAL_PREFIXES.items():
             if m.startswith(prefix):
+                if isinstance(brand_or_idx, ErdBrand):
+                    _LOGGER.debug(f"Model '{m}': inferred brand '{brand_or_idx.name}' from prefix '{prefix}'")
+                    return brand_or_idx
+
+                idx = brand_or_idx
                 if len(m) > idx:
                     brand_letter = m[idx]
                     brand = BRAND_FIRST_LETTER_MAP.get(brand_letter)

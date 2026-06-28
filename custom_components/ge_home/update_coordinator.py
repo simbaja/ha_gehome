@@ -43,6 +43,7 @@ PLATFORMS = [
     "water_heater", 
     "select", 
     "climate", 
+    "fan",
     "light", 
     "button", 
     "number",

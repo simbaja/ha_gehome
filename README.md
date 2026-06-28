@@ -44,6 +44,12 @@ A/C Controls:
 
 ![A/C controls](https://raw.githubusercontent.com/simbaja/ha_components/master/img/ac_controls.png)
 
+## Range Hood HomeKit Controls
+
+Range hoods expose native `fan` and `light` entities when the appliance reports hood fan speed and light level controls. These entities are intended to work better with Home Assistant dashboards, voice assistants, and the HomeKit Bridge than the lower-level select entities. Hood fans expose low, medium, and high as regular fan speeds; boost is exposed as a preset mode when available.
+
+The existing hood fan speed and light level select entities remain available for compatibility, but are disabled by default for new entity registry entries. Re-enable them from the entity settings if you use them in dashboards, scripts, or automations. For the best HomeKit experience, expose the `fan` and `light` hood entities to the HomeKit Bridge and exclude any helper switches or select entities that were previously used to represent individual hood modes.
+
 ## Installation (Manual)
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
