@@ -2,28 +2,23 @@ import logging
 from typing import List
 
 from homeassistant.const import EntityCategory
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
     ErdCode,
-    ErdDataType,
     ErdApplianceType,
     OvenConfiguration,
-    ErdCooktopConfig,
-    CooktopStatus,
     ErdOvenLightLevel,
     ErdOvenLightLevelAvailability,
     ErdOvenWarmingState,
 )
 
 from .base import ApplianceApi
+from .cooktop import build_cooktop_entities
 from ..entities import (
     GeErdSensor,
     GeErdTimerSensor,
+    GeErdTimerNumber,
     GeErdBinarySensor,
-    GeCooktopStatusBinarySensor,
-    GeErdPropertySensor,
-    GeErdPropertyBinarySensor,
     GeOven,
     GeOvenLightLevelSelect,
     GeOvenWarmingStateSelect,
@@ -44,12 +39,6 @@ class OvenApi(ApplianceApi):
         oven_config: OvenConfiguration = self.appliance.get_erd_value(
             ErdCode.OVEN_CONFIGURATION
         )
-
-        cooktop_config = ErdCooktopConfig.NONE
-        if self.has_erd_code(ErdCode.COOKTOP_CONFIG):
-            cooktop_config: ErdCooktopConfig = self.appliance.get_erd_value(
-                ErdCode.COOKTOP_CONFIG
-            )
 
         has_upper_raw_temperature = self.has_erd_code(
             ErdCode.UPPER_OVEN_RAW_TEMPERATURE
@@ -89,9 +78,7 @@ class OvenApi(ApplianceApi):
         )
 
         _LOGGER.debug(f"Oven Config: {oven_config}")
-        _LOGGER.debug(f"Cooktop Config: {cooktop_config}")
         oven_entities = []
-        cooktop_entities = []
 
         if oven_config.has_lower_oven:
             oven_entities.extend(
@@ -112,6 +99,7 @@ class OvenApi(ApplianceApi):
                     GeErdTimerSensor(
                         self, ErdCode.LOWER_OVEN_KITCHEN_TIMER, suggested_uom="h"
                     ),
+                    GeErdTimerNumber(self, ErdCode.LOWER_OVEN_KITCHEN_TIMER),
                     GeErdSensor(
                         self,
                         ErdCode.LOWER_OVEN_USER_TEMP_OFFSET,
@@ -200,6 +188,14 @@ class OvenApi(ApplianceApi):
                         ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven
                     ),
                     suggested_uom="h",
+                ),
+                GeErdTimerNumber(
+                    self,
+                    ErdCode.UPPER_OVEN_KITCHEN_TIMER,
+                    self._single_name(
+                        ErdCode.UPPER_OVEN_KITCHEN_TIMER, 
+                        not oven_config.has_lower_oven
+                    ),
                 ),
                 GeErdSensor(
                     self,
@@ -295,51 +291,7 @@ class OvenApi(ApplianceApi):
                 )
             )
 
-        if cooktop_config == ErdCooktopConfig.PRESENT:
-            # attempt to get cooktop status, preferring extended data when present
-            cooktop_status_erd = ErdCode.COOKTOP_STATUS_EXT
-            cooktop_status: CooktopStatus | None = self.try_get_erd_value(
-                ErdCode.COOKTOP_STATUS_EXT
-            )
-
-            # if we didn't get it, fall back to the legacy status code
-            if cooktop_status is None:
-                cooktop_status_erd = ErdCode.COOKTOP_STATUS
-                cooktop_status = self.try_get_erd_value(ErdCode.COOKTOP_STATUS)
-
-            # if we got a status through either mechanism, we can add the entities
-            if cooktop_status is not None:
-                cooktop_entities.append(
-                    GeCooktopStatusBinarySensor(self, cooktop_status_erd)
-                )
-
-                for k, v in cooktop_status.burners.items():
-                    if v.exists:
-                        prop = self._camel_to_snake(k)
-                        cooktop_entities.append(
-                            GeErdPropertyBinarySensor(
-                                self, cooktop_status_erd, prop + ".on"
-                            )
-                        )
-                        cooktop_entities.append(
-                            GeErdPropertyBinarySensor(
-                                self,
-                                cooktop_status_erd,
-                                prop + ".synchronized",
-                                entity_category=EntityCategory.DIAGNOSTIC,
-                            )
-                        )
-                        if not v.on_off_only:
-                            cooktop_entities.append(
-                                GeErdPropertySensor(
-                                    self,
-                                    cooktop_status_erd,
-                                    prop + ".power_pct",
-                                    icon_override="mdi:fire",
-                                    device_class_override=SensorDeviceClass.POWER_FACTOR,
-                                    data_type_override=ErdDataType.INT,
-                                )
-                            )
+        cooktop_entities = build_cooktop_entities(self)
 
         return base_entities + oven_entities + cooktop_entities
 
@@ -350,9 +302,6 @@ class OvenApi(ApplianceApi):
             name = name.replace(UPPER_OVEN + "_", "")
 
         return name.replace("_", " ").title()
-
-    def _camel_to_snake(self, s):
-        return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
     def _temperature_code(self, has_raw: bool):
         return "RAW_TEMPERATURE" if has_raw else "DISPLAY_TEMPERATURE"

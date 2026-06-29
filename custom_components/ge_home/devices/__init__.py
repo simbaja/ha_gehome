@@ -37,6 +37,7 @@ def get_appliance_api_type(appliance_type: ErdApplianceType) -> Type:
     known_types = {
         ErdApplianceType.OVEN: OvenApi,
         ErdApplianceType.COOKTOP: CooktopApi,
+        ErdApplianceType.GAS_COOKTOP: CooktopApi,
         ErdApplianceType.ELECTRIC_COOKTOP: CooktopApi,
         ErdApplianceType.FRIDGE: FridgeApi,
         ErdApplianceType.BEVERAGE_CENTER: FridgeApi,

@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk.erd import ErdCode, ErdApplianceType, ErdDataType
@@ -42,7 +43,7 @@ class AdvantiumApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "temperature", icon_override="mdi:thermometer", data_type_override=ErdDataType.INT, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "power_level", icon_override="mdi:gauge", data_type_override=ErdDataType.INT, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "warm_status", icon_override="mdi:radiator", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertyBinarySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "door_status", device_class_override="door", entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdPropertyBinarySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "door_status", device_class_override=BinarySensorDeviceClass.DOOR, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertyBinarySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "sensing_active", icon_on_override="mdi:flash-auto", icon_off_override="mdi:flash-off", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertyBinarySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "cooling_fan_status", icon_on_override="mdi:fan", icon_off_override="mdi:fan-off", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertyBinarySensor(self, ErdCode.ADVANTIUM_COOK_STATUS, "oven_light_status", icon_on_override="mdi:lightbulb-on", icon_off_override="mdi:lightbulb-off", entity_category=EntityCategory.DIAGNOSTIC),

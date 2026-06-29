@@ -7,11 +7,13 @@ from .ge_cooktop_status_binary_sensor import GeCooktopStatusBinarySensor
 from .ge_erd_property_binary_sensor import GeErdPropertyBinarySensor
 from .ge_erd_sensor import GeErdSensor
 from .ge_erd_light import GeErdLight
+from .ge_erd_fan import GeErdFan
 from .ge_erd_timer_sensor import GeErdTimerSensor
 from .ge_erd_property_sensor import GeErdPropertySensor
 from .ge_erd_switch import GeErdSwitch
 from .ge_erd_button import GeErdButton
 from .ge_erd_number import GeErdNumber
+from .ge_erd_timer_number import GeErdTimerNumber
 from .ge_water_heater import GeAbstractWaterHeater
 from .ge_erd_select import GeErdSelect
 from .ge_climate import GeClimate

@@ -1,12 +1,13 @@
 import bidict
 
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
+from homeassistant.const import STATE_OFF
 from gehomesdk import ErdOvenCookMode
 
 SUPPORT_NONE = WaterHeaterEntityFeature(0)
 GE_OVEN_SUPPORT = (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
-OP_MODE_OFF = "Off"
+OP_MODE_OFF = STATE_OFF
 OP_MODE_BAKE = "Bake"
 OP_MODE_CONVMULTIBAKE = "Conv. Multi-Bake"
 OP_MODE_CONVBAKE = "Convection Bake"
@@ -23,6 +24,7 @@ OP_MODE_PROOF = "Proof"
 OP_MODE_WARM = "Warm"
 
 OP_MODE_AIRFRY = "Air Fry"
+OP_MODE_VENT_BAKE = "Vent Bake"
 
 UPPER_OVEN = "UPPER_OVEN"
 LOWER_OVEN = "LOWER_OVEN"
@@ -42,6 +44,7 @@ COOK_MODE_OP_MAP = bidict.bidict({
     ErdOvenCookMode.BAKED_GOODS: OP_MODE_BAKED_GOODS,
     ErdOvenCookMode.FROZEN_PIZZA_MULTI: OP_MODE_FROZEN_PIZZA_MULTI,
     ErdOvenCookMode.FROZEN_SNACKS_MULTI: OP_MODE_FROZEN_SNACKS_MULTI,
-    ErdOvenCookMode.AIRFRY: OP_MODE_AIRFRY
+    ErdOvenCookMode.AIRFRY: OP_MODE_AIRFRY,
+    ErdOvenCookMode.VENT_BAKE: OP_MODE_VENT_BAKE
 })
 

@@ -58,10 +58,9 @@ class GeOven(GeAbstractWaterHeater):
 
     @cached_property
     def temperature_unit(self):
-        # measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
-        # if measurement_system == ErdMeasurementUnits.METRIC:
-        #     return UnitOfTemperature.CELSIUS
-        # APIs always return Fahrenheit, hardcode
+        # GE appliances always report temperatures in Fahrenheit regardless of
+        # the configured measurement system (and may report METRIC while still
+        # sending Fahrenheit), so we hard-code Fahrenheit for them.
         return UnitOfTemperature.FAHRENHEIT
 
     @property
@@ -136,7 +135,7 @@ class GeOven(GeAbstractWaterHeater):
         cook_mode = self.current_cook_setting
         if cook_mode.temperature:
             return cook_mode.temperature
-        return None
+        return 0
 
     @property
     def min_temp(self) -> int:

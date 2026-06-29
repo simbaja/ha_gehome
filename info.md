@@ -76,6 +76,13 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
+- Refactored common cooktop logic to apply to both cooktop and oven devices
+- Tightened typing for binary sensor and sensor device/state classes
+- Improved login error messages now specifically indicate when MFA or Terms of Service acceptance is required
+- Removed AC-specific demand response sensors from WAC/BIAC (now provided by the cross-appliance resource sensors)
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
 - Changed mode names for Haier water heaters [#442]
 - Made LAUNDRY_MACHINE_STATE diagnostic on all appliances [#447]
@@ -99,6 +106,16 @@ A/C Controls:
 {% endif %}
 
 #### Features
+
+{% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
+- Added hood fan and light entities [#507]
+- Added cooktop-specific entities (sensors and controls)
+- Added kitchen timer to cooktop as number entities (in minutes)
+- Added gas cooktop to known device mapping
+- Added quiet/turbo mode for AC-capable appliances [#397]
+- Added potential support for dishwasher delay start on some models [#434]
+- Added cross-appliance resource usage sensors to all supported appliances (instantaneous power, cumulative energy, hot/cold water, gas usage) where the appliance reports them [#335,#492]
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
 - Added DRY mode to HVAC options and mappings [#441]
@@ -194,6 +211,16 @@ A/C Controls:
 {% endif %}
 
 #### Bugfixes
+
+{% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
+- Fixed dehumidifier sensors incorrectly typed (should be binary sensors)
+- Fixed typing issue in oven target_temperature
+- Avoid returning None for oven target_temperature [#457]
+- Allow eco mode access for non-heating split ACs [#474]
+- Fix oven off mode to use HA's STATE_OFF constant [#485]
+- Restore appliance availability on state update [#495]
+- Ignore non-printable serial numbers and fall back to MAC as unique device identifier [#502]
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.2.0'.split('.') | map('int') %}
 - Cooktop Sensor fixes [#440, #454]

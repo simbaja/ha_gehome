@@ -2,6 +2,7 @@ from propcache.api import cached_property
 from typing import Optional
 import magicattr
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 from gehomesdk import ErdCodeType, ErdDataType
 
@@ -18,8 +19,8 @@ class GeErdPropertySensor(GeErdSensor):
         erd_property: str, 
         erd_override: Optional[str] = None, 
         icon_override: Optional[str] = None, 
-        device_class_override: Optional[str] = None, 
-        state_class_override: Optional[str] = None, 
+        device_class_override: Optional[SensorDeviceClass] = None, 
+        state_class_override: Optional[SensorStateClass] = None, 
         uom_override: Optional[str] = None, 
         data_type_override: Optional[ErdDataType] = None,
         entity_category: Optional[EntityCategory] = None
