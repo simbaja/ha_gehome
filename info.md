@@ -76,7 +76,8 @@ A/C Controls:
 
 #### Changes
 
-{% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
+{% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
+- Enabled metric units for F&P oven temperatures [#509]
 - Refactored common cooktop logic to apply to both cooktop and oven devices
 - Tightened typing for binary sensor and sensor device/state classes
 - Improved login error messages now specifically indicate when MFA or Terms of Service acceptance is required
@@ -107,7 +108,8 @@ A/C Controls:
 
 #### Features
 
-{% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
+{% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
+- Added hood fan and light entities [#507]
 - Added cooktop-specific entities (sensors and controls)
 - Added kitchen timer to cooktop as number entities (in minutes)
 - Added gas cooktop to known device mapping
