@@ -14,7 +14,6 @@
 - Change: Refactored common cooktop logic to apply to both cooktop and oven devices
 - Change: Tightened typing for binary sensor and sensor device/state classes
 - Change: Removed AC-specific demand response sensors from WAC/BIAC (superseded by cross-appliance resource sensors)
-- Change: Enabled metric units for F&P oven temperatures [#509]
 - Bugfix: Fixed dehumidifier sensors incorrectly typed (should be binary sensors)
 - Bugfix: Fixed typing issue in oven target_temperature
 - Bugfix: Avoid returning None for oven target_temperature [#457]

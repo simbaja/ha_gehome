@@ -60,17 +60,7 @@ class GeOven(GeAbstractWaterHeater):
     def temperature_unit(self):
         # GE appliances always report temperatures in Fahrenheit regardless of
         # the configured measurement system (and may report METRIC while still
-        # sending Fahrenheit), so we hard-code Fahrenheit for them.  Fisher &
-        # Paykel ovens sold in metric markets are the exception: they report
-        # their raw ERD temperatures in Celsius, so for those we honour the
-        # device's measurement system to avoid Home Assistant double-converting.
-        if self.api.is_fisher_paykel:
-            try:
-                measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
-            except KeyError:
-                measurement_system = None
-            if measurement_system == ErdMeasurementUnits.METRIC:
-                return UnitOfTemperature.CELSIUS
+        # sending Fahrenheit), so we hard-code Fahrenheit for them.
         return UnitOfTemperature.FAHRENHEIT
 
     @property
