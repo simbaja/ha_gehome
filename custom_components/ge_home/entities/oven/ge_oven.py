@@ -79,15 +79,20 @@ class GeOven(GeAbstractWaterHeater):
 
     @property
     def current_temperature(self) -> int | None: # type: ignore
-        #DISPLAY_TEMPERATURE appears to be out of line with what's
-        #actually going on in the oven, RAW_TEMPERATURE seems to be
-        #accurate. However, it appears some devices don't have
-        #the raw temperature.  So, we'll allow an override to handle
-        #that situation (see constructor)
-        #current_temp = self.get_erd_value("DISPLAY_TEMPERATURE")
-        #if current_temp:
-        #    return current_temp
-        return self.get_erd_value(self._temperature_erd_code)
+        #RAW_TEMPERATURE tracks the cavity more accurately than
+        #DISPLAY_TEMPERATURE, so it's preferred when the appliance has it
+        #(see constructor).  However, some ovens advertise the raw ERD but
+        #never populate it (it stays 0); in that case fall back to
+        #DISPLAY_TEMPERATURE so current_temperature isn't stuck at 0.
+        current_temp = self.get_erd_value(self._temperature_erd_code)
+        if not current_temp and self._temperature_erd_code != "DISPLAY_TEMPERATURE":
+            if self.api.has_erd_code(self.get_erd_code("DISPLAY_TEMPERATURE")):
+                current_temp = self.get_erd_value("DISPLAY_TEMPERATURE")
+        # Kept numeric (not None) for the same reason as target_temperature
+        # (#457): consumers float() this value. When there is no reading, fall
+        # back to the metric-aware idle placeholder so it shows 0 in the user's
+        # unit rather than -17.8C (0F) for metric users.
+        return current_temp or self._idle_temperature_placeholder
 
     @property
     def current_operation(self) -> str | None: # type: ignore
@@ -130,12 +135,35 @@ class GeOven(GeAbstractWaterHeater):
         return self.appliance.get_erd_value(erd_code)
 
     @property
+    def _idle_temperature_placeholder(self) -> int:
+        """Numeric placeholder for when the oven reports no reading/setpoint.
+
+        target_temperature and current_temperature must stay numeric, never
+        None, or downstream consumers that float() them crash (e.g. Google
+        Assistant device-state serialization, #457).
+
+        The oven transmits temperatures in Fahrenheit and Home Assistant
+        converts to the user's unit, so a raw 0 renders as -17.8C (0F) for
+        metric users. Return the Fahrenheit value that renders as 0 in the
+        user's configured unit instead: 32F = 0C for a metric locale, 0F for
+        an imperial one. This keeps an idle oven showing a clean 0 in the
+        user's own unit while staying a real (float-able) number.
+        """
+        if self.api.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return 32
+        return 0
+
+    @property
     def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         cook_mode = self.current_cook_setting
         if cook_mode.temperature:
             return cook_mode.temperature
-        return 0
+        # No active setpoint (oven off). Must stay numeric, not None:
+        # downstream consumers such as Google Assistant float() this value and
+        # crash on None (#457). Use the metric-aware idle placeholder so it
+        # shows 0 in the user's unit rather than -17.8C (0F) for metric users.
+        return self._idle_temperature_placeholder
 
     @property
     def min_temp(self) -> int:
@@ -189,6 +217,22 @@ class GeOven(GeAbstractWaterHeater):
         erd_code = self.get_erd_code(suffix)
         return self.appliance.get_erd_value(erd_code)
 
+    def _attr_temperature(self, suffix: str):
+        """Convert an oven temperature ERD (Fahrenheit) to the user's unit for
+        the state attributes, treating 0 as "no reading".
+
+        Home Assistant unit-converts the numeric current/target fields, but
+        attribute values are passed through verbatim, so a raw Fahrenheit
+        number (e.g. 167) would otherwise sit unconverted next to the Celsius
+        fields. Convert here, mirroring the diagnostic temperature sensors.
+        """
+        value = self.get_erd_value(suffix)
+        if not value:
+            return None
+        if self.api.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return round((value - 32) * 5 / 9, 1)
+        return value
+
     @property
     def display_state(self) -> Optional[str]:
         erd_code = self.get_erd_code("CURRENT_STATE")
@@ -203,12 +247,12 @@ class GeOven(GeAbstractWaterHeater):
         data = {
             "display_state": self.display_state,
             "probe_present": probe_present,
-            "display_temperature": self.get_erd_value("DISPLAY_TEMPERATURE")
+            "display_temperature": self._attr_temperature("DISPLAY_TEMPERATURE"),
         }
         if self.api.has_erd_code(self.get_erd_code("RAW_TEMPERATURE")):
-            data["raw_temperature"] = self.get_erd_value("RAW_TEMPERATURE")
+            data["raw_temperature"] = self._attr_temperature("RAW_TEMPERATURE")
         if probe_present:
-            data["probe_temperature"] = self.get_erd_value("PROBE_DISPLAY_TEMP")
+            data["probe_temperature"] = self._attr_temperature("PROBE_DISPLAY_TEMP")
 
         elapsed_time = None
         cook_time_remaining = None
