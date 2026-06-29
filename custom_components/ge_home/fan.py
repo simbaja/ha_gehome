@@ -1,22 +1,22 @@
 """GE Home Fan Entities"""
 import logging
 from collections.abc import Collection
-from typing import Callable
+from typing import Callable, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers import entity_registry as er
 
-from .entities import GeHoodFan
 from .const import DOMAIN
 from .devices import ApplianceApi
+from .entities import GeErdFan
 from .update_coordinator import GeHomeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable[..., Any]):
     """GE Home fans"""
     _LOGGER.debug('Adding GE "Fans"')
     coordinator: GeHomeUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             entity
             for api in apis
             for entity in api.entities
-            if isinstance(entity, GeHoodFan)
+            if isinstance(entity, GeErdFan)
             and entity.erd_code in api.appliance._property_cache
             if not registry.async_is_registered(entity.entity_id)
         ]

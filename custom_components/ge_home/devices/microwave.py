@@ -36,7 +36,7 @@ class MicrowaveApi(ApplianceApi):
         fan_availability: ErdHoodFanSpeedAvailability | None = self.try_get_erd_value(ErdCode.HOOD_FAN_SPEED_AVAILABILITY)
         light_availability: ErdHoodLightLevelAvailability | None = self.try_get_erd_value(ErdCode.HOOD_LIGHT_LEVEL_AVAILABILITY)
 
-        mwave_entities = [
+        mwave_entities: List[Entity] = [
             GeErdBinarySensor(self, ErdCode.MICROWAVE_REMOTE_ENABLE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.MICROWAVE_STATE, "status", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertyBinarySensor(self, ErdCode.MICROWAVE_STATE, "door_status", device_class_override=BinarySensorDeviceClass.DOOR, entity_category=EntityCategory.DIAGNOSTIC),
