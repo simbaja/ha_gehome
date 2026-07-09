@@ -6,6 +6,11 @@ EVENT_ALL_APPLIANCES_READY = 'all_appliances_ready'
 CONNECTION_NOTIFICATION_ID = "ge_home_connection"
 CONFIG_FLOW_VERSION = 3
 
+# Stored in the config entry after an MFA (or normal) login so reconnects can
+# authenticate via the OAuth refresh token instead of re-running the password
+# login (which would re-trigger the MFA email challenge on every reconnect).
+CONF_REFRESH_TOKEN = "refresh_token"
+
 HA_REFRESH_INTERVAL = 60
 STATE_UPDATE_INTERVAL = 30
 CLIENT_START_TIMEOUT = 30

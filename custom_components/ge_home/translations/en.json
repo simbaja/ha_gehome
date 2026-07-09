@@ -3,23 +3,50 @@
   "config": {
     "step": {
       "user": {
+        "title": "Sign in to SmartHQ",
+        "description": "Enter the SmartHQ (GE Appliances) account you use in the SmartHQ mobile app.\n\nIf your account has two-factor authentication (2FA) turned on, a verification code will be emailed to you and requested on the next screen \u2014 so keep your email handy.",
         "data": {
-          "username": "Username",
+          "username": "Email address",
           "password": "Password",
           "region": "Region"
+        },
+        "data_description": {
+          "username": "The email address for your SmartHQ account.",
+          "password": "Your SmartHQ account password (this is not your Home Assistant password).",
+          "region": "Choose US for North America or EU for Europe."
         }
       },
       "reauth": {
+        "title": "Reconnect SmartHQ",
+        "description": "Home Assistant can no longer sign in to SmartHQ, so your appliances are unavailable. Re-enter your password below to reconnect.\n\nIf two-factor authentication (2FA) is turned on, a verification code will be emailed to you and requested on the next screen. After you finish, Home Assistant stays signed in and won't ask for a code again unless the login stops working.",
         "data": {
-          "username": "Username",
+          "username": "Email address",
           "password": "Password",
           "region": "Region"
+        },
+        "data_description": {
+          "username": "The email address for your SmartHQ account.",
+          "password": "Your SmartHQ account password (this is not your Home Assistant password).",
+          "region": "Choose US for North America or EU for Europe."
+        }
+      },
+      "mfa": {
+        "title": "Enter your verification code",
+        "description": "SmartHQ emailed a verification code to the address on your account. Enter it below to finish signing in.\n\nThe code expires after a few minutes. If it expired or never arrived, leave the code blank, tick **Resend code**, and submit to get a new one.",
+        "data": {
+          "mfa_code": "Verification code",
+          "resend_code": "Resend code"
+        },
+        "data_description": {
+          "mfa_code": "The one-time code from the SmartHQ email.",
+          "resend_code": "Leave the code blank and tick this to email a fresh code."
         }
       }
     },
     "error": {
       "cannot_connect": "Can't connect to SmartHQ",
       "invalid_auth": "Invalid authentication provided, please check credentials",
+      "invalid_mfa_code": "Invalid or expired verification code, please try again",
       "mfa_required": "Multi-factor authentication is required; please complete MFA in the SmartHQ app and try again",
       "terms_required": "Terms of service acceptance is required; please accept the terms in the SmartHQ app and try again",
       "unknown": "Unknown error occurred"

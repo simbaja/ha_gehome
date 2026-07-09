@@ -63,6 +63,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._region = config_entry.data[CONF_REGION]
+        # Present for MFA (and now all newly-configured) accounts. When set, we
+        # authenticate via the OAuth refresh token instead of the password login.
+        self._refresh_token: str | None = config_entry.data.get(CONF_REFRESH_TOKEN)
         self._appliance_apis: Dict[str, ApplianceApi] = {}
         self._signal_remove_callbacks: List[Callable] = []
         self._got_roster = False
@@ -230,9 +233,21 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         # Create new client and start it
         try:
-            self._client = self._create_ge_client(event_loop=self.hass.loop)
+            client = self._create_ge_client(event_loop=self.hass.loop)
             session = async_get_clientsession(self.hass)
-            await self._client.async_get_credentials(session)
+            if self._refresh_token:
+                # Authenticate via the stored refresh token so we never re-run
+                # the password login (which re-triggers the MFA email challenge
+                # on every reconnect). ponytail: gehomesdk 2026.5.4 has no public
+                # seeder, so we set the session/token directly; upgrade path is a
+                # constructor/seed API upstream.
+                client._session = session
+                client._refresh_token = self._refresh_token
+                await client.async_do_refresh_login_flow()
+                self._persist_refresh_token(getattr(client, "_refresh_token", None))
+            else:
+                await client.async_get_credentials(session)
+            self._client = client
         except Exception as err:
             _LOGGER.error(f"could not start the client: {err}")
             self._client = None
@@ -242,9 +257,26 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self.hass.loop.create_task(self._client.async_run_client())
         _LOGGER.debug("Scheduled the client for execution.")
 
+    def _persist_refresh_token(self, token: Optional[str]) -> None:
+        """Save a rotated refresh token back to the config entry."""
+        if not token or token == self._refresh_token:
+            return
+        _LOGGER.debug("Persisting rotated GE Home refresh token")
+        self._refresh_token = token
+        data = dict(self._config_entry.data)
+        data[CONF_REFRESH_TOKEN] = token
+        self.hass.config_entries.async_update_entry(self._config_entry, data=data)
+
     async def _async_stop_client(self):
         """ Teardown the client if it exists """
         if self._client:
+            # The SDK rotates the refresh token during its own internal reconnects;
+            # capture the latest value before we discard the client.
+            if self._refresh_token:
+                try:
+                    self._persist_refresh_token(getattr(self._client, "_refresh_token", None))
+                except Exception:
+                    _LOGGER.debug("Could not persist rotated refresh token", exc_info=True)
             try:
                 self._client.clear_event_handlers()
                 await self._client.disconnect()
@@ -325,7 +357,14 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                 try:
                     await self._async_start_client()
                 except (GeNotAuthenticatedError, GeAuthFailedError):
+                    # Refresh token is no longer valid (revoked / password change /
+                    # MFA re-required). Surface HA's reauth flow so the user can
+                    # re-authenticate (and complete MFA) instead of silently retrying.
                     self._show_persistent_notification("Authentication failure: please re-authenticate the GE Home integration.")
+                    try:
+                        self._config_entry.async_start_reauth(self.hass)
+                    except Exception:
+                        _LOGGER.debug("Could not start reauth flow", exc_info=True)
                     return
                 except Exception as err:
                     _LOGGER.warning(f"Reconnect attempt failed: {err}")
