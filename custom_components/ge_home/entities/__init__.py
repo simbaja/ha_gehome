@@ -12,3 +12,4 @@ from .opal_ice_maker import *
 from .ccm import *
 from .dehumidifier import *
 from .laundry import *
+from .toaster_oven import *

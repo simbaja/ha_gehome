@@ -387,8 +387,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
-            _LOGGER.info(f"Could not find appliance {appliance.mac_addr} in known device list.")
-            return
+            _LOGGER.info(f"Adding appliance {appliance.mac_addr} from state update.")
+            api = self._maybe_add_appliance_api(appliance)
+            self._async_dispatch_appliances_ready([api])
         
         self._update_entity_state(api.entities)
 
@@ -424,7 +425,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         self.last_update_success = True
         self._ensure_appliance_available(appliance)
-        self._maybe_add_appliance_api(appliance)
+        api = self._maybe_add_appliance_api(appliance)
+        if self._init_done:
+            self._async_dispatch_appliances_ready([api])
         await self._async_maybe_trigger_all_ready()
         await self._start_periodic_updates()
 
@@ -465,7 +468,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         api_type = get_appliance_api_type(appliance.appliance_type or ErdApplianceType.UNKNOWN)
         return api_type(self, appliance)
 
-    def _maybe_add_appliance_api(self, appliance: GeAppliance) -> None:
+    def _maybe_add_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
         mac_addr = appliance.mac_addr
         if mac_addr not in self.appliance_apis:
             _LOGGER.debug(f"Adding appliance api for appliance {mac_addr} ({appliance.appliance_type})")
@@ -478,6 +481,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
             api.build_entities_list()
+        return api
+
+    def _async_dispatch_appliances_ready(self, apis: List[ApplianceApi]) -> None:
+        async_dispatcher_send(self.hass, self.signal_ready, apis)
 
     async def _async_maybe_trigger_all_ready(self, force: bool = False) -> None:
         """See if we're all ready to go, and if so, let the games begin."""
@@ -496,10 +503,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._all_initial_updates_received.set()
 
             await self._client.async_event(EVENT_ALL_APPLIANCES_READY, None)
-            async_dispatcher_send(
-                self.hass, 
-                self.signal_ready, 
-                list(self.appliance_apis.values()))
+            self._async_dispatch_appliances_ready(list(self.appliance_apis.values()))
             
     async def _async_remove_stale_devices(self):
         """Remove devices/entities from HA that no longer exist in the cloud."""

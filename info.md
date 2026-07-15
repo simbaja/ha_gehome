@@ -4,6 +4,7 @@ Integration for GE WiFi-enabled appliances into Home Assistant.  This integratio
 
 - Fridge
 - Oven
+- Toaster Oven
 - Dishwasher / F&P Dual Dishwasher
 - Laundry (Washer/Dryer)
 - Whole Home Water Filter
@@ -109,6 +110,7 @@ A/C Controls:
 
 {% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
 - Added hood fan and light entities [#507]
+- Added support for toaster oven appliances and toaster oven light control
 - Added cooktop-specific entities (sensors and controls)
 - Added kitchen timer to cooktop as number entities (in minutes)
 - Added gas cooktop to known device mapping

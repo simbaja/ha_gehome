@@ -36,8 +36,17 @@ class OvenApi(ApplianceApi):
 
     def get_all_entities(self) -> List[Entity]:
         base_entities = super().get_all_entities()
-        oven_config: OvenConfiguration = self.appliance.get_erd_value(
+        oven_config: OvenConfiguration | None = self.try_get_erd_value(
             ErdCode.OVEN_CONFIGURATION
+        )
+        has_lower_oven = bool(
+            (oven_config and oven_config.has_lower_oven)
+            or self.has_erd_code(ErdCode.LOWER_OVEN_COOK_MODE)
+        )
+        has_upper_oven = bool(
+            self.has_erd_code(ErdCode.UPPER_OVEN_COOK_MODE)
+            or self.has_erd_code(ErdCode.UPPER_OVEN_CURRENT_STATE)
+            or self.has_erd_code(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)
         )
 
         has_upper_raw_temperature = self.has_erd_code(
@@ -80,7 +89,7 @@ class OvenApi(ApplianceApi):
         _LOGGER.debug(f"Oven Config: {oven_config}")
         oven_entities = []
 
-        if oven_config.has_lower_oven:
+        if has_lower_oven:
             oven_entities.extend(
                 [
                     GeErdSensor(
@@ -115,14 +124,17 @@ class OvenApi(ApplianceApi):
                         ErdCode.LOWER_OVEN_REMOTE_ENABLED,
                         entity_category=EntityCategory.DIAGNOSTIC,
                     ),
+                ]
+            )
+            if self._has_oven_control_erds(LOWER_OVEN):
+                oven_entities.append(
                     GeOven(
                         self,
                         LOWER_OVEN,
                         True,
                         self._temperature_code(has_lower_raw_temperature),
-                    ),
-                ]
-            )
+                    )
+                )
             if has_lower_raw_temperature:
                 oven_entities.append(
                     GeErdSensor(
@@ -154,13 +166,13 @@ class OvenApi(ApplianceApi):
                     )
                 )
 
-        oven_entities.extend(
-            [
+        if has_upper_oven:
+            oven_entities.extend([
                 GeErdSensor(
                     self,
                     ErdCode.UPPER_OVEN_COOK_MODE,
                     self._single_name(
-                        ErdCode.UPPER_OVEN_COOK_MODE, not oven_config.has_lower_oven
+                        ErdCode.UPPER_OVEN_COOK_MODE, not has_lower_oven
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
@@ -168,7 +180,7 @@ class OvenApi(ApplianceApi):
                     self,
                     ErdCode.UPPER_OVEN_CURRENT_STATE,
                     self._single_name(
-                        ErdCode.UPPER_OVEN_CURRENT_STATE, not oven_config.has_lower_oven
+                        ErdCode.UPPER_OVEN_CURRENT_STATE, not has_lower_oven
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
@@ -177,7 +189,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_COOK_TIME_REMAINING,
                     self._single_name(
                         ErdCode.UPPER_OVEN_COOK_TIME_REMAINING,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     suggested_uom="h",
                 ),
@@ -185,7 +197,7 @@ class OvenApi(ApplianceApi):
                     self,
                     ErdCode.UPPER_OVEN_KITCHEN_TIMER,
                     self._single_name(
-                        ErdCode.UPPER_OVEN_KITCHEN_TIMER, not oven_config.has_lower_oven
+                        ErdCode.UPPER_OVEN_KITCHEN_TIMER, not has_lower_oven
                     ),
                     suggested_uom="h",
                 ),
@@ -194,7 +206,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_KITCHEN_TIMER,
                     self._single_name(
                         ErdCode.UPPER_OVEN_KITCHEN_TIMER, 
-                        not oven_config.has_lower_oven
+                        not has_lower_oven
                     ),
                 ),
                 GeErdSensor(
@@ -202,7 +214,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_USER_TEMP_OFFSET,
                     self._single_name(
                         ErdCode.UPPER_OVEN_USER_TEMP_OFFSET,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
@@ -211,7 +223,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE,
                     self._single_name(
                         ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
@@ -220,18 +232,20 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_REMOTE_ENABLED,
                     self._single_name(
                         ErdCode.UPPER_OVEN_REMOTE_ENABLED,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 ),
-                GeOven(
-                    self,
-                    UPPER_OVEN,
-                    False,
-                    self._temperature_code(has_upper_raw_temperature),
-                ),
-            ]
-        )
+            ])
+            if self._has_oven_control_erds(UPPER_OVEN):
+                oven_entities.append(
+                    GeOven(
+                        self,
+                        UPPER_OVEN,
+                        False,
+                        self._temperature_code(has_upper_raw_temperature),
+                    )
+                )
         if has_upper_raw_temperature:
             oven_entities.append(
                 GeErdSensor(
@@ -239,7 +253,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_RAW_TEMPERATURE,
                     self._single_name(
                         ErdCode.UPPER_OVEN_RAW_TEMPERATURE,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 )
@@ -254,7 +268,7 @@ class OvenApi(ApplianceApi):
                     self,
                     ErdCode.UPPER_OVEN_LIGHT,
                     self._single_name(
-                        ErdCode.UPPER_OVEN_LIGHT, not oven_config.has_lower_oven
+                        ErdCode.UPPER_OVEN_LIGHT, not has_lower_oven
                     ),
                 )
             )
@@ -265,7 +279,7 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE,
                     self._single_name(
                         ErdCode.UPPER_OVEN_WARMING_DRAWER_STATE,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                 )
             )
@@ -276,13 +290,13 @@ class OvenApi(ApplianceApi):
                     ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP,
                     self._single_name(
                         ErdCode.UPPER_OVEN_PROBE_DISPLAY_TEMP,
-                        not oven_config.has_lower_oven,
+                        not has_lower_oven,
                     ),
                     entity_category=EntityCategory.DIAGNOSTIC,
                 )
             )
 
-        if oven_config.has_warming_drawer and warm_drawer is not None:
+        if oven_config and oven_config.has_warming_drawer and warm_drawer is not None:
             oven_entities.append(
                 GeErdSensor(
                     self,
@@ -305,3 +319,11 @@ class OvenApi(ApplianceApi):
 
     def _temperature_code(self, has_raw: bool):
         return "RAW_TEMPERATURE" if has_raw else "DISPLAY_TEMPERATURE"
+
+    def _has_oven_control_erds(self, oven_select: str) -> bool:
+        return (
+            self.has_erd_code(ErdCode[f"{oven_select}_AVAILABLE_COOK_MODES"])
+            and self.has_erd_code(ErdCode[f"{oven_select}_COOK_MODE"])
+            and self.has_erd_code(ErdCode[f"{oven_select}_DISPLAY_TEMPERATURE"])
+            and self.has_erd_code(ErdCode.OVEN_MODE_MIN_MAX_TEMP)
+        )

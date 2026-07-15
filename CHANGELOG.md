@@ -4,6 +4,7 @@
 ## 2026.6.0
 
 - Feature: Added hood fan and light entities [#507]
+- Feature: Added support for toaster oven appliances and toaster oven light control
 - Feature: Added cooktop-specific entities (sensors and controls)
 - Feature: Added kitchen timer to cooktop as number entities (in minutes)
 - Feature: Added gas cooktop to known device mapping

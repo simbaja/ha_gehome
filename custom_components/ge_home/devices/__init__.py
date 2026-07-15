@@ -5,6 +5,7 @@ from gehomesdk.erd import ErdApplianceType
 
 from .base import ApplianceApi
 from .oven import OvenApi
+from .toaster_oven import ToasterOvenApi
 from .cooktop import CooktopApi
 from .fridge import FridgeApi
 from .dishwasher import DishwasherApi
@@ -50,6 +51,7 @@ def get_appliance_api_type(appliance_type: ErdApplianceType) -> Type:
         ErdApplianceType.WATER_SOFTENER: WaterSoftenerApi,
         ErdApplianceType.WATER_HEATER: WaterHeaterApi,
         ErdApplianceType.ADVANTIUM: AdvantiumApi,
+        ErdApplianceType.TOASTER_OVEN: ToasterOvenApi,
         ErdApplianceType.AIR_CONDITIONER: WacApi,
         ErdApplianceType.SPLIT_AIR_CONDITIONER: SacApi,
         ErdApplianceType.PORTABLE_AIR_CONDITIONER: PacApi,
