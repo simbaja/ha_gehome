@@ -22,11 +22,11 @@ class GeHoodFan(GeErdFan):
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} Hood Fan"
+        return f"{self.entity_identifier} Hood Fan"
 
     @cached_property
     def unique_id(self) -> Optional[str]:
-        return f"{DOMAIN}_{self.serial_or_mac}_hood_fan"
+        return f"{DOMAIN}_{self.entity_identifier}_hood_fan"
 
     @property
     def icon(self) -> str | None: 

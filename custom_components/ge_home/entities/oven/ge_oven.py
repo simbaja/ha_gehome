@@ -34,7 +34,7 @@ class GeOven(GeAbstractWaterHeater):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_{self.oven_select.lower()}"
+        return f"{DOMAIN}_{self.entity_identifier}_{self.oven_select.lower()}"
 
     @cached_property
     def name(self) -> str | None:
@@ -43,7 +43,7 @@ class GeOven(GeAbstractWaterHeater):
         else:
             oven_title = "Oven"
 
-        return f"{self.serial_or_mac} {oven_title}"
+        return f"{self.entity_identifier} {oven_title}"
 
     @property
     def icon(self) -> str | None:

@@ -21,11 +21,11 @@ class GeHoodLight(GeErdLight):
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} Hood Light"
+        return f"{self.entity_identifier} Hood Light"
 
     @cached_property
     def unique_id(self) -> Optional[str]:
-        return f"{DOMAIN}_{self.serial_or_mac}_hood_light"
+        return f"{DOMAIN}_{self.entity_identifier}_hood_light"
 
     @property
     def icon(self) -> str | None: 

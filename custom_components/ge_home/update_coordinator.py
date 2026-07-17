@@ -101,6 +101,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         return f"{DOMAIN}-ready-{self._config_entry.entry_id}"
 
     @property
+    def device_identifier_mode(self) -> str:
+        """The configured device identifier mode for entity unique_ids/names.
+
+        Falls back to the historical serial-first behavior for entries that
+        predate the option (e.g. before migration completes)."""
+        return self._config_entry.options.get(
+            CONF_DEVICE_IDENTIFIER, DEFAULT_DEVICE_IDENTIFIER_EXISTING
+        )
+
+    @property
     def initialized(self) -> bool:
         return self._init_done 
 

@@ -59,11 +59,11 @@ class GeClimate(GeEntity, ClimateEntity):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_climate"
+        return f"{DOMAIN}_{self.entity_identifier}_climate"
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} Climate"
+        return f"{self.entity_identifier} Climate"
 
     @property
     def icon(self) ->str | None: # type: ignore

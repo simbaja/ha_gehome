@@ -47,6 +47,10 @@ class GeEntity:
     def serial_or_mac(self) -> str:
         return self.api.serial_or_mac
 
+    @property
+    def entity_identifier(self) -> str:
+        return self.api.entity_identifier
+
     @cached_property
     def name(self) -> Optional[str]:
         raise NotImplementedError

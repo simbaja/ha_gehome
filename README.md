@@ -81,8 +81,30 @@ Once the HACS Integration of GE Home is completed:
 8. Select the region you registered your device in (US or EU).
 9. Once you submit, the integration will log in and get all your connected devices.
 10. You can define in which area you device is, then click **Finish**
-11. Your sensors should appear as **sensor.<serial_number>_<sensor_function>**
-    ie: sensor.fs12345678_dishwasher_cycle_name
+11. Your sensors will appear using the configured **device identifier** (see below), for example:
+    - Serial-first: `sensor.fs12345678_dishwasher_cycle_name`
+    - MAC-first: `sensor.aa_bb_cc_dd_ee_ff_dishwasher_cycle_name`
+
+### Device identifier (entity IDs and names)
+
+Entity `unique_id`s and friendly names are derived from a device identifier. You can change this at any time after setup via **Settings --> Devices & Services --> GE Home (SmartHQ) --> Configure**.
+
+There are two modes, and each falls back to the other when the preferred value is unavailable:
+
+| Mode | Primary | Fallback | Default for |
+| ---- | ------- | -------- | ----------- |
+| `serial_or_mac` (Serial number, fallback MAC) | Serial | MAC | Existing installations (unchanged behavior) |
+| `mac_or_serial` (MAC address, fallback serial) | MAC | Serial | New installations |
+
+Existing installations are automatically kept on `serial_or_mac` so nothing changes on upgrade. New installations default to the more stable `mac_or_serial`.
+
+**Consequences when changing the setting:**
+
+- Changing the mode reloads the integration and recomputes all entity `unique_id`s and friendly names.
+- Automations and dashboards referencing old `entity_id`s may need to be updated.
+- Switching modes can leave duplicate/orphaned entities that must be removed manually from the entity registry.
+- `serial_or_mac`: entity IDs can change if serial availability changes (restart, bad ERD, non-printable serial).
+- `mac_or_serial`: more stable across restarts, but MAC-based names are harder to recognize in the UI.
 
 ## Change Log
 

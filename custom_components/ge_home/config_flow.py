@@ -19,10 +19,21 @@ from gehomesdk import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, VALIDATE_DATA_TIMEOUT, CONFIG_FLOW_VERSION
+from .const import (
+    DOMAIN,
+    VALIDATE_DATA_TIMEOUT,
+    CONFIG_FLOW_VERSION,
+    CONF_DEVICE_IDENTIFIER,
+    DEVICE_IDENTIFIER_SERIAL_OR_MAC,
+    DEVICE_IDENTIFIER_MAC_OR_SERIAL,
+    DEFAULT_DEVICE_IDENTIFIER_EXISTING,
+    DEFAULT_DEVICE_IDENTIFIER_NEW,
+)
 from .exceptions import HaAuthError, HaCannotConnect, HaMfaRequired, HaTermsRequired
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +112,12 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> "GeHomeOptionsFlow":
+        """Get the options flow for this handler."""
+        return GeHomeOptionsFlow()
+
     async def _async_validate_input(self, user_input: dict):
         """Map validation to HA-friendly error codes."""
         try:
@@ -131,7 +148,13 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info, errors = await self._async_validate_input(user_input)
                 if info:
-                    return self.async_create_entry(title=info["title"], data=user_input)
+                    return self.async_create_entry(
+                        title=info["title"],
+                        data=user_input,
+                        options={
+                            CONF_DEVICE_IDENTIFIER: DEFAULT_DEVICE_IDENTIFIER_NEW
+                        },
+                    )
 
             except Exception as err:
                 _LOGGER.exception(f"Unexpected error in user step: {err}")
@@ -168,5 +191,33 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_get_user_schema(user_input),
             errors=errors
         )
+
+
+class GeHomeOptionsFlow(config_entries.OptionsFlow):
+    """Handle options for GE Home (post-install configuration)."""
+
+    async def async_step_init(self, user_input: Optional[Dict] = None):
+        """Manage the device identifier option."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current = self.config_entry.options.get(
+            CONF_DEVICE_IDENTIFIER, DEFAULT_DEVICE_IDENTIFIER_EXISTING
+        )
+
+        options_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEVICE_IDENTIFIER, default=current
+                ): vol.In(
+                    [
+                        DEVICE_IDENTIFIER_SERIAL_OR_MAC,
+                        DEVICE_IDENTIFIER_MAC_OR_SERIAL,
+                    ]
+                )
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
 
 

@@ -57,11 +57,11 @@ class GeErdEntity(GeEntity):
             erd_string = self._erd_override
 
         erd_title = " ".join(erd_string.split("_")).title()
-        return f"{self.serial_or_mac} {erd_title}"
+        return f"{self.entity_identifier} {erd_title}"
 
     @cached_property
     def unique_id(self) -> Optional[str]:
-        return f"{DOMAIN}_{self.serial_or_mac}_{self.erd_string.lower()}"
+        return f"{DOMAIN}_{self.entity_identifier}_{self.erd_string.lower()}"
 
     def _stringify(self, value: Any, **kwargs) -> Optional[str]:
         """Stringify a value"""
