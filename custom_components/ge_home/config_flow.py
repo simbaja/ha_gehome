@@ -9,22 +9,30 @@ import async_timeout
 
 from gehomesdk import (
     GeAuthFailedError,
-    GeAuthMfaRequiredError,
     GeAuthTermsRequiredError,
     GeNotAuthenticatedError,
     GeGeneralServerError,
     GeSmartHqLogin,
-    LOGIN_REGIONS,
+    LOGIN_REGIONS
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, VALIDATE_DATA_TIMEOUT, CONFIG_FLOW_VERSION, CONF_REFRESH_TOKEN
+from .const import (
+    DOMAIN, 
+    VALIDATE_DATA_TIMEOUT, 
+    CONFIG_FLOW_VERSION, 
+    CONF_REFRESH_TOKEN,
+    CONF_DEVICE_IDENTIFIER,
+    DEVICE_IDENTIFIER_SERIAL_OR_MAC,
+    DEVICE_IDENTIFIER_MAC_OR_SERIAL,
+    DEFAULT_DEVICE_IDENTIFIER_EXISTING
+)
 from .exceptions import HaAuthError
 
 _LOGGER = logging.getLogger(__name__)
@@ -276,5 +284,3 @@ class GeHomeOptionsFlow(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
-
-

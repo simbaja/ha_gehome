@@ -22,11 +22,11 @@ class GeToasterOvenLight(GeErdLight):
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} Toaster Oven Light"
+        return f"{self.entity_identifier} Toaster Oven Light"
 
     @cached_property
     def unique_id(self) -> Optional[str]:
-        return f"{DOMAIN}_{self.serial_or_mac}_toaster_oven_light"
+        return f"{DOMAIN}_{self.entity_identifier}_toaster_oven_light"
 
     @property
     def icon(self) -> str | None: 

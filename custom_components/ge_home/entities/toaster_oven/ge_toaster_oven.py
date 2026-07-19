@@ -38,11 +38,11 @@ class GeToasterOven(GeAbstractWaterHeater):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_toaster_oven"
+        return f"{DOMAIN}_{self.entity_identifier}_toaster_oven"
 
     @cached_property
     def name(self) -> str | None:
-        return f"{self.serial_or_mac} Toaster Oven"
+        return f"{self.entity_identifier} Toaster Oven"
 
     @property
     def icon(self) -> str | None:
@@ -80,7 +80,7 @@ class GeToasterOven(GeAbstractWaterHeater):
 
     @cached_property
     def operation_list(self) -> List[str]:
-        return [mode.name.replace("_", " ").title() for mode in ErdToasterOvenCookMode]
+        return [m for mode in ErdToasterOvenCookMode if (m := mode.stringify()) is not None]
 
     @property
     def target_temperature(self) -> int | None:  # type: ignore
