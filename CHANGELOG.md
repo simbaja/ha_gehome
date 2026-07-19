@@ -5,6 +5,8 @@
 
 - Feature: Added interactive multi-factor authentication (MFA) support to the config and re-auth flows. Accounts with email MFA enabled can now be set up directly in Home Assistant, which prompts for the emailed verification code (with a resend option) instead of failing.
 - Feature: Added support for toaster oven appliances and toaster oven light control
+- Feature: Added ability to change between mac/serial for unique id generation
+- Feature: Improved handling of auto mode for some WACs [#536]
 - Change: Reworded the config and re-auth flow screens to explain the sign-in and verification-code steps.
 
 ## 2026.6.0

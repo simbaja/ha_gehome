@@ -24,6 +24,8 @@ Integration for GE WiFi-enabled appliances into Home Assistant.  This integratio
 
 Unfortunately, I'm pretty much at the end of what I can do without assistance from others with these devices that can help provide logs.  I'll do what I can to make updates if there's something broken, but I am not really able to add new functionality if I can't get a little help to do so.
 
+**NOTE:** GE has started building their official version of the SmartHQ integration, which can be found [here](https://github.com/geappliances/geappliances-smarthq-integration).  It leverages the new Digital Twin API and service-based discovery of appliance functionality.  You may want to consider switching to that integration if it meets your needs.
+
 ## Home Assistant UI Examples
 Entities card:
 
@@ -110,6 +112,8 @@ A/C Controls:
 
 {% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
 - Added support for toaster oven appliances and toaster oven light control
+- Added ability to change between mac/serial for unique id generation
+- Improved handling of auto mode for some WACs [#536]
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
