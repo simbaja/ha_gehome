@@ -63,6 +63,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._region = config_entry.data[CONF_REGION]
+        # Present for MFA (and all newly-configured) accounts. When set, the SDK
+        # authenticates via the OAuth refresh token instead of the password login,
+        # avoiding re-triggering the MFA email challenge on every reconnect.
+        self._refresh_token: str | None = config_entry.data.get(CONF_REFRESH_TOKEN)
         self._appliance_apis: Dict[str, ApplianceApi] = {}
         self._signal_remove_callbacks: List[Callable] = []
         self._got_roster = False
@@ -221,7 +225,8 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._password,
             self._region,
             event_loop=event_loop,
-            ssl_context=get_default_context()
+            ssl_context=get_default_context(),
+            refresh_token=self._refresh_token,
         )
         client.add_event_handler(EVENT_APPLIANCE_INITIAL_UPDATE, self._on_device_initial_update)
         client.add_event_handler(EVENT_APPLIANCE_UPDATE_RECEIVED, self._on_device_update)
@@ -240,9 +245,11 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         # Create new client and start it
         try:
-            self._client = self._create_ge_client(event_loop=self.hass.loop)
+            client = self._create_ge_client(event_loop=self.hass.loop)
             session = async_get_clientsession(self.hass)
-            await self._client.async_get_credentials(session)
+            await client.async_get_credentials(session)
+            self._persist_refresh_token(client.refresh_token)
+            self._client = client
         except Exception as err:
             _LOGGER.error(f"could not start the client: {err}")
             self._client = None
@@ -252,9 +259,26 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         self.hass.loop.create_task(self._client.async_run_client())
         _LOGGER.debug("Scheduled the client for execution.")
 
+    def _persist_refresh_token(self, token: str | None) -> None:
+        """Save a rotated refresh token back to the config entry."""
+        if not token or token == self._refresh_token:
+            return
+        _LOGGER.debug("Persisting rotated GE Home refresh token")
+        self._refresh_token = token
+        data = dict(self._config_entry.data)
+        data[CONF_REFRESH_TOKEN] = token
+        self.hass.config_entries.async_update_entry(self._config_entry, data=data)
+
     async def _async_stop_client(self):
         """ Teardown the client if it exists """
         if self._client:
+            # The SDK rotates the refresh token during its own internal reconnects;
+            # capture the latest value before we discard the client.
+            if self._refresh_token:
+                try:
+                    self._persist_refresh_token(self._client.refresh_token)
+                except Exception:
+                    _LOGGER.debug("Could not persist rotated refresh token", exc_info=True)
             try:
                 self._client.clear_event_handlers()
                 await self._client.disconnect()
@@ -335,7 +359,14 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
                 try:
                     await self._async_start_client()
                 except (GeNotAuthenticatedError, GeAuthFailedError):
+                    # Refresh token is no longer valid (revoked / password change /
+                    # MFA re-required). Surface HA's reauth flow so the user can
+                    # re-authenticate (and complete MFA) instead of silently retrying.
                     self._show_persistent_notification("Authentication failure: please re-authenticate the GE Home integration.")
+                    try:
+                        self._config_entry.async_start_reauth(self.hass)
+                    except Exception:
+                        _LOGGER.debug("Could not start reauth flow", exc_info=True)
                     return
                 except Exception as err:
                     _LOGGER.warning(f"Reconnect attempt failed: {err}")
@@ -397,8 +428,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         try:
             api = self.appliance_apis[appliance.mac_addr]
         except KeyError:
-            _LOGGER.info(f"Could not find appliance {appliance.mac_addr} in known device list.")
-            return
+            _LOGGER.info(f"Adding appliance {appliance.mac_addr} from state update.")
+            api = self._maybe_add_appliance_api(appliance)
+            if self._init_done:
+                self._async_dispatch_appliances_ready([api])
         
         self._update_entity_state(api.entities)
 
@@ -434,7 +467,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
 
         self.last_update_success = True
         self._ensure_appliance_available(appliance)
-        self._maybe_add_appliance_api(appliance)
+        api = self._maybe_add_appliance_api(appliance)
+        if self._init_done:
+            self._async_dispatch_appliances_ready([api])
         await self._async_maybe_trigger_all_ready()
         await self._start_periodic_updates()
 
@@ -470,12 +505,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
     def _get_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
         if appliance is None:
             return None
-
-        self._dump_appliance(appliance)
         api_type = get_appliance_api_type(appliance.appliance_type or ErdApplianceType.UNKNOWN)
         return api_type(self, appliance)
 
-    def _maybe_add_appliance_api(self, appliance: GeAppliance) -> None:
+    def _maybe_add_appliance_api(self, appliance: GeAppliance) -> ApplianceApi:
         mac_addr = appliance.mac_addr
         if mac_addr not in self.appliance_apis:
             _LOGGER.debug(f"Adding appliance api for appliance {mac_addr} ({appliance.appliance_type})")
@@ -488,6 +521,10 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             api = self.appliance_apis[mac_addr]
             api.appliance = appliance
             api.build_entities_list()
+        return api
+
+    def _async_dispatch_appliances_ready(self, apis: List[ApplianceApi]) -> None:
+        async_dispatcher_send(self.hass, self.signal_ready, apis)
 
     async def _async_maybe_trigger_all_ready(self, force: bool = False) -> None:
         """See if we're all ready to go, and if so, let the games begin."""
@@ -506,10 +543,7 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             self._all_initial_updates_received.set()
 
             await self._client.async_event(EVENT_ALL_APPLIANCES_READY, None)
-            async_dispatcher_send(
-                self.hass, 
-                self.signal_ready, 
-                list(self.appliance_apis.values()))
+            self._async_dispatch_appliances_ready(list(self.appliance_apis.values()))
             
     async def _async_remove_stale_devices(self):
         """Remove devices/entities from HA that no longer exist in the cloud."""
