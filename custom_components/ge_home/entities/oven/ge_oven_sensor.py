@@ -5,13 +5,14 @@ from ..common import GeErdSensor
 
 
 class GeOvenErdTemperatureSensor(GeErdSensor):
-    """Oven cavity temperature sensor that treats 0 as "no reading".
+    """Oven cavity temperature sensor that handles 0 values.
 
     The oven cavity temperature ERDs (display, raw, probe) use 0 as a
     "no reading" sentinel: a raw-temperature ERD an appliance advertises but
     never populates, or a display/probe temperature while the oven is idle.
-    Surfacing the 0 would convert 0F to -17.8C, so we report it as unknown
-    instead.
+    Surfacing 0 natively in Fahrenheit converts to -17.8C. To display 0 
+    correctly when the user has configured Celsius, we return 32 (Fahrenheit) 
+    so it converts to 0C.
 
     This is deliberately NOT used for USER_TEMP_OFFSET, where 0 is a
     legitimate value (no offset); see GeOvenErdTemperatureOffsetSensor.
@@ -20,9 +21,14 @@ class GeOvenErdTemperatureSensor(GeErdSensor):
     @property
     def native_value(self):  # type: ignore
         value = super().native_value
-        # 0 (or None) means the appliance isn't reporting a reading.
-        if not value:
+        if value is None:
             return None
+        
+        # 0 means the appliance isn't reporting a reading.
+        if value == 0:
+            if self._temp_units == UnitOfTemperature.CELSIUS:
+                return 32
+            return 0
         return value
 
 
