@@ -1,6 +1,11 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2026.7.0
+
+- Feature: Added interactive multi-factor authentication (MFA) support to the config and re-auth flows. Accounts with email MFA enabled can now be set up directly in Home Assistant, which prompts for the emailed verification code (with a resend option) instead of failing.
+- Change: Reworded the config and re-auth flow screens to explain the sign-in and verification-code steps.
+
 ## 2026.6.0
 
 - Feature: Added hood fan and light entities [#507]
