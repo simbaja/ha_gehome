@@ -8,7 +8,7 @@
 - Feature: Added ability to change between mac/serial for unique id generation
 - Feature: Improved handling of auto mode for some WACs [#536]
 - Change: Reworded the config and re-auth flow screens to explain the sign-in and verification-code steps.
-
+- Bugfix: Made fridge temperature setting getters defensive [#529, #418, #503, #499]
 ## 2026.6.0
 
 - Feature: Added hood fan and light entities [#507]

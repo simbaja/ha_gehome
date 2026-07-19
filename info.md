@@ -221,6 +221,10 @@ A/C Controls:
 
 #### Bugfixes
 
+{% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
+- Made fridge temperature setting getters defensive [#529, #418, #503, #499]
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
 - Fixed dehumidifier sensors incorrectly typed (should be binary sensors)
 - Fixed typing issue in oven target_temperature
