@@ -46,11 +46,11 @@ class GeAdvantium(GeAbstractWaterHeater):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_number}"
+        return f"{DOMAIN}_{self.entity_identifier}"
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_number} Advantium"
+        return f"{self.entity_identifier} Advantium"
 
     @property
     def personality(self) -> Optional[ErdPersonality]:

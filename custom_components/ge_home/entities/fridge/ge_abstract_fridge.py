@@ -17,7 +17,6 @@ from gehomesdk import (
     IceMakerControlStatus
 )
 
-from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .const import *
@@ -60,14 +59,6 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         except:
             _LOGGER.debug("Turbo mode not supported.")
             return [OP_MODE_NORMAL, OP_MODE_SABBATH]
-
-    @cached_property
-    def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_number}_{self.heater_type}"
-
-    @cached_property
-    def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} {self.heater_type.title()}"
 
     @property
     def target_temps(self) -> FridgeSetPoints:

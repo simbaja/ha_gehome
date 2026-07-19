@@ -55,5 +55,19 @@
       "already_configured": "Account already configured!",
       "reauth_successful": "Re-authentication was successful!"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "GE Home Options",
+        "description": "Choose how entity IDs and names are derived. Both modes fall back to the other identifier when the preferred value is unavailable.\n\n- serial_or_mac (Serial number, fallback MAC): entity IDs use the serial when valid, otherwise the MAC. If serial availability changes (restart, bad ERD, non-printable serial), entity IDs can change and may create duplicate entities.\n- mac_or_serial (MAC address, fallback serial): entity IDs use the MAC when valid, otherwise the serial. More stable across restarts, but MAC-based names are harder to recognize in the UI.\n\nChanging this setting reloads the integration and recomputes all entity unique IDs and names. Automations and dashboards referencing old entity IDs may need updating, and switching modes can leave duplicate/orphaned entities that require manual cleanup.",
+        "data": {
+          "device_identifier": "Device identifier"
+        },
+        "data_description": {
+          "device_identifier": "serial_or_mac = serial with MAC fallback (default for existing installs); mac_or_serial = MAC with serial fallback (default for new installs)"
+        }
+      }
+    }
   }
 }

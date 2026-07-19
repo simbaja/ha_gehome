@@ -41,11 +41,11 @@ class GeHumidifier(GeEntity, HumidifierEntity, metaclass=abc.ABCMeta):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_{self._device_class}"
+        return f"{DOMAIN}_{self.entity_identifier}_{self._device_class}"
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} {self._device_class.title()}"
+        return f"{self.entity_identifier} {self._device_class.title()}"
 
     @property
     def icon(self) ->str | None: # type: ignore

@@ -8,7 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_USERNAME, CONF_REGION, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    CONF_DEVICE_IDENTIFIER,
+    DEFAULT_DEVICE_IDENTIFIER_EXISTING,
+)
 from .exceptions import HaAuthError, HaCannotConnect
 from .update_coordinator import GeHomeUpdateCoordinator
 
@@ -67,6 +71,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             f"GE Home: Migration of entry {config_entry.entry_id} to v3 successful "
             f"(unique_id='{unique_id}')"
         )
+        old_version = 3
+
+    # --- Migrate any version 3 to 4
+    if old_version == 3:
+        _LOGGER.debug(f"GE Home: Migrating entry {config_entry.entry_id} from v{old_version} to v4")
+
+        # Preserve historical serial-first behavior for existing installs by
+        # writing the device identifier option explicitly.
+        options = dict(config_entry.options)
+        options.setdefault(CONF_DEVICE_IDENTIFIER, DEFAULT_DEVICE_IDENTIFIER_EXISTING)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options=options,
+            version=4,
+        )
+
+        _LOGGER.info(f"GE Home: Migration of entry {config_entry.entry_id} to v4 successful")
 
     return True
 
@@ -103,6 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from exc
             
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
+
+    # Reload the entry when options change (e.g. device identifier mode)
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     _LOGGER.debug("Coordinator setup complete")
     return True
