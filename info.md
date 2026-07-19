@@ -223,6 +223,8 @@ A/C Controls:
 
 {% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
 - Made fridge temperature setting getters defensive [#529, #418, #503, #499]
+- Fixed issue with laundry dryer sheet interpretation [#444]
+- Fixed issue with oven temperatures displaying negative temperatures when using Celsius when oven is off
 {% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}

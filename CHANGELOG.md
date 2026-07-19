@@ -9,6 +9,9 @@
 - Feature: Improved handling of auto mode for some WACs [#536]
 - Change: Reworded the config and re-auth flow screens to explain the sign-in and verification-code steps.
 - Bugfix: Made fridge temperature setting getters defensive [#529, #418, #503, #499]
+- Bugfix: Fixed issue with laundry dryer sheet interpretation [#444]
+- Bugfix: Fixed issue with oven temperatures displaying negative temperatures when using Celsius when oven is off
+
 ## 2026.6.0
 
 - Feature: Added hood fan and light entities [#507]
