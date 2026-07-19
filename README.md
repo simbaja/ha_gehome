@@ -9,6 +9,7 @@ Integration for GE WiFi-enabled appliances into Home Assistant.  This integratio
 
 - Fridge
 - Oven
+- Toaster Oven
 - Dishwasher / F&P Dual Dishwasher 
 - Laundry (Washer/Dryer)
 - Whole Home Water Filter

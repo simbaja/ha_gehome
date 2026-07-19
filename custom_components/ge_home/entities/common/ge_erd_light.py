@@ -51,7 +51,7 @@ class GeErdLight(GeErdEntity, LightEntity):
         return self._color_mode
 
     @property
-    def brightness(self): # type: ignore
+    def brightness(self) -> int | None: # type: ignore
         """Return the brightness of the light."""
         return to_hass_level(self.appliance.get_erd_value(self.erd_code))        
 
