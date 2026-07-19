@@ -1,31 +1,41 @@
 """GE Home water-heater-style entity for toaster ovens."""
 
 import logging
+from datetime import timedelta
 from propcache.api import cached_property
 from typing import Any, Dict, List, Optional
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from gehomesdk import ErdCode
+from gehomesdk import (
+    ErdCode,
+    ErdToasterOvenCookMode,
+    ToasterOvenCookSetting,
+)
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
-from .const import (
-    GE_TOASTER_OVEN_SUPPORT,
-    TOASTER_OVEN_COOK_MODE_MAP,
-    TOASTER_OVEN_COOK_MODE_MAP_REVERSE,
-)
+from .const import GE_TOASTER_OVEN_SUPPORT
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _cook_mode_name(cook_mode: ErdToasterOvenCookMode) -> str:
+    return cook_mode.stringify() or cook_mode.name.replace("_", " ").title()
+
+
+_COOK_MODE_BY_OPERATION = {
+    _cook_mode_name(cook_mode): cook_mode for cook_mode in ErdToasterOvenCookMode
+}
 
 
 class GeToasterOven(GeAbstractWaterHeater):
     """GE Appliance toaster oven."""
 
-    SETTING_ERD = "0x9207"
-    SETTING_CONTROL_ERD = "0x9208"
+    SETTING_ERD = ErdCode.TOASTER_OVEN_COOK_SETTING
+    SETTING_CONTROL_ERD = ErdCode.TOASTER_OVEN_COOK_SETTING_CONTROL
     DEFAULT_TEMPERATURE = 350
-    DEFAULT_COOK_TIME_SECONDS = 600
+    DEFAULT_COOK_TIME = timedelta(seconds=600)
     MIN_TEMPERATURE = 80
     MAX_TEMPERATURE = 450
 
@@ -66,7 +76,7 @@ class GeToasterOven(GeAbstractWaterHeater):
     @property
     def remote_enabled(self) -> bool:
         try:
-            return self.appliance.get_erd_value(self._remote_enabled_erd) == True
+            return self.appliance.get_erd_value(self._remote_enabled_erd) is True
         except KeyError:
             return False
 
@@ -77,20 +87,20 @@ class GeToasterOven(GeAbstractWaterHeater):
     @property
     def current_operation(self) -> str | None:  # type: ignore
         setting = self._current_setting
-        if setting is None:
+        if setting is None or setting.cook_mode is None:
             return None
-        return TOASTER_OVEN_COOK_MODE_MAP_REVERSE.get(setting["mode"])
+        return _cook_mode_name(setting.cook_mode)
 
     @cached_property
     def operation_list(self) -> List[str]:
-        return list(TOASTER_OVEN_COOK_MODE_MAP.keys())
+        return list(_COOK_MODE_BY_OPERATION.keys())
 
     @property
     def target_temperature(self) -> int | None:  # type: ignore
         setting = self._current_setting
         if setting is None:
             return None
-        return setting["temperature"]
+        return setting.temperature
 
     @property
     def min_temp(self) -> int:
@@ -107,18 +117,18 @@ class GeToasterOven(GeAbstractWaterHeater):
             return None
         return {
             "remote_enabled": self.remote_enabled,
-            "cook_time": setting["cook_time"],
+            "cook_time": int(setting.cook_time.total_seconds()),
         }
 
     async def async_set_operation_mode(self, operation_mode: str):
         """Set the operation mode."""
-        if operation_mode not in TOASTER_OVEN_COOK_MODE_MAP:
+        cook_mode = _COOK_MODE_BY_OPERATION.get(operation_mode)
+        if cook_mode is None:
             _LOGGER.debug("Unknown toaster oven mode: %s", operation_mode)
             return
 
         setting = self._current_setting or self._default_setting
-        setting["mode"] = TOASTER_OVEN_COOK_MODE_MAP[operation_mode]
-        await self._write_setting(setting)
+        await self._write_setting(setting._replace(cook_mode=cook_mode))
 
     async def async_set_temperature(self, **kwargs):
         """Set the cook temperature."""
@@ -127,53 +137,27 @@ class GeToasterOven(GeAbstractWaterHeater):
             return
 
         setting = self._current_setting or self._default_setting
-        setting["temperature"] = max(
-            self.min_temp, min(self.max_temp, int(target_temp))
-        )
-        await self._write_setting(setting)
+        temperature = max(self.min_temp, min(self.max_temp, int(target_temp)))
+        await self._write_setting(setting._replace(temperature=temperature))
 
     @property
-    def _current_setting(self) -> Optional[Dict[str, Any]]:
-        raw = self.appliance.get_raw_erd_value(self._setting_erd)
-        if raw is None:
-            return None
+    def _current_setting(self) -> Optional[ToasterOvenCookSetting]:
         try:
-            data = bytes.fromhex(raw)
-        except ValueError:
+            setting = self.appliance.get_erd_value(self._setting_erd)
+        except KeyError:
             return None
-        if len(data) < 10:
+        if not isinstance(setting, ToasterOvenCookSetting):
             return None
-        return {
-            "temperature": int.from_bytes(data[0:4], "big"),
-            "cook_time": int.from_bytes(data[4:8], "big"),
-            "mode": int.from_bytes(data[8:10], "big"),
-            "options": data[10:].hex().upper(),
-        }
+        return setting
 
     @property
-    def _default_setting(self) -> Dict[str, Any]:
-        return {
-            "temperature": self.DEFAULT_TEMPERATURE,
-            "cook_time": self.DEFAULT_COOK_TIME_SECONDS,
-            "mode": TOASTER_OVEN_COOK_MODE_MAP[self.operation_list[0]],
-            "options": "0000",
-        }
-
-    async def _write_setting(self, setting: Dict[str, Any]) -> None:
-        try:
-            options = bytes.fromhex(str(setting.get("options", "0000")))
-        except ValueError:
-            options = b"\x00\x00"
-
-        payload = (
-            int(setting["temperature"]).to_bytes(4, "big")
-            + int(setting["cook_time"]).to_bytes(4, "big")
-            + int(setting["mode"]).to_bytes(2, "big")
-            + options
-        ).hex().upper()
-        _LOGGER.debug("Setting toaster oven mode to %s", payload)
-        await self.appliance.client.async_set_erd_value(
-            self.appliance,
-            self._setting_control_erd,
-            payload,
+    def _default_setting(self) -> ToasterOvenCookSetting:
+        return ToasterOvenCookSetting(
+            cook_mode=ErdToasterOvenCookMode.AIR_FRY,
+            temperature=self.DEFAULT_TEMPERATURE,
+            cook_time=self.DEFAULT_COOK_TIME,
         )
+
+    async def _write_setting(self, setting: ToasterOvenCookSetting) -> None:
+        _LOGGER.debug("Setting toaster oven mode to %s", setting)
+        await self.appliance.async_set_erd_value(self._setting_control_erd, setting)

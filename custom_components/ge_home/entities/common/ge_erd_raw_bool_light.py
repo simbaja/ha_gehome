@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class GeErdRawBoolLight(GeErdEntity, LightEntity):
-    """On/off light backed by an unregistered raw ERD hex payload."""
+    """On/off light backed by a boolean ERD."""
 
     def __init__(
         self,
@@ -39,18 +39,19 @@ class GeErdRawBoolLight(GeErdEntity, LightEntity):
 
     @property
     def is_on(self) -> bool | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self.erd_code)
-        if raw is None:
+        try:
+            value = self.appliance.get_erd_value(self.erd_code)
+        except KeyError:
             return None
-        return raw != "00"
+        return self._boolify(value)
 
     async def async_turn_on(self, **kwargs):
         _LOGGER.debug(f"Turning on {self.unique_id}")
-        await self.appliance.client.async_set_erd_value(self.appliance, self._writeable_erd_code, "01")
+        await self.appliance.async_set_erd_value(self._writeable_erd_code, True)
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.debug(f"Turning off {self.unique_id}")
-        await self.appliance.client.async_set_erd_value(self.appliance, self._writeable_erd_code, "00")
+        await self.appliance.async_set_erd_value(self._writeable_erd_code, False)
 
     @cached_property
     def unique_id(self) -> str | None:

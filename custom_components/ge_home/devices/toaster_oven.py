@@ -1,7 +1,7 @@
 from typing import List
 
 from homeassistant.helpers.entity import Entity
-from gehomesdk import ErdApplianceType
+from gehomesdk import ErdApplianceType, ErdCode
 
 from .base import ApplianceApi
 from ..entities import (
@@ -25,7 +25,12 @@ class ToasterOvenApi(ApplianceApi):
         entities = super().get_all_entities()
         entities.extend(
             [
-                GeErdRawBoolLight(self, "0x9201", "light", control_erd_code="0x9202"),
+                GeErdRawBoolLight(
+                    self,
+                    ErdCode.TOASTER_OVEN_LIGHT,
+                    "light",
+                    control_erd_code=ErdCode.TOASTER_OVEN_LIGHT_CONTROL,
+                ),
                 GeToasterOven(self),
                 GeToasterOvenCookModeSensor(self),
                 GeToasterOvenCrispFinishSensor(self),

@@ -1,26 +1,21 @@
 """GE Home toaster oven state sensor."""
 
+from datetime import timedelta
+
 from propcache.api import cached_property
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EntityCategory, UnitOfTime
-from gehomesdk import ErdCode
+from gehomesdk import (
+    ErdCode,
+    ErdToasterOvenCookMode,
+    ErdToasterOvenState,
+    ToasterOvenCookSetting,
+)
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeErdBinarySensor, GeErdSensor
-from .const import TOASTER_OVEN_COOK_MODE_MAP_REVERSE
-
-
-TOASTER_OVEN_SETTING_ERD = "0x9207"
-TOASTER_OVEN_STATE_ERD = "0x9209"
-TOASTER_OVEN_CONVECTION_ERD = "0x922B"
-TOASTER_OVEN_COOK_TIME_REMAINING_ERD = "0x922F"
-TOASTER_OVEN_STATE_MAP = {
-    "00": "Off",
-    "03": "Cooking",
-    "04": "Cooking",
-}
 
 
 class GeToasterOvenCookModeSensor(GeErdSensor):
@@ -29,7 +24,7 @@ class GeToasterOvenCookModeSensor(GeErdSensor):
     def __init__(self, api: ApplianceApi):
         super().__init__(
             api,
-            TOASTER_OVEN_SETTING_ERD,
+            ErdCode.TOASTER_OVEN_COOK_SETTING,
             "toaster_oven_cook_mode",
             "mdi:toaster-oven",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -45,18 +40,20 @@ class GeToasterOvenCookModeSensor(GeErdSensor):
 
     @property
     def native_value(self) -> str | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self.erd_code)
-        if raw is None:
+        setting = self._current_setting
+        if setting is None or setting.cook_mode is None:
             return None
-        try:
-            data = bytes.fromhex(raw)
-        except ValueError:
-            return None
-        if len(data) < 10:
-            return None
+        return self._stringify(setting.cook_mode)
 
-        mode = int.from_bytes(data[8:10], "big")
-        return TOASTER_OVEN_COOK_MODE_MAP_REVERSE.get(mode, f"Unknown ({mode})")
+    @property
+    def _current_setting(self) -> ToasterOvenCookSetting | None:
+        try:
+            setting = self.appliance.get_erd_value(self.erd_code)
+        except KeyError:
+            return None
+        if not isinstance(setting, ToasterOvenCookSetting):
+            return None
+        return setting
 
 
 class GeToasterOvenCrispFinishSensor(GeErdBinarySensor):
@@ -65,7 +62,7 @@ class GeToasterOvenCrispFinishSensor(GeErdBinarySensor):
     def __init__(self, api: ApplianceApi):
         super().__init__(
             api,
-            TOASTER_OVEN_SETTING_ERD,
+            ErdCode.TOASTER_OVEN_COOK_SETTING,
             "toaster_oven_crisp_finish",
             "mdi:fan",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -81,18 +78,20 @@ class GeToasterOvenCrispFinishSensor(GeErdBinarySensor):
 
     @property
     def is_on(self) -> bool | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self.erd_code)
-        if raw is None:
+        setting = self._current_setting
+        if setting is None:
             return None
-        try:
-            data = bytes.fromhex(raw)
-        except ValueError:
-            return None
-        if len(data) < 10:
-            return None
+        return setting.cook_mode == ErdToasterOvenCookMode.CRISP_FINISH
 
-        mode = int.from_bytes(data[8:10], "big")
-        return TOASTER_OVEN_COOK_MODE_MAP_REVERSE.get(mode) == "Crisp Finish"
+    @property
+    def _current_setting(self) -> ToasterOvenCookSetting | None:
+        try:
+            setting = self.appliance.get_erd_value(self.erd_code)
+        except KeyError:
+            return None
+        if not isinstance(setting, ToasterOvenCookSetting):
+            return None
+        return setting
 
 
 class GeToasterOvenConvectionSensor(GeErdBinarySensor):
@@ -101,7 +100,7 @@ class GeToasterOvenConvectionSensor(GeErdBinarySensor):
     def __init__(self, api: ApplianceApi):
         super().__init__(
             api,
-            TOASTER_OVEN_CONVECTION_ERD,
+            ErdCode.TOASTER_OVEN_CONVECTION,
             "toaster_oven_convection",
             "mdi:fan",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -115,24 +114,17 @@ class GeToasterOvenConvectionSensor(GeErdBinarySensor):
     def name(self) -> str | None:
         return f"{self.serial_or_mac} Toaster Oven Convection"
 
-    @property
-    def is_on(self) -> bool | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self.erd_code)
-        if raw is None:
-            return None
-        return raw != "00"
-
 
 class GeToasterOvenStateSensor(GeErdSensor):
     """Sensor describing the toaster oven's current state."""
 
     def __init__(self, api: ApplianceApi):
         self._cook_time_remaining_erd = api.appliance.translate_erd_code(
-            TOASTER_OVEN_COOK_TIME_REMAINING_ERD
+            ErdCode.TOASTER_OVEN_COOK_TIME_REMAINING
         )
         super().__init__(
             api,
-            TOASTER_OVEN_STATE_ERD,
+            ErdCode.TOASTER_OVEN_CURRENT_STATE,
             "toaster_oven_current_state",
             "mdi:toaster-oven",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -152,25 +144,28 @@ class GeToasterOvenStateSensor(GeErdSensor):
 
     @property
     def native_value(self) -> str | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self._erd_code)
-        if raw is None:
+        try:
+            state = self.appliance.get_erd_value(self.erd_code)
+        except KeyError:
             return None
 
-        normalized = raw.upper()
-        if normalized == "02":
+        if state == ErdToasterOvenState.INITIALIZATION:
             if self._cook_time_remaining > 0:
                 return "Awaiting Start"
             return "Complete"
-        return TOASTER_OVEN_STATE_MAP.get(normalized, f"Unknown ({normalized})")
+        return self._stringify(state)
 
     @property
     def _cook_time_remaining(self) -> int:
-        raw = self.appliance.get_raw_erd_value(self._cook_time_remaining_erd)
-        if raw is None:
-            return 0
         try:
-            return int(raw, 16)
-        except ValueError:
+            value = self.appliance.get_erd_value(self._cook_time_remaining_erd)
+        except KeyError:
+            return 0
+        if isinstance(value, timedelta):
+            return int(value.total_seconds())
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
             return 0
 
 
@@ -201,7 +196,7 @@ class GeToasterOvenCookTimeRemainingSensor(GeErdSensor):
     def __init__(self, api: ApplianceApi):
         super().__init__(
             api,
-            TOASTER_OVEN_COOK_TIME_REMAINING_ERD,
+            ErdCode.TOASTER_OVEN_COOK_TIME_REMAINING,
             "toaster_oven_cook_time_remaining",
             "mdi:timer-outline",
             device_class_override=SensorDeviceClass.DURATION,
@@ -216,13 +211,3 @@ class GeToasterOvenCookTimeRemainingSensor(GeErdSensor):
     @cached_property
     def name(self) -> str | None:
         return f"{self.serial_or_mac} Toaster Oven Cook Time Remaining"
-
-    @property
-    def native_value(self) -> int | None:  # type: ignore
-        raw = self.appliance.get_raw_erd_value(self.erd_code)
-        if raw is None:
-            return None
-        try:
-            return int(raw, 16)
-        except ValueError:
-            return None
