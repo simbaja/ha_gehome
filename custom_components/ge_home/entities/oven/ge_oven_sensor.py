@@ -26,7 +26,11 @@ class GeOvenErdTemperatureSensor(GeErdSensor):
         
         # 0 means the appliance isn't reporting a reading.
         if value == 0:
-            if self._temp_units == UnitOfTemperature.CELSIUS:
+            target_unit = getattr(self, "unit_of_measurement", None)
+            if not target_unit:
+                target_unit = self._temp_units
+                
+            if target_unit == UnitOfTemperature.CELSIUS:
                 return 32
             return 0
         return value
