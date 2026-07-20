@@ -6,7 +6,6 @@ from .ge_erd_binary_sensor import GeErdBinarySensor
 from .ge_cooktop_status_binary_sensor import GeCooktopStatusBinarySensor
 from .ge_erd_property_binary_sensor import GeErdPropertyBinarySensor
 from .ge_erd_sensor import GeErdSensor
-from .ge_erd_raw_bool_light import GeErdRawBoolLight
 from .ge_erd_light import GeErdLight
 from .ge_erd_fan import GeErdFan
 from .ge_erd_timer_sensor import GeErdTimerSensor

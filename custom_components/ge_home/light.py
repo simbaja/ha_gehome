@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
-from .entities import GeErdLight, GeErdRawBoolLight, GeHoodLight
+from .entities import GeErdLight, GeHoodLight
 from .devices import ApplianceApi
 from .update_coordinator import GeHomeUpdateCoordinator
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
             entity
             for api in apis
             for entity in api.entities
-            if isinstance(entity, (GeErdLight, GeErdRawBoolLight))
+            if isinstance(entity, GeErdLight)
             and entity.erd_code in api.appliance._property_cache
             if not registry.async_is_registered(entity.entity_id)
         ]
