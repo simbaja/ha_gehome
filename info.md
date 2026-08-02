@@ -110,6 +110,16 @@ A/C Controls:
 
 #### Features
 
+{% if version_installed.split('.') | map('int') < '2026.8.0'.split('.') | map('int') %}
+- Added per-door binary sensors for refrigerators (left/right, freezer, drawer, and Fridge V2 doors)
+- Added setpoint and setpoint limit sensors for refrigerators
+- Added water filter remaining life (%) and days remaining sensors
+- Added AutoFill pitcher state/presence/full and hydration station water consumption entities
+- Added alert notification binary sensors for refrigerator alert conditions
+- Added cavity diagnostic sensors and panel setting controls (sound level, end tone, clock format, control lock) for ovens
+- Added additional cross-appliance resource usage sensors (energy in Wh, water in mL, gas type)
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
 - Added support for toaster oven appliances and toaster oven light control
 - Added ability to change between mac/serial for unique id generation

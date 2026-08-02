@@ -1,7 +1,19 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
-## 2026.7.0
+## 2026.8.0
+
+- Feature: Added per-door binary sensors for refrigerators (fridge left/right, freezer, drawer, and Fridge V2 doors)
+- Feature: Added setpoint and setpoint limit temperature sensors for refrigerators
+- Feature: Added water filter remaining life (%) and days remaining sensors for refrigerators
+- Feature: Added AutoFill pitcher state/presence/full and hydration station total volume entities for refrigerators
+- Feature: Added alert notification binary sensors for all refrigerator alert conditions
+- Feature: Added oven cavity diagnostic sensors (delay time remaining, elapsed cook time, probe present)
+- Feature: Added appliance setting controls for ovens (control lock, 12-hour shutoff, convection conversion, sound level, end tone, clock format, and mode temperature bounds)
+- Feature: Added additional resource monitoring sensors (Wh cumulative energy, mL hot/cold water, gas type)
+- Bugfix: Fixed turbo cool switch mapping on refrigerators
+
+## 2026.7.0-dev0
 
 - Feature: Added interactive multi-factor authentication (MFA) support to the config and re-auth flows. Accounts with email MFA enabled can now be set up directly in Home Assistant, which prompts for the emailed verification code (with a resend option) instead of failing.
 - Feature: Added support for toaster oven appliances and toaster oven light control

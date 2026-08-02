@@ -253,6 +253,22 @@ class ApplianceApi:
                 device_class_override=SensorDeviceClass.GAS,
                 state_class_override=SensorStateClass.TOTAL_INCREASING,
                 entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_ENERGY_WH,
+                uom_override="Wh",
+                device_class_override=SensorDeviceClass.ENERGY,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_COLD_WATER_ML,
+                uom_override="mL",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_HOT_WATER_ML,
+                uom_override="mL",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_GAS_TYPE, entity_category=EntityCategory.DIAGNOSTIC),
         ]
 
         entities.append(

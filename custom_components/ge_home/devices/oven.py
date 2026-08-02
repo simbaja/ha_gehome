@@ -1,7 +1,8 @@
 import logging
 from typing import List
 
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
     ErdCode,
@@ -10,6 +11,7 @@ from gehomesdk import (
     ErdOvenLightLevel,
     ErdOvenLightLevelAvailability,
     ErdOvenWarmingState,
+    ErdDataType,
 )
 
 from .base import ApplianceApi
@@ -19,12 +21,18 @@ from ..entities import (
     GeErdTimerSensor,
     GeErdTimerNumber,
     GeErdBinarySensor,
+    GeErdSelect,
+    GeErdSwitch,
+    GeErdPropertySensor,
     GeOven,
     GeOvenErdTemperatureSensor,
     GeOvenErdTemperatureOffsetSensor,
     GeOvenErdCookModeSensor,
     GeOvenLightLevelSelect,
     GeOvenWarmingStateSelect,
+    SoundLevelOptionsConverter,
+    EndToneOptionsConverter,
+    ClockFormatOptionsConverter,
     UPPER_OVEN,
     LOWER_OVEN,
 )
@@ -310,9 +318,153 @@ class OvenApi(ApplianceApi):
                 )
             )
 
+        # Cavity diagnostics
+        oven_entities.extend(
+            self._build_cavity_diagnostics(UPPER_OVEN, not has_lower_oven)
+        )
+        if has_lower_oven:
+            oven_entities.extend(self._build_cavity_diagnostics(LOWER_OVEN, False))
+
+        # Appliance setting entities (control lock, sound level, end tone, clock, mode limits)
+        setting_entities = self._build_setting_entities()
+
         cooktop_entities = build_cooktop_entities(self)
 
-        return base_entities + oven_entities + cooktop_entities
+        return base_entities + oven_entities + setting_entities + cooktop_entities
+
+    def _build_cavity_diagnostics(self, oven_select: str, make_single: bool) -> List[Entity]:
+        """Sensors for ERDs reported per cavity (delay time, elapsed time, probe present)."""
+        entities: List[Entity] = []
+
+        delay_erd = ErdCode[f"{oven_select}_DELAY_TIME_REMAINING"]
+        if self.has_erd_code(delay_erd):
+            entities.append(
+                GeErdSensor(
+                    self,
+                    delay_erd,
+                    self._single_name(delay_erd, make_single),
+                    suggested_uom="h",
+                )
+            )
+
+        elapsed_erd = ErdCode[f"{oven_select}_ELAPSED_COOK_TIME"]
+        if self.has_erd_code(elapsed_erd):
+            entities.append(
+                GeErdSensor(
+                    self,
+                    elapsed_erd,
+                    self._single_name(elapsed_erd, make_single),
+                    suggested_uom="h",
+                )
+            )
+
+        probe_erd = ErdCode[f"{oven_select}_PROBE_PRESENT"]
+        if self.has_erd_code(probe_erd):
+            entities.append(
+                GeErdBinarySensor(
+                    self,
+                    probe_erd,
+                    self._single_name(probe_erd, make_single),
+                    icon_on_override="mdi:thermometer-check",
+                    icon_off_override="mdi:thermometer-off",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                )
+            )
+
+        return entities
+
+    def _build_setting_entities(self) -> List[Entity]:
+        """Appliance-level configuration ERDs (control lock, tones, clock, mode limits)."""
+        entities: List[Entity] = []
+
+        if self.has_erd_code(ErdCode.USER_INTERFACE_LOCKED):
+            entities.append(
+                GeErdSwitch(
+                    self,
+                    ErdCode.USER_INTERFACE_LOCKED,
+                    erd_override="CONTROL_LOCK",
+                    icon_on_override="mdi:lock",
+                    icon_off_override="mdi:lock-open-variant",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.HOUR_12_SHUTOFF_ENABLED):
+            entities.append(
+                GeErdSwitch(
+                    self,
+                    ErdCode.HOUR_12_SHUTOFF_ENABLED,
+                    icon_on_override="mdi:timer-off-outline",
+                    icon_off_override="mdi:timer-outline",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.CONVECTION_CONVERSION):
+            entities.append(
+                GeErdSwitch(
+                    self,
+                    ErdCode.CONVECTION_CONVERSION,
+                    icon_on_override="mdi:autorenew",
+                    icon_off_override="mdi:autorenew-off",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.SOUND_LEVEL):
+            entities.append(
+                GeErdSelect(
+                    self,
+                    ErdCode.SOUND_LEVEL,
+                    SoundLevelOptionsConverter(),
+                    icon_override="mdi:volume-high",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.END_TONE):
+            entities.append(
+                GeErdSelect(
+                    self,
+                    ErdCode.END_TONE,
+                    EndToneOptionsConverter(),
+                    icon_override="mdi:bell-ring-outline",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.CLOCK_FORMAT):
+            entities.append(
+                GeErdSelect(
+                    self,
+                    ErdCode.CLOCK_FORMAT,
+                    ClockFormatOptionsConverter(),
+                    icon_override="mdi:clock-outline",
+                    entity_category=EntityCategory.CONFIG,
+                )
+            )
+        if self.has_erd_code(ErdCode.OVEN_MODE_MIN_MAX_TEMP):
+            entities.extend(
+                [
+                    GeErdPropertySensor(
+                        self,
+                        ErdCode.OVEN_MODE_MIN_MAX_TEMP,
+                        "lower",
+                        icon_override="mdi:thermometer-low",
+                        device_class_override=SensorDeviceClass.TEMPERATURE,
+                        data_type_override=ErdDataType.INT,
+                        uom_override=UnitOfTemperature.FAHRENHEIT,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    ),
+                    GeErdPropertySensor(
+                        self,
+                        ErdCode.OVEN_MODE_MIN_MAX_TEMP,
+                        "upper",
+                        icon_override="mdi:thermometer-high",
+                        device_class_override=SensorDeviceClass.TEMPERATURE,
+                        data_type_override=ErdDataType.INT,
+                        uom_override=UnitOfTemperature.FAHRENHEIT,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    ),
+                ]
+            )
+
+        return entities
 
     def _single_name(self, erd_code: ErdCode, make_single: bool):
         name = erd_code.name
