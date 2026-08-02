@@ -11,6 +11,7 @@ from gehomesdk import (
     ErdOvenLightLevel,
     ErdOvenLightLevelAvailability,
     ErdOvenWarmingState,
+    ErdOvenCookMode,
     ErdDataType,
 )
 
@@ -50,12 +51,20 @@ class OvenApi(ApplianceApi):
         oven_config: OvenConfiguration | None = self.try_get_erd_value(
             ErdCode.OVEN_CONFIGURATION
         )
-        has_lower_oven = bool(
-            (oven_config and oven_config.has_lower_oven)
-            or self.has_erd_code(ErdCode.LOWER_OVEN_COOK_MODE)
-        )
+        has_lower_oven = False
+        if oven_config is not None:
+            has_lower_oven = oven_config.has_lower_oven
+        else:
+            lower_mode = self.try_get_erd_value(ErdCode.LOWER_OVEN_COOK_MODE)
+            has_lower_oven = (
+                lower_mode is not None
+                and getattr(lower_mode, "cook_mode", None) is not None
+                and getattr(lower_mode, "cook_mode", None) != ErdOvenCookMode.NOMODE
+            )
+
         has_upper_oven = bool(
-            self.has_erd_code(ErdCode.UPPER_OVEN_COOK_MODE)
+            not has_lower_oven
+            or self.has_erd_code(ErdCode.UPPER_OVEN_COOK_MODE)
             or self.has_erd_code(ErdCode.UPPER_OVEN_CURRENT_STATE)
             or self.has_erd_code(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)
         )
@@ -255,7 +264,7 @@ class OvenApi(ApplianceApi):
                     GeOven(
                         self,
                         UPPER_OVEN,
-                        False,
+                        has_lower_oven,
                         self._temperature_code(has_upper_raw_temperature),
                     )
                 )
@@ -445,6 +454,7 @@ class OvenApi(ApplianceApi):
                         self,
                         ErdCode.OVEN_MODE_MIN_MAX_TEMP,
                         "lower",
+                        erd_override="oven_mode_min_temp",
                         icon_override="mdi:thermometer-low",
                         device_class_override=SensorDeviceClass.TEMPERATURE,
                         data_type_override=ErdDataType.INT,
@@ -455,6 +465,7 @@ class OvenApi(ApplianceApi):
                         self,
                         ErdCode.OVEN_MODE_MIN_MAX_TEMP,
                         "upper",
+                        erd_override="oven_mode_max_temp",
                         icon_override="mdi:thermometer-high",
                         device_class_override=SensorDeviceClass.TEMPERATURE,
                         data_type_override=ErdDataType.INT,

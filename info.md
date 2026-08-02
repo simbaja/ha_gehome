@@ -79,6 +79,11 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2026.8.0'.split('.') | map('int') %}
+- Fixed fridge interior light entity disappearing when light is turned off (0 brightness) at startup [#545]
+- Fixed turbo cool switch mapping on refrigerators
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
 - Refactored common cooktop logic to apply to both cooktop and oven devices
 - Tightened typing for binary sensor and sensor device/state classes

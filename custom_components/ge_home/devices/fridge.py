@@ -91,8 +91,8 @@ class FridgeApi(ApplianceApi):
         door_status: FridgeDoorStatus | None = self.try_get_erd_value(ErdCode.DOOR_STATUS)
         if door_status is not None:
             for door_property, icon_on, icon_off in (
-                ("fridge_left", "mdi:fridge-industrial-open", "mdi:fridge-industrial"),
-                ("fridge_right", "mdi:fridge-industrial-open", "mdi:fridge-industrial"),
+                ("fridge_left", "mdi:fridge-industrial-outline", "mdi:fridge-industrial"),
+                ("fridge_right", "mdi:fridge-industrial-outline", "mdi:fridge-industrial"),
                 ("freezer", "mdi:snowflake-alert", "mdi:snowflake"),
                 ("drawer", "mdi:cupboard-outline", "mdi:cupboard"),
             ):
@@ -254,7 +254,7 @@ class FridgeApi(ApplianceApi):
                 fridge_entities.append(GeErdSensor(self, ErdCode.AIR_FILTER_STATUS, entity_category=EntityCategory.DIAGNOSTIC))
             if(ice_bucket_status and ice_bucket_status.is_present_fridge):
                 fridge_entities.append(GeErdPropertySensor(self, ErdCode.ICE_MAKER_BUCKET_STATUS, "state_full_fridge", entity_category=EntityCategory.DIAGNOSTIC))
-            if(interior_light and interior_light != 255):
+            if(interior_light is not None and interior_light != 255):
                 fridge_entities.append(GeErdLight(self, ErdCode.INTERIOR_LIGHT, entity_category=EntityCategory.CONFIG))
             if(proximity_light and proximity_light != ErdOnOff.NA):
                 fridge_entities.append(GeErdSwitch(self, ErdCode.PROXIMITY_LIGHT, ErdOnOffBoolConverter(), icon_on_override="mdi:lightbulb-on", icon_off_override="mdi:lightbulb", entity_category=EntityCategory.CONFIG))

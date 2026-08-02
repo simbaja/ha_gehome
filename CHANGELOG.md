@@ -12,6 +12,7 @@
 - Feature: Added appliance setting controls for ovens (control lock, 12-hour shutoff, convection conversion, sound level, end tone, clock format, and mode temperature bounds)
 - Feature: Added additional resource monitoring sensors (Wh cumulative energy, mL hot/cold water, gas type)
 - Bugfix: Fixed turbo cool switch mapping on refrigerators
+- Bugfix: Fixed fridge interior light entity disappearing when light is turned off (0 brightness) at startup [#545]
 
 ## 2026.7.0-dev0
 
