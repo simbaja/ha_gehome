@@ -4,7 +4,18 @@ DOMAIN = "ge_home"
 
 EVENT_ALL_APPLIANCES_READY = 'all_appliances_ready'
 CONNECTION_NOTIFICATION_ID = "ge_home_connection"
-CONFIG_FLOW_VERSION = 3
+CONFIG_FLOW_VERSION = 4
+
+# Device identifier options (used for entity unique_ids and friendly names)
+CONF_DEVICE_IDENTIFIER = "device_identifier"
+DEVICE_IDENTIFIER_SERIAL_OR_MAC = "serial_or_mac"
+DEVICE_IDENTIFIER_MAC_OR_SERIAL = "mac_or_serial"
+# Existing installs keep the historical serial-first behavior; new installs
+# default to the more stable MAC-first behavior.
+DEFAULT_DEVICE_IDENTIFIER_EXISTING = DEVICE_IDENTIFIER_SERIAL_OR_MAC
+DEFAULT_DEVICE_IDENTIFIER_NEW = DEVICE_IDENTIFIER_MAC_OR_SERIAL
+
+CONF_REFRESH_TOKEN = "refresh_token"
 
 HA_REFRESH_INTERVAL = 60
 STATE_UPDATE_INTERVAL = 30

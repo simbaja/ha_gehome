@@ -17,7 +17,6 @@ from gehomesdk import (
     IceMakerControlStatus
 )
 
-from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .const import *
@@ -61,23 +60,16 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             _LOGGER.debug("Turbo mode not supported.")
             return [OP_MODE_NORMAL, OP_MODE_SABBATH]
 
-    @cached_property
-    def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_number}_{self.heater_type}"
-
-    @cached_property
-    def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} {self.heater_type.title()}"
-
     @property
-    def target_temps(self) -> FridgeSetPoints:
+    def target_temps(self) -> FridgeSetPoints | None:
         """Get the current temperature settings tuple."""
-        return self.appliance.get_erd_value(ErdCode.TEMPERATURE_SETTING)
+        return self.api.try_get_erd_value(ErdCode.TEMPERATURE_SETTING)
 
     @property
     def target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
-        return getattr(self.target_temps, self.heater_type)
+        t = self.target_temps
+        return getattr(t, self.heater_type) if t else None
 
     @property
     def current_temperature(self) -> int | None:  # type: ignore
@@ -99,10 +91,14 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         if not self.min_temp <= target_temp <= self.max_temp:
             raise ValueError("Tried to set temperature out of device range")
 
+        tt = self.target_temps
+        if tt is None:
+            raise ValueError("Device doesn't support temperature settings (possibly timing issue).")
+
         if self.heater_type == HEATER_TYPE_FRIDGE:
-            new_temp = FridgeSetPoints(fridge=target_temp, freezer=self.target_temps.freezer)
+            new_temp = FridgeSetPoints(fridge=target_temp, freezer=tt.freezer)
         elif self.heater_type == HEATER_TYPE_FREEZER:
-            new_temp = FridgeSetPoints(fridge=self.target_temps.fridge, freezer=target_temp)
+            new_temp = FridgeSetPoints(fridge=tt.fridge, freezer=target_temp)
         else:
             raise ValueError("Invalid heater_type")
 

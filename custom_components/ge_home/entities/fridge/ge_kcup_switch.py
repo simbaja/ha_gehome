@@ -23,12 +23,12 @@ class GeKCupSwitch(GeEntity, SwitchEntity):
     @cached_property
     def unique_id(self) -> str:
         # Create a unique ID for this entity
-        return f"{self.api.serial_or_mac}_kcup_hot_water"
+        return f"{self.entity_identifier}_kcup_hot_water"
 
     @cached_property
     def name(self) -> str | None:
         # Set the friendly name to match other switches using the device's unique ID
-        return f"{self.api.serial_or_mac} K-Cup Hot Water"
+        return f"{self.entity_identifier} K-Cup Hot Water"
 
     @property
     def icon(self) -> str | None: # type: ignore

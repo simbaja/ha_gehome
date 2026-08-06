@@ -18,9 +18,35 @@ from gehomesdk import (
 )
 
 from .const import BRAND_FIRST_LETTER_MAP, BRAND_SPECIAL_PREFIXES
-from ..const import DOMAIN
+from ..const import (
+    DOMAIN,
+    CONF_DEVICE_IDENTIFIER,
+    DEVICE_IDENTIFIER_MAC_OR_SERIAL,
+    DEFAULT_DEVICE_IDENTIFIER_EXISTING,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_valid_serial(serial: Optional[str]) -> bool:
+    """Whether a serial number is usable as an identifier.
+
+    Rejects blank/whitespace-only values, all-zero values, and values
+    containing non-printable characters (e.g. certificate data on ERD
+    0x0002, see #502)."""
+    if not serial or serial.isspace():
+        return False
+    try:
+        if int(serial) == 0:
+            return False
+    except (TypeError, ValueError):
+        pass
+    return serial.isprintable()
+
+
+def _is_valid_mac(mac: Optional[str]) -> bool:
+    """Whether a MAC address is usable as an identifier."""
+    return bool(mac) and not mac.isspace()
 
 class ApplianceApi:
     """
@@ -75,17 +101,8 @@ class ApplianceApi:
 
     @cached_property
     def serial_or_mac(self) -> str:
-        def is_zero(val: str) -> bool:
-            try:
-                intVal = int(val)
-                return intVal == 0
-            except:
-                return False
-    
-        if (self.serial_number and not
-            self.serial_number.isspace() and not
-            is_zero(self.serial_number) and
-            self.serial_number.isprintable()):
+        """Prefer the serial number, falling back to the MAC address."""
+        if _is_valid_serial(self.serial_number):
             return self.serial_number
         if self.serial_number and not self.serial_number.isprintable():
             _LOGGER.warning(
@@ -94,6 +111,46 @@ class ApplianceApi:
                 self.mac_addr,
             )
         return self.mac_addr
+
+    @cached_property
+    def mac_or_serial(self) -> str:
+        """Prefer the MAC address, falling back to the serial number."""
+        if _is_valid_mac(self.mac_addr):
+            return self.mac_addr
+        if _is_valid_serial(self.serial_number):
+            _LOGGER.warning(
+                "MAC address for appliance (serial %s) is missing or unusual; "
+                "falling back to serial number for entity identifiers.",
+                self.serial_number,
+            )
+            return self.serial_number
+        # Last resort - MAC is the coordinator/registry key even if unusual.
+        _LOGGER.warning(
+            "Both MAC address (%r) and serial number (%r) are missing or "
+            "unusual; using MAC address as the entity identifier anyway.",
+            self.mac_addr,
+            self.serial_number,
+        )
+        return self.mac_addr
+
+    @property
+    def device_identifier_mode(self) -> str:
+        """Resolve the configured device identifier mode from the coordinator."""
+        mode = getattr(
+            self.coordinator, "device_identifier_mode", None
+        )
+        return mode or DEFAULT_DEVICE_IDENTIFIER_EXISTING
+
+    @property
+    def entity_identifier(self) -> str:
+        """The identifier used for entity unique_ids and friendly names.
+
+        Dispatches based on the per-config-entry device identifier mode.
+        Both modes fall back to the other identifier when the preferred
+        value is unavailable."""
+        if self.device_identifier_mode == DEVICE_IDENTIFIER_MAC_OR_SERIAL:
+            return self.mac_or_serial
+        return self.serial_or_mac
 
     @cached_property
     def brand_id(self) -> ErdBrand:
@@ -140,7 +197,7 @@ class ApplianceApi:
             appliance_type = "Appliance"
         else:
             appliance_type = appliance_type.name.replace("_", " ").title()
-        return f"{self.brand} {appliance_type} {self.serial_or_mac}"
+        return f"{self.brand} {appliance_type} {self.entity_identifier}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -196,6 +253,22 @@ class ApplianceApi:
                 device_class_override=SensorDeviceClass.GAS,
                 state_class_override=SensorStateClass.TOTAL_INCREASING,
                 entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_ENERGY_WH,
+                uom_override="Wh",
+                device_class_override=SensorDeviceClass.ENERGY,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_COLD_WATER_ML,
+                uom_override="mL",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_CUMULATIVE_HOT_WATER_ML,
+                uom_override="mL",
+                device_class_override=SensorDeviceClass.WATER,
+                state_class_override=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC),
+            GeErdSensor(self, ErdCode.RESOURCE_GAS_TYPE, entity_category=EntityCategory.DIAGNOSTIC),
         ]
 
         entities.append(

@@ -24,6 +24,8 @@ Integration for GE WiFi-enabled appliances into Home Assistant.  This integratio
 
 Unfortunately, I'm pretty much at the end of what I can do without assistance from others with these devices that can help provide logs.  I'll do what I can to make updates if there's something broken, but I am not really able to add new functionality if I can't get a little help to do so.
 
+**NOTE:** GE has started building their official version of the SmartHQ integration, which can be found [here](https://github.com/geappliances/geappliances-smarthq-integration).  It leverages the new Digital Twin API and service-based discovery of appliance functionality.  You may want to consider switching to that integration if it meets your needs.
+
 ## Home Assistant UI Examples
 Entities card:
 
@@ -77,6 +79,11 @@ A/C Controls:
 
 #### Changes
 
+{% if version_installed.split('.') | map('int') < '2026.8.0'.split('.') | map('int') %}
+- Fixed fridge interior light entity disappearing when light is turned off (0 brightness) at startup [#545]
+- Fixed turbo cool switch mapping on refrigerators
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
 - Refactored common cooktop logic to apply to both cooktop and oven devices
 - Tightened typing for binary sensor and sensor device/state classes
@@ -108,9 +115,24 @@ A/C Controls:
 
 #### Features
 
+{% if version_installed.split('.') | map('int') < '2026.8.0'.split('.') | map('int') %}
+- Added per-door binary sensors for refrigerators (left/right, freezer, drawer, and Fridge V2 doors)
+- Added setpoint and setpoint limit sensors for refrigerators
+- Added water filter remaining life (%) and days remaining sensors
+- Added AutoFill pitcher state/presence/full and hydration station water consumption entities
+- Added alert notification binary sensors for refrigerator alert conditions
+- Added cavity diagnostic sensors and panel setting controls (sound level, end tone, clock format, control lock) for ovens
+- Added additional cross-appliance resource usage sensors (energy in Wh, water in mL, gas type)
+{% endif %}
+
+{% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
+- Added support for toaster oven appliances and toaster oven light control
+- Added ability to change between mac/serial for unique id generation
+- Improved handling of auto mode for some WACs [#536]
+{% endif %}
+
 {% if version_installed.split('.') | map('int') < '2026.6.0'.split('.') | map('int') %}
 - Added hood fan and light entities [#507]
-- Added support for toaster oven appliances and toaster oven light control
 - Added cooktop-specific entities (sensors and controls)
 - Added kitchen timer to cooktop as number entities (in minutes)
 - Added gas cooktop to known device mapping
@@ -213,6 +235,12 @@ A/C Controls:
 {% endif %}
 
 #### Bugfixes
+
+{% if version_installed.split('.') | map('int') < '2026.7.0'.split('.') | map('int') %}
+- Made fridge temperature setting getters defensive [#529, #418, #503, #499]
+- Fixed issue with laundry dryer sheet interpretation [#444]
+- Fixed issue with oven temperatures displaying negative temperatures when using Celsius when oven is off
+{% endif %}
 
 {% if version_installed.split('.') | map('int') < '2026.5.0'.split('.') | map('int') %}
 - Fixed dehumidifier sensors incorrectly typed (should be binary sensors)

@@ -1,9 +1,9 @@
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 import logging
 from typing import List
 
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
     ErdCode,
@@ -15,6 +15,12 @@ from gehomesdk import (
     ErdFilterStatus,
     HotWaterStatus,
     FridgeModelInfo,
+    FridgeDoorStatus,
+    FridgeSetPoints,
+    FridgeSetPointLimits,
+    ErdDoorStatus,
+    FridgeWaterFilterStatus,
+    FridgeAlertNotifications,
     ErdConvertableDrawerMode,
     ErdDataType
 )
@@ -80,6 +86,129 @@ class FridgeApi(ApplianceApi):
             GeErdSensor(self, ErdCode.DOOR_STATUS, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertyBinarySensor(self, ErdCode.DOOR_STATUS, "any_open", entity_category=EntityCategory.DIAGNOSTIC)
         ]
+
+        # Per-door binary sensors for legacy DOOR_STATUS
+        door_status: FridgeDoorStatus | None = self.try_get_erd_value(ErdCode.DOOR_STATUS)
+        if door_status is not None:
+            for door_property, icon_on, icon_off in (
+                ("fridge_left", "mdi:fridge-industrial-outline", "mdi:fridge-industrial"),
+                ("fridge_right", "mdi:fridge-industrial-outline", "mdi:fridge-industrial"),
+                ("freezer", "mdi:snowflake-alert", "mdi:snowflake"),
+                ("drawer", "mdi:cupboard-outline", "mdi:cupboard"),
+            ):
+                if getattr(door_status, door_property, ErdDoorStatus.NA) == ErdDoorStatus.NA:
+                    continue
+                common_entities.append(
+                    GeErdPropertyBinarySensor(
+                        self,
+                        ErdCode.DOOR_STATUS,
+                        door_property,
+                        icon_on_override=icon_on,
+                        icon_off_override=icon_off,
+                        device_class_override=BinarySensorDeviceClass.DOOR,
+                    )
+                )
+
+        # Fridge V2 per-door binary sensors
+        for v2_door_erd in (
+            ErdCode.FRIDGE_FRESH_FOOD_DOOR_1_STATUS,
+            ErdCode.FRIDGE_FRESH_FOOD_DOOR_2_STATUS,
+            ErdCode.FRIDGE_FRESH_FOOD_DOOR_3_STATUS,
+            ErdCode.FRIDGE_FREEZER_DOOR_1_STATUS,
+            ErdCode.FRIDGE_CONVERTIBLE_COMPARTMENT_DOOR_1_STATUS,
+        ):
+            if self.has_erd_code(v2_door_erd):
+                common_entities.append(
+                    GeErdBinarySensor(
+                        self,
+                        v2_door_erd,
+                        device_class_override=BinarySensorDeviceClass.DOOR,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                )
+
+        # Temperature Setpoint & Setpoint Limits sensors
+        setpoints: FridgeSetPoints | None = self.try_get_erd_value(ErdCode.TEMPERATURE_SETTING)
+        setpoint_limits: FridgeSetPointLimits | None = self.try_get_erd_value(ErdCode.SETPOINT_LIMITS)
+        if setpoints is not None:
+            for zone, has_zone in (
+                ("fridge", fridge_model_info is None or fridge_model_info.has_fridge),
+                ("freezer", fridge_model_info is None or fridge_model_info.has_freezer),
+            ):
+                if not has_zone:
+                    continue
+                common_entities.append(
+                    GeErdPropertySensor(
+                        self,
+                        ErdCode.TEMPERATURE_SETTING,
+                        zone,
+                        device_class_override=SensorDeviceClass.TEMPERATURE,
+                        data_type_override=ErdDataType.INT,
+                    )
+                )
+                if setpoint_limits is not None:
+                    for bound in ("min", "max"):
+                        common_entities.append(
+                            GeErdPropertySensor(
+                                self,
+                                ErdCode.SETPOINT_LIMITS,
+                                f"{zone}_{bound}",
+                                device_class_override=SensorDeviceClass.TEMPERATURE,
+                                data_type_override=ErdDataType.INT,
+                                entity_category=EntityCategory.DIAGNOSTIC,
+                            )
+                        )
+
+        # AutoFill Pitcher & Hydration Station entities
+        if self.has_erd_code(ErdCode.FRIDGE_AUTOFILL_PITCHER_STATE):
+            common_entities.append(
+                GeErdSensor(self, ErdCode.FRIDGE_AUTOFILL_PITCHER_STATE, entity_category=EntityCategory.DIAGNOSTIC)
+            )
+        if self.has_erd_code(ErdCode.FRIDGE_AUTOFILL_PITCHER_PRESENT):
+            common_entities.append(
+                GeErdBinarySensor(
+                    self,
+                    ErdCode.FRIDGE_AUTOFILL_PITCHER_PRESENT,
+                    device_class_override=BinarySensorDeviceClass.PRESENCE,
+                    icon_on_override="mdi:cup-water",
+                    icon_off_override="mdi:cup-off-outline",
+                )
+            )
+        if self.has_erd_code(ErdCode.FRIDGE_AUTOFILL_PITCHER_FULL):
+            common_entities.append(
+                GeErdBinarySensor(
+                    self,
+                    ErdCode.FRIDGE_AUTOFILL_PITCHER_FULL,
+                    icon_on_override="mdi:water-check",
+                    icon_off_override="mdi:water-outline",
+                )
+            )
+        if self.has_erd_code(ErdCode.FRIDGE_HYDRATION_STATION_TOTAL_CONSUMPTION):
+            common_entities.append(
+                GeErdSensor(
+                    self,
+                    ErdCode.FRIDGE_HYDRATION_STATION_TOTAL_CONSUMPTION,
+                    device_class_override=SensorDeviceClass.WATER,
+                    uom_override=UnitOfVolume.FLUID_OUNCES,
+                    state_class_override=SensorStateClass.TOTAL_INCREASING,
+                    icon_override="mdi:water-pump",
+                )
+            )
+
+        # Alert Notifications property binary sensors
+        alerts: FridgeAlertNotifications | None = self.try_get_erd_value(ErdCode.FRIDGE_ALERT_NOTIFICATIONS)
+        if alerts is not None or self.has_erd_code(ErdCode.FRIDGE_ALERT_NOTIFICATIONS):
+            for alert_prop in getattr(FridgeAlertNotifications, "_fields", ()) + ("any_alert",):
+                common_entities.append(
+                    GeErdPropertyBinarySensor(
+                        self,
+                        ErdCode.FRIDGE_ALERT_NOTIFICATIONS,
+                        alert_prop,
+                        device_class_override=BinarySensorDeviceClass.PROBLEM,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                )
+
         if(ice_bucket_status and (ice_bucket_status.is_present_fridge or ice_bucket_status.is_present_freezer)):
             common_entities.append(GeErdSensor(self, ErdCode.ICE_MAKER_BUCKET_STATUS, entity_category=EntityCategory.DIAGNOSTIC))
 
@@ -90,17 +219,42 @@ class FridgeApi(ApplianceApi):
                 GeFridge(self),
             ])
             if turbo_cool is not None:
-                fridge_entities.append(GeErdSwitch(self, ErdCode.FRIDGE_ICE_BOOST, entity_category=EntityCategory.CONFIG))
+                fridge_entities.append(GeErdSwitch(self, ErdCode.TURBO_COOL_STATUS, icon_on_override="mdi:snowflake", icon_off_override="mdi:snowflake-off", entity_category=EntityCategory.CONFIG))
             if(ice_maker_control and ice_maker_control.status_fridge != ErdOnOff.NA):
                 fridge_entities.append(GeErdPropertyBinarySensor(self, ErdCode.ICE_MAKER_CONTROL, "status_fridge", entity_category=EntityCategory.DIAGNOSTIC))
                 fridge_entities.append(GeFridgeIceControlSwitch(self, "fridge"))
             if(water_filter and water_filter != ErdFilterStatus.NA):
                 fridge_entities.append(GeErdSensor(self, ErdCode.WATER_FILTER_STATUS, entity_category=EntityCategory.DIAGNOSTIC))
+                water_filter_status: FridgeWaterFilterStatus | None = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
+                if water_filter_status is not None:
+                    if getattr(water_filter_status, "percent_remaining", None) is not None:
+                        fridge_entities.append(
+                            GeErdPropertySensor(
+                                self,
+                                ErdCode.WATER_FILTER_STATUS,
+                                "percent_remaining",
+                                uom_override=PERCENTAGE,
+                                state_class_override=SensorStateClass.MEASUREMENT,
+                                icon_override="mdi:water-percent",
+                            )
+                        )
+                    if getattr(water_filter_status, "days_remaining", None) is not None:
+                        fridge_entities.append(
+                            GeErdPropertySensor(
+                                self,
+                                ErdCode.WATER_FILTER_STATUS,
+                                "days_remaining",
+                                uom_override=UnitOfTime.DAYS,
+                                state_class_override=SensorStateClass.MEASUREMENT,
+                                icon_override="mdi:calendar-clock",
+                                entity_category=EntityCategory.DIAGNOSTIC,
+                            )
+                        )
             if(air_filter and air_filter != ErdFilterStatus.NA):
                 fridge_entities.append(GeErdSensor(self, ErdCode.AIR_FILTER_STATUS, entity_category=EntityCategory.DIAGNOSTIC))
             if(ice_bucket_status and ice_bucket_status.is_present_fridge):
                 fridge_entities.append(GeErdPropertySensor(self, ErdCode.ICE_MAKER_BUCKET_STATUS, "state_full_fridge", entity_category=EntityCategory.DIAGNOSTIC))
-            if(interior_light and interior_light != 255):
+            if(interior_light is not None and interior_light != 255):
                 fridge_entities.append(GeErdLight(self, ErdCode.INTERIOR_LIGHT, entity_category=EntityCategory.CONFIG))
             if(proximity_light and proximity_light != ErdOnOff.NA):
                 fridge_entities.append(GeErdSwitch(self, ErdCode.PROXIMITY_LIGHT, ErdOnOffBoolConverter(), icon_on_override="mdi:lightbulb-on", icon_off_override="mdi:lightbulb", entity_category=EntityCategory.CONFIG))

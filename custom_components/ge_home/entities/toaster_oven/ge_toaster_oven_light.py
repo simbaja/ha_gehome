@@ -13,26 +13,20 @@ from ..common import GeErdLight
 
 _LOGGER = logging.getLogger(__name__)
 
-
 class GeToasterOvenLight(GeErdLight):
     """Light entity for GE toaster oven light controls."""
 
-    def __init__(
-        self,
-        api: ApplianceApi,
-        erd_code: ErdCodeType,
-        control_erd_code: Optional[ErdCodeType] = None,
-    ):
+    def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, control_erd_code: Optional[ErdCodeType] = None):
         super().__init__(api, erd_code, color_mode=ColorMode.ONOFF)
         self._control_erd_code = control_erd_code
 
     @cached_property
     def name(self) -> Optional[str]:
-        return f"{self.serial_or_mac} Toaster Oven Light"
+        return f"{self.entity_identifier} Toaster Oven Light"
 
     @cached_property
     def unique_id(self) -> Optional[str]:
-        return f"{DOMAIN}_{self.serial_or_mac}_toaster_oven_light"
+        return f"{DOMAIN}_{self.entity_identifier}_toaster_oven_light"
 
     @property
     def icon(self) -> str | None:
@@ -52,7 +46,7 @@ class GeToasterOvenLight(GeErdLight):
     def is_on(self) -> bool:
         """Return True if light is on."""
         try:
-            return self.appliance.get_erd_value(self.erd_code) is True
+            return self.appliance.get_erd_value(self.erd_code) == True
         except KeyError:
             return False
 

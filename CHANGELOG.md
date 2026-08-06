@@ -1,10 +1,33 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## 2026.8.0
+
+- Feature: Added per-door binary sensors for refrigerators (fridge left/right, freezer, drawer, and Fridge V2 doors)
+- Feature: Added setpoint and setpoint limit temperature sensors for refrigerators
+- Feature: Added water filter remaining life (%) and days remaining sensors for refrigerators
+- Feature: Added AutoFill pitcher state/presence/full and hydration station total volume entities for refrigerators
+- Feature: Added alert notification binary sensors for all refrigerator alert conditions
+- Feature: Added oven cavity diagnostic sensors (delay time remaining, elapsed cook time, probe present)
+- Feature: Added appliance setting controls for ovens (control lock, 12-hour shutoff, convection conversion, sound level, end tone, clock format, and mode temperature bounds)
+- Feature: Added additional resource monitoring sensors (Wh cumulative energy, mL hot/cold water, gas type)
+- Bugfix: Fixed turbo cool switch mapping on refrigerators
+- Bugfix: Fixed fridge interior light entity disappearing when light is turned off (0 brightness) at startup [#545]
+
+## 2026.7.0-dev0
+
+- Feature: Added interactive multi-factor authentication (MFA) support to the config and re-auth flows. Accounts with email MFA enabled can now be set up directly in Home Assistant, which prompts for the emailed verification code (with a resend option) instead of failing.
+- Feature: Added support for toaster oven appliances and toaster oven light control
+- Feature: Added ability to change between mac/serial for unique id generation
+- Feature: Improved handling of auto mode for some WACs [#536]
+- Change: Reworded the config and re-auth flow screens to explain the sign-in and verification-code steps.
+- Bugfix: Made fridge temperature setting getters defensive [#529, #418, #503, #499]
+- Bugfix: Fixed issue with laundry dryer sheet interpretation [#444]
+- Bugfix: Fixed issue with oven temperatures displaying negative temperatures when using Celsius when oven is off
+
 ## 2026.6.0
 
 - Feature: Added hood fan and light entities [#507]
-- Feature: Added support for toaster oven appliances and toaster oven light control
 - Feature: Added cooktop-specific entities (sensors and controls)
 - Feature: Added kitchen timer to cooktop as number entities (in minutes)
 - Feature: Added gas cooktop to known device mapping

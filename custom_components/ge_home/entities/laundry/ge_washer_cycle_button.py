@@ -16,12 +16,12 @@ class GeWasherCycleButton(GeErdButton):
     @cached_property
     def unique_id(self) -> str:
         """Return a unique ID for the button."""
-        return f"{self.serial_or_mac}_start_cycle_button"
+        return f"{self.entity_identifier}_start_cycle_button"
 
     @cached_property
     def name(self) -> str:
         """Return the name of the button."""
-        return f"{self.serial_or_mac} Start Cycle"
+        return f"{self.entity_identifier} Start Cycle"
 
     @property
     def icon(self):

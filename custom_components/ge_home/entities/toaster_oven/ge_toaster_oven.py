@@ -1,17 +1,13 @@
 """GE Home water-heater-style entity for toaster ovens."""
 
-import logging
+from gehomesdk import ErdToasterOvenSize
 from datetime import timedelta
+import logging
 from propcache.api import cached_property
 from typing import Any, Dict, List, Optional
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from gehomesdk import (
-    ErdCode,
-    ErdToasterOvenCookMode,
-    ErdToasterOvenSize,
-    ToasterOvenCookSetting,
-)
+from gehomesdk import ErdCode, ErdToasterOvenCookMode, ToasterOvenCookSetting
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
@@ -19,7 +15,6 @@ from ..common import GeAbstractWaterHeater
 from .const import GE_TOASTER_OVEN_SUPPORT
 
 _LOGGER = logging.getLogger(__name__)
-
 
 class GeToasterOven(GeAbstractWaterHeater):
     """GE Appliance toaster oven."""
@@ -43,11 +38,11 @@ class GeToasterOven(GeAbstractWaterHeater):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_toaster_oven"
+        return f"{DOMAIN}_{self.entity_identifier}_toaster_oven"
 
     @cached_property
     def name(self) -> str | None:
-        return f"{self.serial_or_mac} Toaster Oven"
+        return f"{self.entity_identifier} Toaster Oven"
 
     @property
     def icon(self) -> str | None:
@@ -68,7 +63,7 @@ class GeToasterOven(GeAbstractWaterHeater):
     @property
     def remote_enabled(self) -> bool:
         try:
-            return self.appliance.get_erd_value(self._remote_enabled_erd) is True
+            return self.appliance.get_erd_value(self._remote_enabled_erd) == True
         except KeyError:
             return False
 
@@ -85,11 +80,7 @@ class GeToasterOven(GeAbstractWaterHeater):
 
     @cached_property
     def operation_list(self) -> List[str]:
-        return [
-            mode
-            for cook_mode in ErdToasterOvenCookMode
-            if (mode := cook_mode.stringify()) is not None
-        ]
+        return [m for mode in ErdToasterOvenCookMode if (m := mode.stringify()) is not None]
 
     @property
     def target_temperature(self) -> int | None:  # type: ignore
@@ -120,13 +111,14 @@ class GeToasterOven(GeAbstractWaterHeater):
         """Set the operation mode."""
         mode_name = operation_mode.replace(" ", "_").upper()
         try:
-            cook_mode = ErdToasterOvenCookMode[mode_name]
+            mode = ErdToasterOvenCookMode[mode_name]
         except KeyError:
             _LOGGER.debug("Unknown toaster oven mode: %s", operation_mode)
             return
 
         setting = self._current_setting or self._default_setting
-        await self._write_setting(setting._replace(cook_mode=cook_mode))
+        new_setting = setting._replace(cook_mode=mode)
+        await self._write_setting(new_setting)
 
     async def async_set_temperature(self, **kwargs):
         """Set the cook temperature."""
@@ -134,9 +126,10 @@ class GeToasterOven(GeAbstractWaterHeater):
         if target_temp is None:
             return
 
+        target_temp = max(self.min_temp, min(self.max_temp, int(target_temp)))
         setting = self._current_setting or self._default_setting
-        temperature = max(self.min_temp, min(self.max_temp, int(target_temp)))
-        await self._write_setting(setting._replace(temperature=temperature))
+        new_setting = setting._replace(temperature=target_temp)
+        await self._write_setting(new_setting)
 
     @property
     def _current_setting(self) -> Optional[ToasterOvenCookSetting]:
@@ -158,9 +151,12 @@ class GeToasterOven(GeAbstractWaterHeater):
             size=ErdToasterOvenSize.MEDIUM,
             item_count=0,
             preferences=0,
-            raw_string="00" * 12,
+            raw_string="00" * 12
         )
 
     async def _write_setting(self, setting: ToasterOvenCookSetting) -> None:
         _LOGGER.debug("Setting toaster oven setting to %s", setting)
-        await self.appliance.async_set_erd_value(self._setting_control_erd, setting)
+        await self.appliance.async_set_erd_value(
+            self._setting_control_erd,
+            setting,
+        )

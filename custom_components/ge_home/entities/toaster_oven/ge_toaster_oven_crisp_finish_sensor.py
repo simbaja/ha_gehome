@@ -24,11 +24,11 @@ class GeToasterOvenCrispFinishSensor(GeErdBinarySensor):
 
     @cached_property
     def unique_id(self) -> str:
-        return f"{DOMAIN}_{self.serial_or_mac}_toaster_oven_crisp_finish"
+        return f"{DOMAIN}_{self.entity_identifier}_toaster_oven_crisp_finish"
 
     @cached_property
     def name(self) -> str | None:
-        return f"{self.serial_or_mac} Toaster Oven Crisp Finish"
+        return f"{self.entity_identifier} Toaster Oven Crisp Finish"
 
     @property
     def is_on(self) -> bool | None:  # type: ignore
