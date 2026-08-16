@@ -226,7 +226,7 @@ class OvenApi(ApplianceApi):
                         self,
                         ErdCode.UPPER_OVEN_KITCHEN_TIMER,
                         self._single_name(
-                            ErdCode.UPPER_OVEN_KITCHEN_TIMER, 
+                            ErdCode.UPPER_OVEN_KITCHEN_TIMER,
                             not has_lower_oven
                         ),
                     ),

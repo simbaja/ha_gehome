@@ -24,9 +24,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    DOMAIN, 
-    VALIDATE_DATA_TIMEOUT, 
-    CONFIG_FLOW_VERSION, 
+    DOMAIN,
+    VALIDATE_DATA_TIMEOUT,
+    CONFIG_FLOW_VERSION,
     CONF_REFRESH_TOKEN,
     CONF_DEVICE_IDENTIFIER,
     DEVICE_IDENTIFIER_SERIAL_OR_MAC,

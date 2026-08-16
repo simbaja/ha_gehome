@@ -104,7 +104,7 @@ class GeToasterOven(GeAbstractWaterHeater):
             return None
         return {
             "remote_enabled": self.remote_enabled,
-            "cook_time": setting.cook_time,
+            "cook_time": int(setting.cook_time.total_seconds()),
         }
 
     async def async_set_operation_mode(self, operation_mode: str):
@@ -134,9 +134,12 @@ class GeToasterOven(GeAbstractWaterHeater):
     @property
     def _current_setting(self) -> Optional[ToasterOvenCookSetting]:
         try:
-            return self.appliance.get_erd_value(self._setting_erd)
+            setting = self.appliance.get_erd_value(self._setting_erd)
         except KeyError:
             return None
+        if not isinstance(setting, ToasterOvenCookSetting):
+            return None
+        return setting
 
     @property
     def _default_setting(self) -> ToasterOvenCookSetting:

@@ -94,7 +94,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         tt = self.target_temps
         if tt is None:
             raise ValueError("Device doesn't support temperature settings (possibly timing issue).")
-        
+
         if self.heater_type == HEATER_TYPE_FRIDGE:
             new_temp = FridgeSetPoints(fridge=target_temp, freezer=tt.freezer)
         elif self.heater_type == HEATER_TYPE_FREEZER:

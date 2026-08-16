@@ -29,7 +29,7 @@ class GeToasterOvenLight(GeErdLight):
         return f"{DOMAIN}_{self.entity_identifier}_toaster_oven_light"
 
     @property
-    def icon(self) -> str | None: 
+    def icon(self) -> str | None:
         return "mdi:lightbulb"
 
     @cached_property
@@ -38,12 +38,12 @@ class GeToasterOvenLight(GeErdLight):
         return {ColorMode.ONOFF}
 
     @property
-    def brightness(self) -> int | None: 
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return None
 
     @property
-    def is_on(self) -> bool: 
+    def is_on(self) -> bool:
         """Return True if light is on."""
         try:
             return self.appliance.get_erd_value(self.erd_code) == True

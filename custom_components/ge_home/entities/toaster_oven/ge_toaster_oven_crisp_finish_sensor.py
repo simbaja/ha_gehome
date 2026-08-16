@@ -3,7 +3,7 @@
 from propcache.api import cached_property
 
 from homeassistant.const import EntityCategory
-from gehomesdk import ErdCode
+from gehomesdk import ErdCode, ErdToasterOvenCookMode, ToasterOvenCookSetting
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
@@ -34,6 +34,8 @@ class GeToasterOvenCrispFinishSensor(GeErdBinarySensor):
     def is_on(self) -> bool | None:  # type: ignore
         try:
             setting = self.appliance.get_erd_value(self.erd_code)
-            return setting.cook_mode.name == "CRISP_FINISH"
-        except (KeyError, AttributeError):
+        except KeyError:
             return None
+        if not isinstance(setting, ToasterOvenCookSetting):
+            return None
+        return setting.cook_mode == ErdToasterOvenCookMode.CRISP_FINISH
