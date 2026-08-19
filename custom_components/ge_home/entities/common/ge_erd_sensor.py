@@ -1,4 +1,3 @@
-import enum
 import logging
 from datetime import timedelta
 from propcache.api import cached_property
@@ -8,7 +7,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, Sen
 from homeassistant.const import UnitOfTemperature, EntityCategory
 from gehomesdk import ErdCodeType, ErdCodeClass, ErdDataType
 
-from .ge_erd_entity import GeErdEntity
+from .ge_erd_entity import GeErdEntity, compound_state_field
 from ...devices import ApplianceApi
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,18 +75,15 @@ class GeErdSensor(GeErdEntity, SensorEntity):
         except (KeyError, ValueError):
             return None
 
+        state_field = compound_state_field(value)
         asdict = getattr(value, "_asdict", None)
-        if (
-            not callable(asdict)
-            or isinstance(value, enum.Enum)
-            or not hasattr(value, "status")
-        ):
+        if not state_field or not callable(asdict):
             return None
 
         return {
             name: field_value
             for name, field_value in asdict().items()
-            if name != "status" and field_value is not None
+            if name != state_field and field_value is not None
         }
 
     @cached_property

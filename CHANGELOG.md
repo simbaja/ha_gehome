@@ -4,6 +4,7 @@
 ## Unreleased
 
 - Bugfix: Fridge water filter status sensor state is Good/Replace/etc again; remaining-life fields are attributes instead of being dumped into the state string
+- Bugfix: Fridge model info sensor state is the raw model value; capability fields are attributes instead of being dumped into the state string
 
 ## 2026.8.0
 
