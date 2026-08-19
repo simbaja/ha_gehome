@@ -1,3 +1,4 @@
+import enum
 from datetime import timedelta
 from propcache.api import cached_property
 from typing import Optional, Any
@@ -8,6 +9,24 @@ from gehomesdk import ErdCode, ErdCodeType, ErdCodeClass, ErdMeasurementUnits
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from .ge_entity import GeEntity
+
+# Preferred state field on compound SDK namedtuples. Remaining fields
+# are exposed as extra attributes on the sensor.
+_COMPOUND_STATE_FIELDS = ("status", "raw_value")
+
+
+def compound_state_field(value: Any) -> str | None:
+    """Return the field that should be the entity state, if any."""
+    if value is None or isinstance(value, (enum.Enum, str, bytes, int, float, bool, timedelta)):
+        return None
+    asdict = getattr(value, "_asdict", None)
+    if not callable(asdict):
+        return None
+    fields = asdict()
+    for name in _COMPOUND_STATE_FIELDS:
+        if name in fields and fields[name] is not None:
+            return name
+    return None
 
 
 class GeErdEntity(GeEntity):
@@ -65,6 +84,12 @@ class GeErdEntity(GeEntity):
 
     def _stringify(self, value: Any, **kwargs) -> Optional[str]:
         """Stringify a value"""
+        # Compound SDK values (e.g. FridgeWaterFilterStatus, FridgeModelInfo)
+        # should display the primary field, not the whole object repr.
+        field = compound_state_field(value)
+        if field:
+            value = getattr(value, field)
+
         # perform special processing before passing over to the default method
         if self.erd_code == ErdCode.CLOCK_TIME:
             return value.strftime("%H:%M:%S") if value else None

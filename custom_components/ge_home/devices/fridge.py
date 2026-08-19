@@ -19,7 +19,6 @@ from gehomesdk import (
     FridgeSetPoints,
     FridgeSetPointLimits,
     ErdDoorStatus,
-    FridgeWaterFilterStatus,
     FridgeAlertNotifications,
     ErdConvertableDrawerMode,
     ErdDataType
@@ -64,7 +63,8 @@ class FridgeApi(ApplianceApi):
 
         ice_maker_control: IceMakerControlStatus | None = self.try_get_erd_value(ErdCode.ICE_MAKER_CONTROL)
         ice_bucket_status: FridgeIceBucketStatus | None = self.try_get_erd_value(ErdCode.ICE_MAKER_BUCKET_STATUS)
-        water_filter: ErdFilterStatus | None = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
+        water_filter = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
+        water_filter_status: ErdFilterStatus | None = getattr(water_filter, "status", water_filter)
         air_filter: ErdFilterStatus | None = self.try_get_erd_value(ErdCode.AIR_FILTER_STATUS)
         hot_water_status: HotWaterStatus | None = self.try_get_erd_value(ErdCode.HOT_WATER_STATUS)
         fridge_model_info: FridgeModelInfo | None = self.try_get_erd_value(ErdCode.FRIDGE_MODEL_INFO)
@@ -223,11 +223,10 @@ class FridgeApi(ApplianceApi):
             if(ice_maker_control and ice_maker_control.status_fridge != ErdOnOff.NA):
                 fridge_entities.append(GeErdPropertyBinarySensor(self, ErdCode.ICE_MAKER_CONTROL, "status_fridge", entity_category=EntityCategory.DIAGNOSTIC))
                 fridge_entities.append(GeFridgeIceControlSwitch(self, "fridge"))
-            if(water_filter and water_filter != ErdFilterStatus.NA):
+            if(water_filter_status and water_filter_status != ErdFilterStatus.NA):
                 fridge_entities.append(GeErdSensor(self, ErdCode.WATER_FILTER_STATUS, entity_category=EntityCategory.DIAGNOSTIC))
-                water_filter_status: FridgeWaterFilterStatus | None = self.try_get_erd_value(ErdCode.WATER_FILTER_STATUS)
-                if water_filter_status is not None:
-                    if getattr(water_filter_status, "percent_remaining", None) is not None:
+                if water_filter is not None:
+                    if getattr(water_filter, "percent_remaining", None) is not None:
                         fridge_entities.append(
                             GeErdPropertySensor(
                                 self,
@@ -238,7 +237,7 @@ class FridgeApi(ApplianceApi):
                                 icon_override="mdi:water-percent",
                             )
                         )
-                    if getattr(water_filter_status, "days_remaining", None) is not None:
+                    if getattr(water_filter, "days_remaining", None) is not None:
                         fridge_entities.append(
                             GeErdPropertySensor(
                                 self,
