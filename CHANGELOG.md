@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## Unreleased
+
+- Bugfix: Fridge water filter status sensor state is Good/Replace/etc again; remaining-life fields are attributes instead of being dumped into the state string
+
 ## 2026.8.0
 
 - Feature: Added per-door binary sensors for refrigerators (fridge left/right, freezer, drawer, and Fridge V2 doors)

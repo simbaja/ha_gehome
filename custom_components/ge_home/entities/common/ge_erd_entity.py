@@ -1,3 +1,4 @@
+import enum
 from datetime import timedelta
 from propcache.api import cached_property
 from typing import Optional, Any
@@ -65,6 +66,13 @@ class GeErdEntity(GeEntity):
 
     def _stringify(self, value: Any, **kwargs) -> Optional[str]:
         """Stringify a value"""
+        # Compound SDK values (e.g. FridgeWaterFilterStatus) expose the
+        # user-facing enum on `.status`. Stringify that instead of repr().
+        if not isinstance(value, enum.Enum):
+            status = getattr(value, "status", None)
+            if isinstance(status, enum.Enum):
+                value = status
+
         # perform special processing before passing over to the default method
         if self.erd_code == ErdCode.CLOCK_TIME:
             return value.strftime("%H:%M:%S") if value else None

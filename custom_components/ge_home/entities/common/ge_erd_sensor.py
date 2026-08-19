@@ -1,7 +1,8 @@
+import enum
 import logging
 from datetime import timedelta
 from propcache.api import cached_property
-from typing import Optional
+from typing import Any, Optional
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfTemperature, EntityCategory
@@ -62,6 +63,32 @@ class GeErdSensor(GeErdEntity, SensorEntity):
             return self._stringify(value, temp_units=self._temp_units)
         except (KeyError, ValueError):
             return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose remaining fields of compound SDK values as attributes."""
+        # Property sensors already isolate a single field as their state.
+        if getattr(self, "erd_property", None):
+            return None
+
+        try:
+            value = self.appliance.get_erd_value(self.erd_code)
+        except (KeyError, ValueError):
+            return None
+
+        asdict = getattr(value, "_asdict", None)
+        if (
+            not callable(asdict)
+            or isinstance(value, enum.Enum)
+            or not hasattr(value, "status")
+        ):
+            return None
+
+        return {
+            name: field_value
+            for name, field_value in asdict().items()
+            if name != "status" and field_value is not None
+        }
 
     @cached_property
     def native_unit_of_measurement(self) -> Optional[str]:
