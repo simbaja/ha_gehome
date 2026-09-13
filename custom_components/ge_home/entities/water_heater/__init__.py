@@ -1,2 +1,3 @@
 from .heater_modes import WhHeaterModeConverter
 from .ge_water_heater import GeWaterHeater
+from .mixing_valve_tank_capacity_options import MixingValveTankCapacityOptionsConverter

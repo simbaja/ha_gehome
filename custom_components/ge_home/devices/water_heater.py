@@ -4,18 +4,21 @@ from typing import List
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import Entity
 from gehomesdk import (
-    ErdCode, 
+    ErdCode,
     ErdApplianceType,
-    ErdOnOff
+    ErdOnOff,
+    ErdWaterHeaterMixingValveTankCapacity
 )
 
 from custom_components.ge_home.entities.water_heater.ge_water_heater import GeWaterHeater
 
 from .base import ApplianceApi
 from ..entities import (
-    GeErdSensor, 
+    GeErdSensor,
     GeErdSwitch,
-    ErdOnOffBoolConverter
+    GeErdSelect,
+    ErdOnOffBoolConverter,
+    MixingValveTankCapacityOptionsConverter
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +33,7 @@ class WaterHeaterApi(ApplianceApi):
 
         boost_mode: ErdOnOff | None = self.try_get_erd_value(ErdCode.WH_HEATER_BOOST_STATE)
         active: ErdOnOff | None = self.try_get_erd_value(ErdCode.WH_HEATER_ACTIVE_STATE)
+        mixing_valve_capacity: ErdWaterHeaterMixingValveTankCapacity | None = self.try_get_erd_value(ErdCode.WH_HEATER_MIXING_VALVE_TANK_CAPACITY)
 
         wh_entities = [
             GeErdSensor(self, ErdCode.WH_HEATER_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
@@ -45,6 +49,9 @@ class WaterHeaterApi(ApplianceApi):
 
         if(active and active != ErdOnOff.NA):
             wh_entities.append(GeErdSwitch(self, ErdCode.WH_HEATER_ACTIVE_STATE, ErdOnOffBoolConverter(), icon_on_override="mdi:power", icon_off_override="mdi:power-standby", control_erd_code=ErdCode.WH_HEATER_ACTIVE_CONTROL, entity_category=EntityCategory.CONFIG))
+
+        if(mixing_valve_capacity and mixing_valve_capacity != ErdWaterHeaterMixingValveTankCapacity.UNKNOWN):
+            wh_entities.append(GeErdSelect(self, ErdCode.WH_HEATER_MIXING_VALVE_TANK_CAPACITY, MixingValveTankCapacityOptionsConverter(), icon_override="mdi:water-thermometer", entity_category=EntityCategory.CONFIG))
 
         entities = base_entities + wh_entities
         return entities
