@@ -31,7 +31,8 @@ from .const import (
     CONF_DEVICE_IDENTIFIER,
     DEVICE_IDENTIFIER_SERIAL_OR_MAC,
     DEVICE_IDENTIFIER_MAC_OR_SERIAL,
-    DEFAULT_DEVICE_IDENTIFIER_EXISTING
+    DEFAULT_DEVICE_IDENTIFIER_EXISTING,
+    CONF_PREFERRED_OVEN_MODE,
 )
 from .exceptions import HaAuthError
 
@@ -269,6 +270,19 @@ class GeHomeOptionsFlow(config_entries.OptionsFlow):
         current = self.config_entry.options.get(
             CONF_DEVICE_IDENTIFIER, DEFAULT_DEVICE_IDENTIFIER_EXISTING
         )
+        preferred_oven_mode = self.config_entry.options.get(
+            CONF_PREFERRED_OVEN_MODE, ""
+        )
+        from .entities.oven.const import COOK_MODE_OP_MAP, OP_MODE_OFF
+
+        preferred_mode_options = [
+            "",
+            *(
+                mode
+                for mode in COOK_MODE_OP_MAP.values()
+                if mode != OP_MODE_OFF
+            ),
+        ]
 
         options_schema = vol.Schema(
             {
@@ -279,7 +293,10 @@ class GeHomeOptionsFlow(config_entries.OptionsFlow):
                         DEVICE_IDENTIFIER_SERIAL_OR_MAC,
                         DEVICE_IDENTIFIER_MAC_OR_SERIAL,
                     ]
-                )
+                ),
+                vol.Required(
+                    CONF_PREFERRED_OVEN_MODE, default=preferred_oven_mode
+                ): vol.In(preferred_mode_options),
             }
         )
 

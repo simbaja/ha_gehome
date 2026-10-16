@@ -115,6 +115,11 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @property
+    def preferred_oven_mode(self) -> str | None:
+        """Preferred cooking mode for oven entities, if configured."""
+        return self._config_entry.options.get(CONF_PREFERRED_OVEN_MODE) or None
+
+    @property
     def initialized(self) -> bool:
         return self._init_done 
 

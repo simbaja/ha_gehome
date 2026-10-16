@@ -17,6 +17,7 @@ from ...const import DOMAIN
 from ...devices import ApplianceApi
 from ..common import GeAbstractWaterHeater
 from .const import *
+from .operation_modes import order_operation_modes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,8 +126,11 @@ class GeOven(GeAbstractWaterHeater):
         
         _LOGGER.debug(f"Final Cook Modes: {cook_modes}")
         op_modes = [o for o in (COOK_MODE_OP_MAP[c] for c in cook_modes) if o]
-        op_modes = [OP_MODE_OFF] + op_modes
-        return op_modes
+        return order_operation_modes(
+            op_modes,
+            self.api.coordinator.preferred_oven_mode,
+            OP_MODE_OFF,
+        )
 
     @property
     def current_cook_setting(self) -> OvenCookSetting:

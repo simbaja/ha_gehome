@@ -8,6 +8,7 @@ CONFIG_FLOW_VERSION = 4
 
 # Device identifier options (used for entity unique_ids and friendly names)
 CONF_DEVICE_IDENTIFIER = "device_identifier"
+CONF_PREFERRED_OVEN_MODE = "preferred_oven_mode"
 DEVICE_IDENTIFIER_SERIAL_OR_MAC = "serial_or_mac"
 DEVICE_IDENTIFIER_MAC_OR_SERIAL = "mac_or_serial"
 # Existing installs keep the historical serial-first behavior; new installs

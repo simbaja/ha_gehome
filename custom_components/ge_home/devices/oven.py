@@ -30,6 +30,7 @@ from ..entities import (
     GeOvenErdTemperatureOffsetSensor,
     GeOvenErdCookModeSensor,
     GeOvenLightLevelSelect,
+    GeOvenLight,
     GeOvenWarmingStateSelect,
     SoundLevelOptionsConverter,
     EndToneOptionsConverter,
@@ -171,6 +172,8 @@ class OvenApi(ApplianceApi):
                 oven_entities.append(
                     GeOvenLightLevelSelect(self, ErdCode.LOWER_OVEN_LIGHT)
                 )
+            if lower_light is not None and lower_light != ErdOvenLightLevel.NOT_AVAILABLE:
+                oven_entities.append(GeOvenLight(self, ErdCode.LOWER_OVEN_LIGHT))
             if lower_warm_drawer is not None:
                 oven_entities.append(
                     GeOvenWarmingStateSelect(
@@ -292,6 +295,13 @@ class OvenApi(ApplianceApi):
                     self._single_name(
                         ErdCode.UPPER_OVEN_LIGHT, not has_lower_oven
                     ),
+                )
+            )
+        if upper_light is not None and upper_light != ErdOvenLightLevel.NOT_AVAILABLE:
+            oven_entities.append(
+                GeOvenLight(
+                    self,
+                    ErdCode.UPPER_OVEN_LIGHT,
                 )
             )
         if upper_warm_drawer is not None:

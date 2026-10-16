@@ -38,7 +38,8 @@ class OvenLightLevelOptionsConverter(OptionsConverter):
 class GeOvenLightLevelSelect(GeErdSelect):
 
     def __init__(self, api: ApplianceApi, erd_code: ErdCodeType, erd_override: Optional[str] = None):
-        self._availability: ErdOvenLightLevelAvailability | None = api.try_get_erd_value(ErdCode.LOWER_OVEN_LIGHT_AVAILABILITY)
+        availability_code = ErdCode[f"{erd_code.name}_AVAILABILITY"]
+        self._availability: ErdOvenLightLevelAvailability | None = api.try_get_erd_value(availability_code)
 
         #check to see if we have a status
         value: ErdOvenLightLevel | None = api.try_get_erd_value(erd_code)
@@ -65,4 +66,3 @@ class GeOvenLightLevelSelect(GeErdSelect):
         new_state: ErdOvenLightLevel = self._converter.from_option_string(option)
         await self.appliance.async_set_erd_value(self.erd_code, new_state)        
         self._assumed_state = new_state
-        
