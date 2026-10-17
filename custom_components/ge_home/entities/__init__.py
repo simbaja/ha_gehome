@@ -13,3 +13,4 @@ from .ccm import *
 from .dehumidifier import *
 from .laundry import *
 from .toaster_oven import *
+from .espresso_maker import *

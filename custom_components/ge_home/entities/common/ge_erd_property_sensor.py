@@ -23,7 +23,9 @@ class GeErdPropertySensor(GeErdSensor):
         state_class_override: Optional[SensorStateClass] = None, 
         uom_override: Optional[str] = None, 
         data_type_override: Optional[ErdDataType] = None,
-        entity_category: Optional[EntityCategory] = None
+        entity_category: Optional[EntityCategory] = None,
+        suggested_uom: Optional[str] = None,
+        suggested_precision: Optional[int] = None
     ):
         super().__init__(
             api, 
@@ -34,7 +36,9 @@ class GeErdPropertySensor(GeErdSensor):
             state_class_override=state_class_override,
             uom_override=uom_override,
             data_type_override=data_type_override,
-            entity_category=entity_category
+            entity_category=entity_category,
+            suggested_uom=suggested_uom,
+            suggested_precision=suggested_precision
         )
         self.erd_property = erd_property
         self._erd_property_cleansed = erd_property.replace(".","_").replace("[","_").replace("]","_")

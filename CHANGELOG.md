@@ -1,6 +1,10 @@
 
 # GE Home Appliances (SmartHQ) Changelog
 
+## Unreleased
+
+- Feature: Expanded espresso maker support: brewing/emptying status, problem sensors (empty waste bin, out of beans, descale needed, service door, grinder faults), last brew type/volume/temperature/grind time, volume until descale, lifetime coffee ground, water hardness select, standby timeout and steam duration numbers, and per-drink temperature/volume/grind time numbers (only for drinks and fields the machine allows adjusting) [#438]
+
 ## 2026.8.0
 
 - Feature: Added per-door binary sensors for refrigerators (fridge left/right, freezer, drawer, and Fridge V2 doors)
