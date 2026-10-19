@@ -571,11 +571,9 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         current_macs = valid_macs
 
         # Loop through all devices for this config entry
-        for device_entry in list(device_registry.devices.values()):
-            # Skip devices not associated with this config entry
-            if self._config_entry.entry_id not in device_entry.config_entries:
-                continue
-
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        ):
             # Extract mac_addresses (assumes identifiers contain ("ge_home", mac))
             device_mac = None
             for ident in device_entry.identifiers:
