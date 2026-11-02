@@ -1,2 +1,3 @@
 from .ge_washer_cycle_button import GeWasherCycleButton
 from .ge_dryer_cycle_button import GeDryerCycleButton
+from .ge_dryer_wrinkle_care_button import GeDryerWrinkleCareButton

@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeDryerCycleButton
+from ..entities import GeErdSensor, GeErdBinarySensor, GeDryerCycleButton, GeDryerWrinkleCareButton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,10 @@ class DryerApi(ApplianceApi):
         
         # Add the start cycle button
         dryer_entities.append(GeDryerCycleButton(self))
+
+        # Add the Wrinkle Care (remote extended tumble) button
+        if self.has_erd_code(ErdCode.LAUNDRY_DRYER_REMOTE_START_EXTENDED_TUMBLE):
+            dryer_entities.append(GeDryerWrinkleCareButton(self))
 
         entities = base_entities + common_entities + dryer_entities
         return entities
