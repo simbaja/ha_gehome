@@ -3,3 +3,7 @@ from .ge_ccm_brew_strength import GeCcmBrewStrengthSelect
 from .ge_ccm_brew_temperature import GeCcmBrewTemperatureNumber
 from .ge_ccm_brew_cups import GeCcmBrewCupsNumber
 from .ge_ccm_brew_settings import GeCcmBrewSettingsButton
+from .ge_ccm_grinder_switch import GeCcmGrinderSwitch
+from .ge_ccm_brew_basket_binary_sensor import GeCcmBrewBasketMissingBinarySensor
+from .ge_ccm_clean_brew_basket_binary_sensor import GeCcmCleanBrewBasketBinarySensor
+from .ge_ccm_grinder_missing_binary_sensor import GeCcmGrinderMissingBinarySensor
