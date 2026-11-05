@@ -8,7 +8,6 @@ The ERD code is not registered in the gehomesdk, so the value is decoded
 as raw bytes.  This class interprets the byte value directly.
 """
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import EntityCategory
 
 from ..common.ge_erd_binary_sensor import GeErdBinarySensor
@@ -17,14 +16,17 @@ ERD_CCM_CLEAN_BREW_BASKET = "0x902C"
 
 
 class GeCcmCleanBrewBasketBinarySensor(GeErdBinarySensor):
-    """Binary sensor that detects when the brew basket needs cleaning."""
+    """Binary sensor that detects when the brew basket needs cleaning.
+
+    This is a routine post-brew maintenance reminder, not a fault condition,
+    so no PROBLEM device class is applied.
+    """
 
     def __init__(self, api):
         super().__init__(
             api,
             erd_code=ERD_CCM_CLEAN_BREW_BASKET,
             erd_override="Clean Brew Basket",
-            device_class_override=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
         )
 
