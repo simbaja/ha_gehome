@@ -13,6 +13,7 @@ from ..entities import (
     GeErdPropertySensor,
     GeErdBinarySensor,
     GeErdFilterPositionSelect,
+    GeWaterFilterRemoteModeButton,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,9 @@ class WaterFilterApi(ApplianceApi):
             GeErdSensor(self, ErdCode.WH_FILTER_DAY_USAGE, device_class_override=SensorDeviceClass.WATER, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.WH_FILTER_LIFE_REMAINING, "life_remaining", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdBinarySensor(self, ErdCode.WH_FILTER_FLOW_ALERT, device_class_override=BinarySensorDeviceClass.MOISTURE, entity_category=EntityCategory.DIAGNOSTIC),
+            # SmartHQ app's "Back to remote mode": clearing the manual-mode ERD returns the valve to remote control
+            # (0x115E valve state is rejected by the cloud as "erd is not writable")
+            GeWaterFilterRemoteModeButton(self, ErdCode.WH_FILTER_MANUAL_MODE, "00", "return_to_remote_mode", "wh_filter_remote_mode_manual"),
         ]
         entities = base_entities + wf_entities
         return entities
