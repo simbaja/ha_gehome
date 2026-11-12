@@ -21,7 +21,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_REGION
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     DOMAIN,
@@ -87,6 +87,8 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         self._login: Optional[GeSmartHqLogin] = None
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._reauth_form_shown: bool = False
         self._pending: Dict[str, str] = {}
         self._mfa_method: str = "email"
         self._last_error: Optional[str] = None
@@ -116,7 +118,8 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._reauth_entry = self.hass.config_entries.async_get_entry(
                 self.context.get("entry_id", ""))
 
-        if user_input is None:
+        if user_input is None or not self._reauth_form_shown:
+            self._reauth_form_shown = True
             prefill = {}
             if self._reauth_entry:
                 prefill = {
@@ -167,7 +170,14 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=step_id, data_schema=_get_user_schema(user_input),
                 errors={"base": "invalid_auth"})
 
-        self._login = GeSmartHqLogin(async_get_clientsession(self.hass))
+        # Use a session with its own cookie jar. The login is a multi-step,
+        # cookie-backed exchange; on Home Assistant's shared session any other
+        # SmartHQ login (the entry's reconnect, another flow, leftovers from an
+        # earlier attempt) shares and can replace those cookies mid-challenge.
+        if self._session is None:
+            self._session = async_create_clientsession(self.hass)
+        self._session.cookie_jar.clear()
+        self._login = GeSmartHqLogin(self._session)
         self._pending = {CONF_USERNAME: username, CONF_PASSWORD: password, CONF_REGION: region}
 
         try:
@@ -177,7 +187,8 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except GeAuthTermsRequiredError:
             errors["base"] = "terms_required"
-        except (GeAuthFailedError, GeNotAuthenticatedError):
+        except (GeAuthFailedError, GeNotAuthenticatedError) as err:
+            _LOGGER.warning("SmartHQ login failed: %s: %s", type(err).__name__, err)
             errors["base"] = "invalid_auth"
         except GeGeneralServerError:
             errors["base"] = "cannot_connect"
@@ -229,7 +240,10 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except GeGeneralServerError:
             self._last_error = "cannot_connect"
             return None
-        except (GeAuthFailedError, GeNotAuthenticatedError):
+        except (GeAuthFailedError, GeNotAuthenticatedError) as err:
+            # Not only a wrong code ends up here; log what actually failed.
+            _LOGGER.warning(
+                "SmartHQ verification step failed: %s: %s", type(err).__name__, err)
             self._last_error = "invalid_mfa_code"
             return None
         except Exception:  # noqa: BLE001
