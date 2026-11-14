@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType, ErdRemoteCommand
 
 from .base import ApplianceApi
-from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdPropertyBinarySensor, GeDishwasherCommandButton
+from ..entities import GeErdSensor, GeErdBinarySensor, GeErdPropertySensor, GeErdPropertyBinarySensor, GeDishwasherCommandButton, GeDishwasherErrorCodeSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,10 @@ class DualDishwasherApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "rinse_aid", erd_override="lower_setting", icon_override="mdi:shimmer", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "dry_option", erd_override="lower_setting", icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "wash_zone", erd_override="lower_setting", icon_override="mdi:dock-top", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "delay_hours", erd_override="lower_setting", icon_override="mdi:clock-fast", entity_category=EntityCategory.DIAGNOSTIC)
+            GeErdPropertySensor(self, ErdCode.DISHWASHER_USER_SETTING, "delay_hours", erd_override="lower_setting", icon_override="mdi:clock-fast", entity_category=EntityCategory.DIAGNOSTIC),
+
+            #Errors
+            GeDishwasherErrorCodeSensor(self, ErdCode.DISHWASHER_ERROR, erd_override="lower_error_code", icon_override="mdi:dishwasher-alert", entity_category=EntityCategory.DIAGNOSTIC)
         ]
 
         upper_entities = [
@@ -63,7 +66,10 @@ class DualDishwasherApi(ApplianceApi):
             GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "rinse_aid", erd_override="upper_setting", icon_override="mdi:shimmer", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "dry_option", erd_override="upper_setting", icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "wash_zone", erd_override="upper_setting", icon_override="mdi:dock-top", entity_category=EntityCategory.DIAGNOSTIC),
-            GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "delay_hours", erd_override="upper_setting", icon_override="mdi:clock-fast", entity_category=EntityCategory.DIAGNOSTIC)
+            GeErdPropertySensor(self, ErdCode.DISHWASHER_UPPER_USER_SETTING, "delay_hours", erd_override="upper_setting", icon_override="mdi:clock-fast", entity_category=EntityCategory.DIAGNOSTIC),
+
+            #Errors
+            GeDishwasherErrorCodeSensor(self, ErdCode.DISHWASHER_UPPER_UNKNOWN_3208, erd_override="upper_error_code", icon_override="mdi:dishwasher-alert", entity_category=EntityCategory.DIAGNOSTIC)
         ]
 
         # Remote commands are always supported, enabled by a physical button per tub, disabled when the tub is opened (lower)
