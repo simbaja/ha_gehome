@@ -57,7 +57,7 @@ class GeToasterOven(GeAbstractWaterHeater):
         return GE_TOASTER_OVEN_SUPPORT
 
     @cached_property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
@@ -68,7 +68,7 @@ class GeToasterOven(GeAbstractWaterHeater):
             return False
 
     @property
-    def current_temperature(self) -> int | None:  # type: ignore
+    def native_current_temperature(self) -> int | None:  # type: ignore
         return None
 
     @property
@@ -83,7 +83,7 @@ class GeToasterOven(GeAbstractWaterHeater):
         return [m for mode in ErdToasterOvenCookMode if (m := mode.stringify()) is not None]
 
     @property
-    def target_temperature(self) -> int | None:  # type: ignore
+    def native_target_temperature(self) -> int | None:  # type: ignore
         setting = self._current_setting
         if setting is None:
             return None

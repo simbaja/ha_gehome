@@ -104,30 +104,30 @@ class GeDispenser(GeAbstractWaterHeater):
         return OP_MODE_NORMAL
 
     @property
-    def current_temperature(self) -> int | None: # type: ignore
+    def native_current_temperature(self) -> int | None: # type: ignore
         """Return the current temperature."""
         return self.hot_water_status.current_temp
 
     @property
-    def target_temperature(self) -> int | None: # type: ignore
+    def native_target_temperature(self) -> int | None: # type: ignore
         """Return the target temperature."""
         return self.appliance.get_erd_value(ErdCode.HOT_WATER_SET_TEMP)
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return TemperatureConverter.convert(self._min_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
+        return TemperatureConverter.convert(self._min_temp, UnitOfTemperature.FAHRENHEIT, self.native_temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return TemperatureConverter.convert(self._max_temp, UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
+        return TemperatureConverter.convert(self._max_temp, UnitOfTemperature.FAHRENHEIT, self.native_temperature_unit)
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]: # type: ignore
         data = {}
         
-        data["target_temperature"] = self.target_temperature
+        data["target_temperature"] = self.native_target_temperature
         if self.hot_water_status.status in [ErdHotWaterStatus.FAULT_LOCKED_OUT, ErdHotWaterStatus.FAULT_NEED_CLEARED]:
             data["fault_status"] = self._stringify(self.hot_water_status.status)
         if self.supports_k_cups:

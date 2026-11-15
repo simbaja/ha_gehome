@@ -1,6 +1,6 @@
 import logging
 from propcache.api import cached_property
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -13,6 +13,7 @@ from gehomesdk import ErdCode, ErdCodeType, ErdMeasurementUnits, ErdOnOff
 from ...const import DOMAIN
 from ...devices import ApplianceApi
 from .ge_erd_entity import GeEntity
+from .native_temperature import NATIVE_TEMPERATURES
 from .options_converter import OptionsConverter
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,13 +97,29 @@ class GeClimate(GeEntity, ClimateEntity):
         return self._fan_mode_erd_code
 
     @cached_property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         #appears to always be Fahrenheit internally, hardcode this
         return UnitOfTemperature.FAHRENHEIT
         #measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         #if measurement_system == ErdMeasurementUnits.METRIC:
         #    return UnitOfTemperature.CELSIUS
         #return UnitOfTempterature.FAHRENHEIT
+
+    # Releases before 2026.11 only read the old names. Type checkers see the
+    # 2026.11+ class, where those names are final.
+    if not TYPE_CHECKING and not NATIVE_TEMPERATURES:
+
+        @property
+        def temperature_unit(self):
+            return self.native_temperature_unit
+
+        @property
+        def current_temperature(self):
+            return self.native_current_temperature
+
+        @property
+        def target_temperature(self):
+            return self.native_target_temperature
 
     @cached_property
     def supported_features(self):
@@ -113,7 +130,7 @@ class GeClimate(GeEntity, ClimateEntity):
         return self.appliance.get_erd_value(self.power_status_erd_code) == ErdOnOff.ON
 
     @property
-    def target_temperature(self) -> float | None: # type: ignore
+    def native_target_temperature(self) -> float | None: # type: ignore
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         if measurement_system == ErdMeasurementUnits.METRIC:
             targ = float(self.appliance.get_erd_value(self.target_temperature_erd_code))
@@ -122,7 +139,7 @@ class GeClimate(GeEntity, ClimateEntity):
         return float(self.appliance.get_erd_value(self.target_temperature_erd_code))
 
     @property
-    def current_temperature(self) -> float | None: # type: ignore
+    def native_current_temperature(self) -> float | None: # type: ignore
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
         if measurement_system == ErdMeasurementUnits.METRIC:
             current = float(self.appliance.get_erd_value(self.current_temperature_erd_code))
@@ -202,8 +219,8 @@ class GeClimate(GeEntity, ClimateEntity):
         #convert to int (setting can only handle ints)
         temperature = int(temperature)
 
-        _LOGGER.debug(f"Setting temperature from {self.target_temperature} to {temperature}")
-        if self.target_temperature != temperature:
+        _LOGGER.debug(f"Setting temperature from {self.native_target_temperature} to {temperature}")
+        if self.native_target_temperature != temperature:
             await self.appliance.async_set_erd_value(self.target_temperature_erd_code, temperature)
 
     async def async_turn_on(self):
@@ -213,7 +230,7 @@ class GeClimate(GeEntity, ClimateEntity):
         await self.appliance.async_set_erd_value(self.power_status_erd_code, ErdOnOff.OFF)
 
     def _convert_temp(self, temperature_f: int):
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return float(temperature_f)
         else:
             return (temperature_f - 32.0) * (5/9)

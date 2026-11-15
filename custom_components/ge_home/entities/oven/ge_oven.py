@@ -57,7 +57,7 @@ class GeOven(GeAbstractWaterHeater):
             return SUPPORT_NONE
 
     @cached_property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         # GE appliances always report temperatures in Fahrenheit regardless of
         # the configured measurement system (and may report METRIC while still
         # sending Fahrenheit), so we hard-code Fahrenheit for them.
@@ -78,7 +78,7 @@ class GeOven(GeAbstractWaterHeater):
         return value == True
 
     @property
-    def current_temperature(self) -> int | None: # type: ignore
+    def native_current_temperature(self) -> int | None: # type: ignore
         #RAW_TEMPERATURE tracks the cavity more accurately than
         #DISPLAY_TEMPERATURE, so it's preferred when the appliance has it
         #(see constructor).  However, some ovens advertise the raw ERD but
@@ -154,7 +154,7 @@ class GeOven(GeAbstractWaterHeater):
         return 0
 
     @property
-    def target_temperature(self) -> int | None: # type: ignore
+    def native_target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         cook_mode = self.current_cook_setting
         if cook_mode.temperature:
@@ -185,9 +185,9 @@ class GeOven(GeAbstractWaterHeater):
         # good old 350F.
         if operation_mode == OP_MODE_OFF:
             target_temp = 0
-        elif self.target_temperature:
-            target_temp = self.target_temperature
-        elif self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        elif self.native_target_temperature:
+            target_temp = self.native_target_temperature
+        elif self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             target_temp = 350
         else:
             target_temp = 177
@@ -237,7 +237,7 @@ class GeOven(GeAbstractWaterHeater):
     def display_state(self) -> Optional[str]:
         erd_code = self.get_erd_code("CURRENT_STATE")
         erd_value = self.appliance.get_erd_value(erd_code)
-        return self._stringify(erd_value, temp_units=self.temperature_unit)
+        return self._stringify(erd_value, temp_units=self.native_temperature_unit)
 
     @property
     def extra_state_attributes(self) -> Optional[Dict[str, Any]]: # type: ignore
