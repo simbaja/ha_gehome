@@ -77,7 +77,6 @@ class GeHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GE Home."""
 
     VERSION = CONFIG_FLOW_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     @staticmethod
     @callback
