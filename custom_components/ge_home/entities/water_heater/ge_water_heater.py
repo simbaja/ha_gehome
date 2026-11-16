@@ -36,11 +36,11 @@ class GeWaterHeater(GeAbstractWaterHeater):
         return (WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.TARGET_TEMPERATURE)
 
     @cached_property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
-    def current_temperature(self) -> int | None: # type: ignore
+    def native_current_temperature(self) -> int | None: # type: ignore
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TEMPERATURE)
 
     @property
@@ -53,7 +53,7 @@ class GeWaterHeater(GeAbstractWaterHeater):
         return self._modes_converter.options
 
     @property
-    def target_temperature(self) -> int | None: # type: ignore
+    def native_target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         return self.appliance.get_erd_value(ErdCode.WH_HEATER_TARGET_TEMPERATURE)
 

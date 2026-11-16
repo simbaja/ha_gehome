@@ -66,13 +66,13 @@ class GeAbstractFridge(GeAbstractWaterHeater):
         return self.api.try_get_erd_value(ErdCode.TEMPERATURE_SETTING)
 
     @property
-    def target_temperature(self) -> int | None: # type: ignore
+    def native_target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         t = self.target_temps
         return getattr(t, self.heater_type) if t else None
 
     @property
-    def current_temperature(self) -> int | None:  # type: ignore
+    def native_current_temperature(self) -> int | None:  # type: ignore
         """Return the current temperature."""
         try:
             current_temps = self.appliance.get_erd_value(ErdCode.CURRENT_TEMPERATURE)
@@ -119,7 +119,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             return getattr(self.setpoint_limits, f"{self.heater_type}_min")
         except:
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
-            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_min"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
+            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_min"], UnitOfTemperature.FAHRENHEIT, self.native_temperature_unit)
 
     @property
     def max_temp(self):
@@ -128,7 +128,7 @@ class GeAbstractFridge(GeAbstractWaterHeater):
             return getattr(self.setpoint_limits, f"{self.heater_type}_max")
         except:
             _LOGGER.debug("No temperature setpoint limits available. Using hardcoded limits.")
-            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], UnitOfTemperature.FAHRENHEIT, self.temperature_unit)
+            return TemperatureConverter.convert(self.temp_limits[f"{self.heater_type}_max"], UnitOfTemperature.FAHRENHEIT, self.native_temperature_unit)
 
     @property
     def current_operation(self) -> str: # type: ignore

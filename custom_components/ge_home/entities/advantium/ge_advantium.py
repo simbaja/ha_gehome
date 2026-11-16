@@ -66,7 +66,7 @@ class GeAdvantium(GeAbstractWaterHeater):
         return value == True
 
     @property
-    def current_temperature(self) -> int | None: # type: ignore
+    def native_current_temperature(self) -> int | None: # type: ignore
         return self.appliance.get_erd_value(ErdCode.UPPER_OVEN_DISPLAY_TEMPERATURE)
 
     @property
@@ -134,7 +134,7 @@ class GeAdvantium(GeAbstractWaterHeater):
             return False
 
     @property
-    def target_temperature(self) -> int | None: # type: ignore
+    def native_target_temperature(self) -> int | None: # type: ignore
         """Return the temperature we try to reach."""
         try:
             cook_mode = self.current_cook_setting
@@ -195,8 +195,8 @@ class GeAdvantium(GeAbstractWaterHeater):
         if (
             setting.allow_temperature_set and 
             self.current_cook_status.cook_mode == setting.cook_mode and 
-            self.target_temperature):
-            target_temp = max(self.min_temp, min(self.max_temp, int(self.target_temperature)))
+            self.native_target_temperature):
+            target_temp = max(self.min_temp, min(self.max_temp, int(self.native_target_temperature)))
 
         #by default we will start an operation, but handle other actions too
         action = AdvantiumCookAction.START
