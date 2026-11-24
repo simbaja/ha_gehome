@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from gehomesdk import ErdCode, ErdApplianceType
 
 from .base import ApplianceApi
-from ..entities import GeSacClimate, GeErdSensor, GeErdSwitch, GeErdSelect, ErdOnOffBoolConverter, TurboQuietModeOptionsConverter
+from ..entities import GeSacClimate, GeErdSensor, GeErdSwitch, GeErdSelect, ErdOnOffBoolConverter, TurboQuietModeOptionsConverter, GeAcTargetTemperatureSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class SacApi(ApplianceApi):
 
         sac_entities = [
             GeSacClimate(self),
-            GeErdSensor(self, ErdCode.AC_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
+            GeAcTargetTemperatureSensor(self, ErdCode.AC_TARGET_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.AC_AMBIENT_TEMPERATURE, entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.AC_FAN_SETTING, icon_override="mdi:fan", entity_category=EntityCategory.DIAGNOSTIC),
             GeErdSensor(self, ErdCode.AC_OPERATION_MODE, entity_category=EntityCategory.DIAGNOSTIC),
