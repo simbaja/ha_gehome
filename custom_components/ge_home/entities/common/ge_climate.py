@@ -12,6 +12,7 @@ from gehomesdk import ErdCode, ErdCodeType, ErdMeasurementUnits, ErdOnOff
 
 from ...const import DOMAIN
 from ...devices import ApplianceApi
+from .ac_temperature import normalize_ac_target_temperature
 from .ge_erd_entity import GeEntity
 from .options_converter import OptionsConverter
 
@@ -115,11 +116,13 @@ class GeClimate(GeEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None: # type: ignore
         measurement_system = self.appliance.get_erd_value(ErdCode.TEMPERATURE_UNIT)
+        # the unit sometimes sends the setpoint as two bytes in the other order ("4200" = 66 F),
+        # which the SDK reads as 16896
+        targ = float(normalize_ac_target_temperature(self.appliance.get_erd_value(self.target_temperature_erd_code)))
         if measurement_system == ErdMeasurementUnits.METRIC:
-            targ = float(self.appliance.get_erd_value(self.target_temperature_erd_code))
             targ = round( ((targ - 32.0) * (5/9)) / 2 ) * 2 
             return (9 * targ) / 5 + 32
-        return float(self.appliance.get_erd_value(self.target_temperature_erd_code))
+        return targ
 
     @property
     def current_temperature(self) -> float | None: # type: ignore
