@@ -570,12 +570,16 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
         # Update current macs for HA registry cleanup
         current_macs = valid_macs
 
-        # Loop through all devices for this config entry
-        for device_entry in list(device_registry.devices.values()):
-            # Skip devices not associated with this config entry
-            if self._config_entry.entry_id not in device_entry.config_entries:
-                continue
-
+        # Loop through the devices of this config entry only. The registry keeps an
+        # index per config entry, so this is a lookup, not a walk over every device in Home
+        # Assistant. The old walk read the deprecated DeviceEntry.config_entries on each device
+        # (and device_registry.devices.values()); every read runs HA's frame reporter, which scans
+        # sys.modules, and on a large instance that blocked the event loop for seconds at each
+        # roster update. async_entries_for_config_entry returns a new list, so removing devices
+        # inside the loop is safe.
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        ):
             # Extract mac_addresses (assumes identifiers contain ("ge_home", mac))
             device_mac = None
             for ident in device_entry.identifiers:
@@ -586,10 +590,11 @@ class GeHomeUpdateCoordinator(DataUpdateCoordinator):
             if device_mac and device_mac not in current_macs:
                 _LOGGER.info(f"Removing stale device {device_entry.name} ({device_mac}) from HA registry")
 
-                # Remove all entities linked to this device
-                for entity_entry in list(entity_registry.entities.values()):
-                    if entity_entry.device_id == device_entry.id:
-                        entity_registry.async_remove(entity_entry.entity_id)
+                # Remove all entities linked to this device (disabled ones included)
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, device_entry.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_remove(entity_entry.entity_id)
 
                 # Remove the device itself
                 device_registry.async_remove_device(device_entry.id)            
