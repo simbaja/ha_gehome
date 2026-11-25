@@ -185,6 +185,11 @@ class GeOven(GeAbstractWaterHeater):
         # good old 350F.
         if operation_mode == OP_MODE_OFF:
             target_temp = 0
+        elif operation_mode == OP_MODE_WARM:
+            # Warm has no adjustable temperature: the oven reports 170F when
+            # started from the panel, so send the same rather than carrying
+            # over a bake setpoint.
+            target_temp = 170
         elif self.target_temperature:
             target_temp = self.target_temperature
         elif self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
